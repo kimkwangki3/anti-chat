@@ -60,6 +60,26 @@ const channelMemberRoutes = require('./routes/channelMembers');
 app.use(express.json());
 app.use(cookieParser());
 
+// 업로드 폴더 생성
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+app.use('/uploads', express.static(uploadDir));
+
+// API 라우트 등록
+app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/notices', noticeRoutes);
+app.use('/api/posts', postRoutes);
+app.use('/api/channels', channelRoutes);
+app.use('/api/channel-members', channelMemberRoutes);
+
+// 데이터베이스 연결
+mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/corporate-chat')
+    .then(() => console.log('MongoDB 연결 성공'))
+    .catch(err => console.error('MongoDB 연결 실패:', err));
+
 // Routes (Placeholder)
 app.get('/', (req, res) => {
     res.send('API is running...');
