@@ -20,8 +20,8 @@ const Sidebar = () => {
     ];
 
     const adminMenuItems = [
-        { id: 'members', label: '멤버 관리', icon: '👥', path: '/admin/members' },
-        { id: 'edit', label: '채널 설정', icon: '⚙️', path: '/admin/edit-channel' },
+        { id: 'members', label: '멤버 관리', icon: '👥', path: `/admin/members?channelId=${currentChannel?._id}` },
+        { id: 'edit', label: '채널 설정', icon: '⚙️', path: `/admin/edit-channel?channelId=${currentChannel?._id}` },
     ];
 
     return (

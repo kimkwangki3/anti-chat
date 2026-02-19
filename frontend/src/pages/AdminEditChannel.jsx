@@ -46,63 +46,75 @@ const AdminEditChannel = () => {
         }
     };
 
-    if (isLoading) return <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white font-mono">LOADING...</div>;
+    if (isLoading) return (
+        <div className="h-full flex items-center justify-center bg-[#1a1a24] text-[#FF9500]">
+            <div className="animate-bounce text-4xl italic font-black font-mono uppercase tracking-widest">Loading...</div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto">
+        <div className="h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar p-6 md:p-12">
             <header className="mb-12">
                 <button
                     onClick={() => navigate(-1)}
-                    className="text-[10px] font-bold text-[#4f6ef7] hover:underline uppercase tracking-widest mb-4"
+                    className="text-[10px] font-black text-[#FF9500] hover:text-[#FF5E00] transition-colors uppercase tracking-[0.2em] mb-6 flex items-center gap-2 group"
                 >
-                    ← 뒤로 가기
+                    <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span> Return Back
                 </button>
-                <h1 className="text-4xl font-bold font-['Bebas_Neue'] tracking-wider uppercase italic text-white">
-                    EDIT <span className="text-[#4f6ef7]">CHANNEL INFO</span>
+                <h1 className="text-4xl font-black italic tracking-tighter text-white mb-2 font-mono uppercase">
+                    Edit <span className="text-[#FF9500]">Channel Info</span>
                 </h1>
-                <p className="text-[#6b6b8a] text-[10px] font-mono tracking-[0.3em] uppercase mt-2">채널 정보 수정 및 업데이트</p>
+                <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">나만의 소중한 채널 정보를 관리하세요</p>
             </header>
 
-            <div className="max-w-2xl bg-[#12121a] border border-[rgba(79,110,247,0.15)] rounded-2xl p-10 shadow-2xl">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                    <div>
-                        <label className="block text-[10px] font-bold text-[#444466] uppercase tracking-[0.2em] mb-3 font-mono ml-1">채널 이름</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full bg-[#1a1a28] border border-white/5 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#4f6ef7] transition-all"
-                            placeholder="채널 이름을 입력하세요"
-                        />
+            <div className="max-w-3xl bg-[#23232f] border border-white/5 rounded-[2.5rem] p-10 md:p-16 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#FF9500]/5 rounded-bl-[6rem] -mr-12 -mt-12 group-hover:bg-[#FF9500]/10 transition-colors"></div>
+
+                <form onSubmit={handleSubmit} className="space-y-12 relative z-10">
+                    <div className="space-y-4">
+                        <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic">Channel Identity</label>
+                        <div className="relative group/input">
+                            <div className="absolute -inset-0.5 orange-gradient rounded-2xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500"></div>
+                            <input
+                                type="text"
+                                required
+                                value={formData.name}
+                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-8 py-5 text-white text-sm font-bold focus:outline-none focus:border-[#FF9500]/30 transition-all shadow-inner"
+                                placeholder="채널의 이름을 정해주세요"
+                            />
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-[10px] font-bold text-[#444466] uppercase tracking-[0.2em] mb-3 font-mono ml-1">채널 설명</label>
-                        <textarea
-                            required
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full bg-[#1a1a28] border border-white/5 rounded-xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#4f6ef7] transition-all min-h-[120px] leading-relaxed"
-                            placeholder="채널에 대한 설명을 입력하세요"
-                        />
+                    <div className="space-y-4">
+                        <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic">Channel Story</label>
+                        <div className="relative group/input">
+                            <div className="absolute -inset-0.5 orange-gradient rounded-3xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500"></div>
+                            <textarea
+                                required
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                className="w-full bg-[#1a1a24] border border-white/5 rounded-[2rem] px-8 py-6 text-white text-sm font-medium focus:outline-none focus:border-[#FF9500]/30 transition-all shadow-inner min-h-[180px] leading-relaxed"
+                                placeholder="채널을 멋지게 설명해 보세요"
+                            />
+                        </div>
                     </div>
 
-                    {error && <p className="text-red-500 text-xs font-mono">{error}</p>}
+                    {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest font-mono italic">{error}</p>}
 
-                    <div className="flex gap-4 pt-4">
+                    <div className="flex gap-6 pt-4">
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="flex-1 py-4 border border-white/5 text-[#6b6b8a] font-bold rounded-xl hover:bg-white/5 transition-all uppercase text-xs tracking-widest"
+                            className="flex-1 py-5 bg-[#1a1a24] border border-white/5 text-[#6b6b8a] text-[10px] font-black rounded-2xl hover:bg-white/5 transition-all uppercase tracking-widest shadow-lg"
                         >
-                            취소
+                            Cancel
                         </button>
                         <button
                             type="submit"
-                            className="flex-[2] bg-[#4f6ef7] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#4f6ef7]/20 hover:bg-[#7bb3ff] transition-all uppercase text-xs tracking-widest"
+                            className="flex-[2] py-5 orange-gradient text-white text-[10px] font-black rounded-2xl shadow-xl shadow-[#FF9500]/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-[0.2em]"
                         >
-                            정보 수정 완료
+                            Update Channel Settings ✨
                         </button>
                     </div>
                 </form>
