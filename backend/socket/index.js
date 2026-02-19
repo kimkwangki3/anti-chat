@@ -49,7 +49,8 @@ const socketHandler = (io) => {
 
         // 메시지 전송 (파일 기록 추가)
         socket.on('send_message', async (data) => {
-            const { roomId, senderId, content, channelId } = data; // channelId 추가
+            const { roomId, senderId, content, channelId } = data;
+            console.log(`[SOCKET] Message logic - Room: ${roomId}, Sender: ${senderId}`);
 
             try {
                 const message = await Message.create({
@@ -68,6 +69,7 @@ const socketHandler = (io) => {
                     lastMessageAt: Date.now()
                 });
 
+                console.log(`[SOCKET] Emitting message to room: ${roomId}`);
                 io.to(roomId).emit('receive_message', message);
 
                 // 채팅 타겟 알림 (수신자에게만 전송)
@@ -76,13 +78,13 @@ const socketHandler = (io) => {
                     const recipientId = room.adminId.toString() === senderId.toString() ? room.memberId : room.adminId;
                     const recipientRoom = recipientId.toString();
 
-                    console.log(`[SOCKET] Sending notification to user room: ${recipientRoom}`);
+                    console.log(`[SOCKET] Sending notification to recipient room: ${recipientRoom}`);
 
                     io.to(recipientRoom).emit('chat_notification', {
                         roomId,
                         senderName: user?.name,
                         content: content.substring(0, 20),
-                        channelId
+                        channelId: channelId || room.channelId
                     });
                 }
             } catch (error) {
