@@ -17,6 +17,7 @@ const Sidebar = () => {
         { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${currentChannel?._id}`, count: counts.notice, hidden: !currentChannel },
         { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${currentChannel?._id}`, count: counts.post, hidden: !currentChannel },
         { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${currentChannel?._id}`, count: counts.chat, hidden: !currentChannel },
+        { id: 'settings', label: '설정', icon: '⚙️', path: '/settings' },
     ];
 
     const adminMenuItems = [
