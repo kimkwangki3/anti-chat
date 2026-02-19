@@ -13,6 +13,7 @@ import PostDetailPage from './pages/PostDetailPage';
 import Sidebar from './components/Common/Sidebar';
 import BottomNav from './components/Common/BottomNav';
 import AdminEditChannel from './pages/AdminEditChannel';
+import SettingsPage from './pages/SettingsPage';
 
 const ProtectedLayout = ({ children }) => {
   const { token } = useAuthStore();
@@ -101,6 +102,11 @@ function App() {
           <Route path="/board/:id" element={
             <ProtectedLayout>
               <PostDetailPage />
+            </ProtectedLayout>
+          } />
+          <Route path="/settings" element={
+            <ProtectedLayout>
+              <SettingsPage />
             </ProtectedLayout>
           } />
         </Routes>

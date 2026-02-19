@@ -23,7 +23,7 @@ const AdminMemberManagement = () => {
         if (channelId) {
             fetchMembers();
         }
-    }, [channelId, user]);
+    }, [channelId, user?.role]);
 
     const fetchMembers = async () => {
         setIsLoading(true);
@@ -75,6 +75,12 @@ const AdminMemberManagement = () => {
 
     const pendingMembers = filteredMembers.filter(m => m.status === 'pending');
     const activeMembers = filteredMembers.filter(m => m.status === 'approved');
+
+    if (isLoading) return (
+        <div className="h-full flex items-center justify-center bg-[#1a1a24]">
+            <div className="w-10 h-10 border-4 border-[#FF9500]/20 border-t-[#FF9500] rounded-full animate-spin"></div>
+        </div>
+    );
 
     return (
         <div className="h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar p-6 md:p-12">

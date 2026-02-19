@@ -64,20 +64,37 @@ const socketHandler = (io) => {
                     writeChatLog(roomId, user.name, content);
                 }
 
-                await ChatRoom.findByIdAndUpdate(roomId, {
-                    lastMessage: content,
-                    lastMessageAt: Date.now()
-                });
-
-                console.log(`[SOCKET] Emitting message to room: ${roomId}`);
-                io.to(roomId).emit('receive_message', message);
-
-                // 채팅 타겟 알림 (수신자에게만 전송)
                 const room = await ChatRoom.findById(roomId);
                 if (room) {
-                    const recipientId = room.adminId.toString() === senderId.toString() ? room.memberId : room.adminId;
-                    const recipientRoom = recipientId.toString();
+                    const isAdminSender = room.adminId.toString() === senderId.toString();
+                    const recipientId = isAdminSender ? room.memberId : room.adminId;
 
+                    // 읽지 않은 카운트 증가 및 가시성 보장
+                    const updateData = {
+                        lastMessage: content,
+                        lastMessageAt: Date.now(),
+                        adminVisible: true,
+                        memberVisible: true
+                    };
+
+                    if (isAdminSender) {
+                        updateData.$inc = { unreadCountMember: 1 };
+                    } else {
+                        updateData.$inc = { unreadCountAdmin: 1 };
+                    }
+
+                    const updatedRoom = await ChatRoom.findByIdAndUpdate(roomId, updateData, { new: true })
+                        .populate('adminId', 'name username isOnline')
+                        .populate('memberId', 'name username isOnline');
+
+                    console.log(`[SOCKET] Emitting message to room: ${roomId}`);
+                    io.to(roomId).emit('receive_message', message);
+
+                    // 채팅방 목록 업데이트 정보 전송 (정렬 및 카운트 반영을 위함)
+                    io.to(room.adminId.toString()).emit('room_updated', updatedRoom);
+                    io.to(room.memberId.toString()).emit('room_updated', updatedRoom);
+
+                    const recipientRoom = recipientId.toString();
                     console.log(`[SOCKET] Sending notification to recipient room: ${recipientRoom}`);
 
                     io.to(recipientRoom).emit('chat_notification', {

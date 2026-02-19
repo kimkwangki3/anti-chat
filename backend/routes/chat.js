@@ -68,6 +68,10 @@ router.post('/rooms', protect, async (req, res) => {
         let room = await ChatRoom.findOne({ adminId, memberId, channelId });
 
         if (room) {
+            // 숨겨진 상태일 수 있으므로 가시성 리셋
+            room.adminVisible = true;
+            room.memberVisible = true;
+            await room.save();
             return res.status(200).json(room);
         }
 
@@ -96,9 +100,14 @@ router.post('/rooms', protect, async (req, res) => {
 router.get('/rooms', protect, async (req, res) => {
     const { channelId } = req.query;
     try {
-        let query = req.user.role === 'admin'
-            ? { adminId: req.user._id }
-            : { memberId: req.user._id };
+        let query = {};
+        if (req.user.role === 'admin') {
+            query.adminId = req.user._id;
+            query.adminVisible = true;
+        } else {
+            query.memberId = req.user._id;
+            query.memberVisible = true;
+        }
 
         if (channelId) {
             query.channelId = channelId;
@@ -112,6 +121,36 @@ router.get('/rooms', protect, async (req, res) => {
         res.json(rooms);
     } catch (error) {
         res.status(500).json({ message: '채팅방 목록을 불러오는데 실패했습니다.' });
+    }
+});
+
+// @route   PUT /api/chat/rooms/:id/read
+// @desc    채팅방 읽음 처리
+router.put('/rooms/:id/read', protect, async (req, res) => {
+    try {
+        const update = req.user.role === 'admin'
+            ? { unreadCountAdmin: 0 }
+            : { unreadCountMember: 0 };
+
+        const room = await ChatRoom.findByIdAndUpdate(req.params.id, update, { new: true });
+        res.json(room);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   PUT /api/chat/rooms/:id/hide
+// @desc    채팅방 숨기기
+router.put('/rooms/:id/hide', protect, async (req, res) => {
+    try {
+        const update = req.user.role === 'admin'
+            ? { adminVisible: false }
+            : { memberVisible: false };
+
+        const room = await ChatRoom.findByIdAndUpdate(req.params.id, update, { new: true });
+        res.json(room);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 });
 

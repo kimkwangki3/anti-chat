@@ -24,11 +24,7 @@ const BottomNav = () => {
     const { user, logout } = useAuthStore();
 
     const handleItemClick = (item) => {
-        if (item.isSettings) {
-            setShowSettings(true);
-        } else {
-            navigate(item.path);
-        }
+        navigate(item.path);
     };
 
     return (

@@ -26,6 +26,8 @@ const useChatStore = create((set, get) => ({
         if (room) {
             // 소켓 룸 입장
             socket.emit('join_room', room._id);
+            // 읽음 처리 호출
+            get().markAsRead(room._id);
 
             // 해당 방의 메시지 내역 조회
             try {
@@ -35,6 +37,48 @@ const useChatStore = create((set, get) => ({
                 console.error('메시지 로드 오류:', error);
             }
         }
+    },
+
+    markAsRead: async (roomId) => {
+        try {
+            await axios.put(`/chat/rooms/${roomId}/read`);
+            set(state => ({
+                rooms: state.rooms.map(r =>
+                    r._id === roomId
+                        ? { ...r, unreadCountAdmin: 0, unreadCountMember: 0 }
+                        : r
+                )
+            }));
+        } catch (error) {
+            console.error('읽음 처리 실패:', error);
+        }
+    },
+
+    hideRoom: async (roomId) => {
+        try {
+            await axios.put(`/chat/rooms/${roomId}/hide`);
+            set(state => ({
+                rooms: state.rooms.filter(r => r._id !== roomId),
+                currentRoom: state.currentRoom?._id === roomId ? null : state.currentRoom
+            }));
+        } catch (error) {
+            console.error('방 숨기기 실패:', error);
+        }
+    },
+
+    updateRoomInList: (updatedRoom) => {
+        set(state => {
+            const index = state.rooms.findIndex(r => r._id === updatedRoom._id);
+            let newRooms = [...state.rooms];
+            if (index !== -1) {
+                newRooms[index] = updatedRoom;
+            } else {
+                newRooms.push(updatedRoom);
+            }
+            // 최신순 정렬
+            newRooms.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
+            return { rooms: newRooms };
+        });
     },
 
     sendMessage: (content) => {

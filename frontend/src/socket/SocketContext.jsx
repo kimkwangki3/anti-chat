@@ -4,6 +4,7 @@ import socket from './socket';
 import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
+import useSettingsStore from '../store/settingsStore';
 
 const SocketContext = createContext();
 
@@ -14,14 +15,15 @@ export const SocketProvider = ({ children }) => {
     const { user } = useAuthStore();
     const { currentChannel } = useChannelStore();
     const { addNotification, incrementUnreadCount, removeNotification, notifications } = useNotificationStore();
+    const { soundType, volume, sounds } = useSettingsStore();
     const [onlineCount, setOnlineCount] = useState(0);
 
     // 알림음 재생 함수
     const playNotificationSound = () => {
         try {
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(e => console.log('[SOUND] Audio play blocked by browser policy:', e));
+            const audio = new Audio(sounds[soundType]);
+            audio.volume = volume;
+            audio.play().catch(e => console.log('[SOUND] Audio play blocked:', e));
         } catch (error) {
             console.error('[SOUND] Audio play error:', error);
         }

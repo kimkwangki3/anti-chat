@@ -23,6 +23,22 @@ const chatRoomSchema = new mongoose.Schema({
     lastMessageAt: {
         type: Date,
         default: Date.now
+    },
+    unreadCountAdmin: {
+        type: Number,
+        default: 0
+    },
+    unreadCountMember: {
+        type: Number,
+        default: 0
+    },
+    adminVisible: {
+        type: Boolean,
+        default: true
+    },
+    memberVisible: {
+        type: Boolean,
+        default: true
     }
 }, {
     timestamps: true
