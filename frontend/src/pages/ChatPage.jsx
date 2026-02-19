@@ -40,6 +40,8 @@ const ChatPage = () => {
         if (!socket.connected) {
             socket.auth = { token };
             socket.connect();
+            // 개인 알림 룸 참가를 위한 setup 이벤트 호출
+            socket.emit('setup', user);
         }
 
         socket.on('receive_message', (message) => {

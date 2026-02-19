@@ -16,6 +16,14 @@ const socketHandler = (io) => {
             }
         });
 
+        // 채팅방 입장을 위한 전용 핸들러 (누락분 추가)
+        socket.on('join_room', (roomId) => {
+            if (roomId) {
+                socket.join(roomId);
+                console.log(`[SOCKET] User joined chat room: ${roomId}`);
+            }
+        });
+
         // 채널 룸 참가 및 인원 집계
         socket.on('join_channel', (channelId) => {
             if (channelId) {
