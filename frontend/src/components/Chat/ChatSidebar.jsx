@@ -40,6 +40,8 @@ const ChatSidebar = () => {
             setShowUserList(false);
         } catch (error) {
             console.error('방 생성 실패:', error);
+            const message = error.response?.data?.message || '대화를 시작할 수 없습니다.';
+            alert(message);
         }
     };
 
