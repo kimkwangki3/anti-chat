@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import useChatStore from '../../store/chatStore';
 import useAuthStore from '../../store/authStore';
 import axios from '../../api/axios';
+import socket from '../../socket/socket';
 
 const ChatSidebar = () => {
     const {
@@ -17,10 +18,11 @@ const ChatSidebar = () => {
     const queryParams = new URLSearchParams(location.search);
     const channelId = queryParams.get('channelId');
 
+    const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+
     useEffect(() => {
         if (channelId) {
             fetchRooms(channelId);
-            const isAdmin = user?.role?.toLowerCase() === 'admin';
             if (isAdmin) {
                 axios.get(`/chat/users/${channelId}`)
                     .then(res => setUsers(res.data))
@@ -29,7 +31,7 @@ const ChatSidebar = () => {
         } else {
             fetchRooms();
         }
-    }, [fetchRooms, user, channelId]);
+    }, [fetchRooms, user, channelId, isAdmin]);
 
     // 실시간 목록 업데이트 리스너
     useEffect(() => {
@@ -75,7 +77,7 @@ const ChatSidebar = () => {
         <div className="w-80 bg-[#12121a] border-r border-white/5 flex flex-col h-full z-20 shadow-2xl">
             <div className="p-6 border-b border-white/5 bg-[#12121a] flex justify-between items-center h-20">
                 <h2 className="text-xl font-bold font-['Bebas_Neue'] tracking-wider text-[#FF9500] italic leading-none">CHATS</h2>
-                {user?.role === 'admin' ? (
+                {isAdmin ? (
                     <button
                         onClick={() => setShowUserList(!showUserList)}
                         className="w-10 h-10 rounded-xl bg-[#FF9500]/10 text-[#FF9500] flex items-center justify-center hover:bg-[#FF9500] hover:text-white transition-all shadow-inner active:scale-95"
