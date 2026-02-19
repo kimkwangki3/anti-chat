@@ -7,6 +7,14 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const { Server } = require('socket.io');
+const webpush = require('web-push');
+
+// Web Push VAPID 설정
+webpush.setVapidDetails(
+    'mailto:contact@example.com',
+    process.env.PUBLIC_VAPID_KEY,
+    process.env.PRIVATE_VAPID_KEY
+);
 
 const app = express();
 const server = http.createServer(app);
@@ -67,8 +75,11 @@ if (!fs.existsSync(uploadDir)) {
 }
 app.use('/uploads', express.static(uploadDir));
 
+const pushRoutes = require('./routes/push');
+
 // API 라우트 등록
 app.use('/api/auth', authRoutes);
+app.use('/api/push', pushRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/posts', postRoutes);
