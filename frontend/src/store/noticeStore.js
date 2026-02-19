@@ -66,7 +66,9 @@ const useNoticeStore = create((set, get) => ({
         } catch (error) {
             console.error('읽음 처리 실패:', error);
         }
-    }
+    },
+
+    reset: () => set({ notices: [], isLoading: false, error: null })
 }));
 
 export default useNoticeStore;

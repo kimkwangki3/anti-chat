@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 import axios from '../api/axios';
+import useChatStore from './chatStore';
+import useChannelStore from './channelStore';
+import useNoticeStore from './noticeStore';
+import usePostStore from './postStore';
+import useNotificationStore from './notificationStore';
 
 const useAuthStore = create((set) => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
@@ -49,6 +54,13 @@ const useAuthStore = create((set) => ({
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         set({ user: null, token: null });
+
+        // 모든 스토어 리셋
+        useChatStore.getState().reset();
+        useChannelStore.getState().reset();
+        useNoticeStore.getState().reset();
+        usePostStore.getState().reset();
+        useNotificationStore.getState().resetStore();
     },
 
     checkAuth: async () => {

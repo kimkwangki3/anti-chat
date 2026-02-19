@@ -101,7 +101,9 @@ const useChatStore = create((set, get) => ({
         set((state) => ({
             messages: [...state.messages, message]
         }));
-    }
+    },
+
+    reset: () => set({ rooms: [], currentRoom: null, messages: [], isLoading: false })
 }));
 
 export default useChatStore;

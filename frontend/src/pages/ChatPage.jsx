@@ -21,6 +21,9 @@ const ChatPage = () => {
 
     useEffect(() => {
         const initChat = async () => {
+            // 채널이 바뀌면 일단 현재 방 선택 해제 (잔상 방지)
+            setCurrentRoom(null);
+
             if (channelId) {
                 await fetchRooms(channelId);
                 resetUnreadCount(channelId, 'chat');
@@ -29,7 +32,7 @@ const ChatPage = () => {
             }
         };
         initChat();
-    }, [channelId, fetchRooms, resetUnreadCount]);
+    }, [channelId, fetchRooms, resetUnreadCount, setCurrentRoom]);
 
     useEffect(() => {
         if (rooms.length > 0) {

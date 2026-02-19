@@ -80,7 +80,9 @@ const usePostStore = create((set, get) => ({
         } catch (error) {
             console.error('게시글 읽음 처리 실패:', error);
         }
-    }
+    },
+
+    reset: () => set({ posts: [], currentPost: null, isLoading: false, error: null })
 }));
 
 export default usePostStore;

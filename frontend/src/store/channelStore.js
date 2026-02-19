@@ -79,7 +79,9 @@ const useChannelStore = create((set, get) => ({
         } catch (error) {
             alert(error.response?.data?.message || '가입 신청 실패');
         }
-    }
+    },
+
+    reset: () => set({ myChannels: [], searchResults: [], currentChannel: null, isLoading: false })
 }));
 
 export default useChannelStore;
