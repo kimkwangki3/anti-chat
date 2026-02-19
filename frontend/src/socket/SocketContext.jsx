@@ -16,6 +16,17 @@ export const SocketProvider = ({ children }) => {
     const { addNotification, incrementUnreadCount, removeNotification, notifications } = useNotificationStore();
     const [onlineCount, setOnlineCount] = useState(0);
 
+    // 알림음 재생 함수
+    const playNotificationSound = () => {
+        try {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(e => console.log('[SOUND] Audio play blocked by browser policy:', e));
+        } catch (error) {
+            console.error('[SOUND] Audio play error:', error);
+        }
+    };
+
     useEffect(() => {
         if (user) {
             socket.connect();
@@ -35,6 +46,7 @@ export const SocketProvider = ({ children }) => {
                     path: `/notices?channelId=${notice.channelId}`
                 });
                 incrementUnreadCount(notice.channelId, 'notice');
+                playNotificationSound();
             });
 
             socket.on('post_received', (post) => {
@@ -48,6 +60,7 @@ export const SocketProvider = ({ children }) => {
                     path: `/board?channelId=${post.channelId}`
                 });
                 incrementUnreadCount(post.channelId, 'post');
+                playNotificationSound();
             });
 
             socket.on('chat_notification', (data) => {
@@ -61,6 +74,7 @@ export const SocketProvider = ({ children }) => {
                     path: `/chat?channelId=${data.channelId}`
                 });
                 incrementUnreadCount(data.channelId, 'chat');
+                playNotificationSound();
             });
 
             return () => {
