@@ -53,7 +53,7 @@ const AdminMemberManagement = () => {
                 channelId: channelId
             });
             setCurrentRoom(res.data);
-            navigate(`/chat?channelId=${channelId}`);
+            navigate(`/chat?channelId=${channelId}&roomId=${res.data._id}`);
         } catch (error) {
             alert('채팅방 연결 실패: ' + (error.response?.data?.message || error.message));
         }

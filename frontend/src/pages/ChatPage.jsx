@@ -17,6 +17,7 @@ const ChatPage = () => {
 
     const queryParams = new URLSearchParams(location.search);
     const channelId = queryParams.get('channelId');
+    const roomId = queryParams.get('roomId');
 
     useEffect(() => {
         const initChat = async () => {
@@ -31,10 +32,15 @@ const ChatPage = () => {
     }, [channelId, fetchRooms, resetUnreadCount]);
 
     useEffect(() => {
-        if (user?.role === 'member' && rooms.length === 1 && !currentRoom) {
+        if (roomId && rooms.length > 0) {
+            const targetRoom = rooms.find(r => r._id === roomId);
+            if (targetRoom && currentRoom?._id !== roomId) {
+                setCurrentRoom(targetRoom);
+            }
+        } else if (user?.role === 'member' && rooms.length === 1 && !currentRoom) {
             setCurrentRoom(rooms[0]);
         }
-    }, [rooms, user, currentRoom, setCurrentRoom]);
+    }, [rooms, user, currentRoom, setCurrentRoom, roomId]);
 
     useEffect(() => {
         if (!socket.connected) {
