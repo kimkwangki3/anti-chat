@@ -20,7 +20,7 @@ const SettingsPage = () => {
     ];
 
     return (
-        <div className="min-h-full bg-[#1a1a24] p-6 md:p-12 overflow-y-auto custom-scrollbar">
+        <div className="h-full bg-[#1a1a24] p-6 md:p-12 overflow-y-auto custom-scrollbar">
             {/* Header */}
             <div className="max-w-2xl mx-auto mb-12 flex items-center justify-between">
                 <div>

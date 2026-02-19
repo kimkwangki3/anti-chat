@@ -46,7 +46,7 @@ const BoardPage = () => {
     const isAdmin = user?.role === 'admin' && currentChannel?.ownerId?._id === user?._id;
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto">
+        <div className="h-full bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto custom-scrollbar">
             <div className="max-w-6xl mx-auto">
                 <header className="flex justify-between items-center mb-12">
                     <div>
