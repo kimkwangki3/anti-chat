@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@layer base {
+    :root {
+        --primary-orange: #FF9500;
+        --primary-orange-light: #FFB347;
+        --primary-orange-dark: #E68600;
+        --kakao-bg: #1a1a24;
+        --kakao-bubble-me: #FF9500;
+        --kakao-bubble-other: #2a2a3a;
+    }
+
+    body {
+        @apply bg-[#1a1a24] text-[#e8e8f0] antialiased;
+        font-family: 'Inter', 'Pretendard', sans-serif;
+    }
+}
+
+@layer components {
+    .orange-gradient {
+        background: linear-gradient(135deg, #FF9500 0%, #FF5E00 100%);
+    }
+
+    .glass-card {
+        @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        @apply bg-white/10 rounded-full hover:bg-white/20;
+    }
+}

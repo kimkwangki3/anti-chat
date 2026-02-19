@@ -1,0 +1,17 @@
+# Common
+node_modules/
+.DS_Store
+.env
+.env.local
+dist/
+build/
+
+# Backend
+backend/.env
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Frontend
+frontend/dist/
+frontend/.env
+frontend/.env.local
