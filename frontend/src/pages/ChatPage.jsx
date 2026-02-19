@@ -101,7 +101,9 @@ const ChatPage = () => {
                                 </button>
                                 <div>
                                     <h2 className="text-sm md:text-lg font-bold text-white tracking-tight">
-                                        {user?.role === 'admin' ? currentRoom.memberId?.name : currentRoom.adminId?.name}
+                                        {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
+                                            ? currentRoom.memberId?.name
+                                            : currentRoom.adminId?.name}
                                     </h2>
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full shadow-[0_0_8px_rgba(6,214,160,0.5)]"></span>

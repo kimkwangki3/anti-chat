@@ -131,9 +131,10 @@ const ChatSidebar = () => {
                     </div>
                 ) : (
                     rooms.map((room) => {
-                        const otherUser = user?.role === 'admin' ? room.memberId : room.adminId;
+                        const isUserAdmin = user?._id === room.adminId?._id || user?._id === room.adminId;
+                        const otherUser = isUserAdmin ? room.memberId : room.adminId;
                         const isActive = currentRoom?._id === room._id;
-                        const unreadCount = user?.role === 'admin' ? room.unreadCountAdmin : room.unreadCountMember;
+                        const unreadCount = isUserAdmin ? room.unreadCountAdmin : room.unreadCountMember;
                         const isOnline = otherUser?.isOnline;
 
                         return (

@@ -100,10 +100,11 @@ router.post('/rooms', protect, async (req, res) => {
 router.get('/rooms', protect, async (req, res) => {
     const { channelId } = req.query;
     try {
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
         let query = {};
-        if (req.user.role === 'admin') {
+        if (isAdmin) {
             query.adminId = req.user._id;
-            query.adminVisible = { $ne: false }; // false가 아닌 모든 경우(true 또는 undefined) 포함
+            query.adminVisible = { $ne: false };
         } else {
             query.memberId = req.user._id;
             query.memberVisible = { $ne: false };
@@ -128,7 +129,8 @@ router.get('/rooms', protect, async (req, res) => {
 // @desc    채팅방 읽음 처리
 router.put('/rooms/:id/read', protect, async (req, res) => {
     try {
-        const update = req.user.role === 'admin'
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const update = isAdmin
             ? { unreadCountAdmin: 0 }
             : { unreadCountMember: 0 };
 
@@ -143,7 +145,8 @@ router.put('/rooms/:id/read', protect, async (req, res) => {
 // @desc    채팅방 숨기기
 router.put('/rooms/:id/hide', protect, async (req, res) => {
     try {
-        const update = req.user.role === 'admin'
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const update = isAdmin
             ? { adminVisible: false }
             : { memberVisible: false };
 

@@ -36,13 +36,17 @@ const MessageList = () => {
                         >
                             {!isMe && (
                                 <div className={`w-9 h-9 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-[11px] font-black text-[#6b6b8a] flex-shrink-0 mb-1 ${!showAvatar && 'invisible'}`}>
-                                    {user?.role === 'admin' ? currentRoom.memberId?.name?.[0] : currentRoom.adminId?.name?.[0]}
+                                    {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
+                                        ? currentRoom.memberId?.name?.[0]
+                                        : currentRoom.adminId?.name?.[0]}
                                 </div>
                             )}
                             <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%]`}>
                                 {!isMe && showAvatar && (
                                     <span className="text-[9px] font-black text-[#5a5a6a] mb-1.5 ml-1 uppercase tracking-widest font-mono italic leading-none">
-                                        {user?.role === 'admin' ? currentRoom.memberId?.name : currentRoom.adminId?.name}
+                                        {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
+                                            ? currentRoom.memberId?.name
+                                            : currentRoom.adminId?.name}
                                     </span>
                                 )}
                                 <div className={`relative px-4 py-3 md:px-6 md:py-4 rounded-2xl md:rounded-[2rem] text-xs md:text-[13px] leading-relaxed shadow-xl transition-all ${isMe
