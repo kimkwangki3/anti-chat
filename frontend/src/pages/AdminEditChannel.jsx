@@ -74,7 +74,7 @@ const AdminEditChannel = () => {
                     <div className="space-y-4">
                         <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic">Channel Identity</label>
                         <div className="relative group/input">
-                            <div className="absolute -inset-0.5 orange-gradient rounded-2xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500"></div>
+                            <div className="absolute -inset-0.5 orange-gradient rounded-2xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500 pointer-events-none"></div>
                             <input
                                 type="text"
                                 required
@@ -89,7 +89,7 @@ const AdminEditChannel = () => {
                     <div className="space-y-4">
                         <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic">Channel Story</label>
                         <div className="relative group/input">
-                            <div className="absolute -inset-0.5 orange-gradient rounded-3xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500"></div>
+                            <div className="absolute -inset-0.5 orange-gradient rounded-3xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500 pointer-events-none"></div>
                             <textarea
                                 required
                                 value={formData.description}

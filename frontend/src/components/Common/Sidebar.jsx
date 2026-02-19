@@ -13,7 +13,7 @@ const Sidebar = () => {
     const counts = unreadCounts[currentChannel?._id] || { notice: 0, post: 0, chat: 0 };
 
     const menuItems = [
-        { id: 'dashboard', label: '홈', icon: '🏠', path: '/' },
+        { id: 'dashboard', label: '홈', icon: '🏠', path: '/', hidden: user?.role === 'admin' },
         { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${currentChannel?._id}`, count: counts.notice, hidden: !currentChannel },
         { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${currentChannel?._id}`, count: counts.post, hidden: !currentChannel },
         { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${currentChannel?._id}`, count: counts.chat, hidden: !currentChannel },
@@ -21,7 +21,6 @@ const Sidebar = () => {
 
     const adminMenuItems = [
         { id: 'members', label: '멤버 관리', icon: '👥', path: `/admin/members?channelId=${currentChannel?._id}` },
-        { id: 'edit', label: '채널 설정', icon: '⚙️', path: `/admin/edit-channel?channelId=${currentChannel?._id}` },
     ];
 
     return (
