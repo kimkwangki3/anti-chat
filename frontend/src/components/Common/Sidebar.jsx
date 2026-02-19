@@ -13,7 +13,7 @@ const Sidebar = () => {
     const counts = unreadCounts[currentChannel?._id] || { notice: 0, post: 0, chat: 0 };
 
     const menuItems = [
-        { id: 'dashboard', label: '홈', icon: '🏠', path: '/', hidden: user?.role === 'admin' },
+        { id: 'dashboard', label: '홈', icon: '🏠', path: '/' },
         { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${currentChannel?._id}`, count: counts.notice, hidden: !currentChannel },
         { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${currentChannel?._id}`, count: counts.post, hidden: !currentChannel },
         { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${currentChannel?._id}`, count: counts.chat, hidden: !currentChannel },
@@ -21,6 +21,7 @@ const Sidebar = () => {
 
     const adminMenuItems = [
         { id: 'members', label: '멤버 관리', icon: '👥', path: `/admin/members?channelId=${currentChannel?._id}` },
+        { id: 'edit', label: '채널 설정', icon: '⚙️', path: `/admin/edit-channel?channelId=${currentChannel?._id}` },
     ];
 
     return (
@@ -72,7 +73,7 @@ const Sidebar = () => {
                     </div>
                 </div>
 
-                {user?.role === 'admin' && (
+                {(user?.role === 'admin' || user?.role === 'superadmin') && currentChannel && (
                     <div className="px-4 mt-8">
                         <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-4">Admin Suite</p>
                         <div className="space-y-2">
