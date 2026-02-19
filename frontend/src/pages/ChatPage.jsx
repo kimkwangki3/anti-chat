@@ -32,13 +32,15 @@ const ChatPage = () => {
     }, [channelId, fetchRooms, resetUnreadCount]);
 
     useEffect(() => {
-        if (roomId && rooms.length > 0) {
-            const targetRoom = rooms.find(r => r._id === roomId);
-            if (targetRoom && currentRoom?._id !== roomId) {
-                setCurrentRoom(targetRoom);
+        if (rooms.length > 0) {
+            if (roomId) {
+                const targetRoom = rooms.find(r => r._id === roomId);
+                if (targetRoom && currentRoom?._id !== targetRoom._id) {
+                    setCurrentRoom(targetRoom);
+                }
+            } else if (user?.role === 'member' && rooms.length === 1 && !currentRoom) {
+                setCurrentRoom(rooms[0]);
             }
-        } else if (user?.role === 'member' && rooms.length === 1 && !currentRoom) {
-            setCurrentRoom(rooms[0]);
         }
     }, [rooms, user, currentRoom, setCurrentRoom, roomId]);
 

@@ -103,10 +103,10 @@ router.get('/rooms', protect, async (req, res) => {
         let query = {};
         if (req.user.role === 'admin') {
             query.adminId = req.user._id;
-            query.adminVisible = true;
+            query.adminVisible = { $ne: false }; // false가 아닌 모든 경우(true 또는 undefined) 포함
         } else {
             query.memberId = req.user._id;
-            query.memberVisible = true;
+            query.memberVisible = { $ne: false };
         }
 
         if (channelId) {
