@@ -103,6 +103,30 @@ const socketHandler = (io) => {
                         content: content.substring(0, 20),
                         channelId: channelId || room.channelId
                     });
+
+                    // 웹 푸시 발송 (백그라운드 알림용)
+                    const webpush = require('web-push');
+                    const PushSubscription = require('../models/PushSubscription');
+                    const sub = await PushSubscription.findOne({ userId: recipientId });
+
+                    if (sub && sub.subscription) {
+                        try {
+                            await webpush.sendNotification(
+                                sub.subscription,
+                                JSON.stringify({
+                                    title: `${user?.name}님의 새로운 메시지 🍑`,
+                                    body: content.length > 50 ? content.substring(0, 50) + '...' : content,
+                                    url: `/chat?channelId=${channelId || room.channelId}`
+                                })
+                            );
+                            console.log(`[PUSH] Sent to user: ${recipientId}`);
+                        } catch (error) {
+                            console.error('[PUSH] Failed to send notification:', error);
+                            if (error.statusCode === 410) { // 만료된 구독 처리
+                                await PushSubscription.deleteOne({ userId: recipientId });
+                            }
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('[SOCKET] 메시지 전송 에러:', error);

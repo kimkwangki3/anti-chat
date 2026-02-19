@@ -122,12 +122,37 @@ const SettingsPage = () => {
                             {Notification.permission !== 'granted' && (
                                 <button
                                     onClick={async () => {
-                                        const permission = await Notification.requestPermission();
-                                        if (permission === 'granted') {
-                                            alert('상큼하게 알림 허용이 완료되었습니다! 🍑');
-                                            window.location.reload();
-                                        } else {
-                                            alert('알림을 허용해주셔야 채팅 소식을 실시간으로 받을 수 있어요. 🔔');
+                                        try {
+                                            const permission = await Notification.requestPermission();
+                                            if (permission === 'granted') {
+                                                const registration = await navigator.serviceWorker.ready;
+                                                const response = await fetch('/api/push/vapid-key');
+                                                const { publicKey } = await response.json();
+
+                                                const subscription = await registration.pushManager.subscribe({
+                                                    userVisibleOnly: true,
+                                                    applicationServerKey: publicKey
+                                                });
+
+                                                const saveRes = await fetch('/api/push/subscribe', {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Authorization': `Bearer ${localStorage.getItem('anti-auth-token')}`
+                                                    },
+                                                    body: JSON.stringify({ subscription })
+                                                });
+
+                                                if (saveRes.ok) {
+                                                    alert('상큼하게 알림 구독이 완료되었습니다! 🍑');
+                                                    window.location.reload();
+                                                }
+                                            } else {
+                                                alert('알림을 허용해주셔야 채팅 소식을 실시간으로 받을 수 있어요. 🔔');
+                                            }
+                                        } catch (err) {
+                                            console.error('Push subscription failed:', err);
+                                            alert('알림 구독 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
                                         }
                                     }}
                                     className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
