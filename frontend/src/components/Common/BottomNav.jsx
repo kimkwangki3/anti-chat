@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 import useChannelStore from '../../store/channelStore';
 import useNotificationStore from '../../store/notificationStore';
 
