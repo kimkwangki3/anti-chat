@@ -61,8 +61,8 @@ const SettingsPage = () => {
                                 key={option.id}
                                 onClick={() => { setSoundType(option.id); playPreview(option.id); }}
                                 className={`w-full p-5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group ${soundType === option.id
-                                        ? 'bg-[#FF9500]/10 border-[#FF9500]/30 text-white'
-                                        : 'bg-white/5 border-transparent text-[#6b6b8a] hover:bg-white/10'
+                                    ? 'bg-[#FF9500]/10 border-[#FF9500]/30 text-white'
+                                    : 'bg-white/5 border-transparent text-[#6b6b8a] hover:bg-white/10'
                                     }`}
                             >
                                 <div className="flex items-center gap-4">
@@ -104,6 +104,42 @@ const SettingsPage = () => {
                     >
                         테스트 재생하기
                     </button>
+                </section>
+
+                {/* Notification Permission Section */}
+                <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
+                    <h3 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-[#FF9500] rounded-full animate-bounce"></span> Push Notifications
+                    </h3>
+                    <div className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/5">
+                            <div>
+                                <p className="text-sm font-bold text-white mb-1">브라우저 알림 권한</p>
+                                <p className="text-[10px] text-[#6b6b8a] uppercase tracking-wider font-mono">
+                                    현재 상태: {Notification.permission === 'granted' ? '✅ 허용됨' : Notification.permission === 'denied' ? '❌ 거부됨' : '❓ 확인 필요'}
+                                </p>
+                            </div>
+                            {Notification.permission !== 'granted' && (
+                                <button
+                                    onClick={async () => {
+                                        const permission = await Notification.requestPermission();
+                                        if (permission === 'granted') {
+                                            alert('상큼하게 알림 허용이 완료되었습니다! 🍑');
+                                            window.location.reload();
+                                        } else {
+                                            alert('알림을 허용해주셔야 채팅 소식을 실시간으로 받을 수 있어요. 🔔');
+                                        }
+                                    }}
+                                    className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
+                                >
+                                    알림 허용하기
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-[11px] text-[#444466] leading-relaxed italic">
+                            💡 **아이폰 사용 시**: 반드시 하단 '공유' 버튼을 눌러 **[홈 화면에 추가]**를 먼저 진행한 후, 홈 화면의 아이콘으로 접속해야 알림을 받을 수 있습니다.
+                        </p>
+                    </div>
                 </section>
 
                 {/* Account Actions */}

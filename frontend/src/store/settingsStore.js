@@ -6,6 +6,7 @@ const useSettingsStore = create(
         (set) => ({
             soundType: 'orange',
             volume: 0.5,
+            notificationPermission: Notification.permission,
 
             sounds: {
                 orange: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
@@ -15,6 +16,7 @@ const useSettingsStore = create(
 
             setSoundType: (type) => set({ soundType: type }),
             setVolume: (val) => set({ volume: val }),
+            setNotificationPermission: (perm) => set({ notificationPermission: perm }),
         }),
         {
             name: 'anti-settings',
