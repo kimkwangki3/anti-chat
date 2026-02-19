@@ -72,54 +72,68 @@ const ChatPage = () => {
     }
 
     return (
-        <div className="flex h-full bg-[#1a1a24] overflow-hidden">
-            <ChatSidebar />
-            <div className="flex-1 flex flex-col min-w-0 bg-[#1a1a24] relative shadow-2xl">
+        <div className="flex h-full bg-[#1a1a24] overflow-hidden relative">
+            {/* PC: 항상 보임 / 모바일: 방 선택 안됐을 때만 보임 */}
+            <div className={`w-full md:w-80 h-full ${currentRoom ? 'hidden md:block' : 'block'}`}>
+                <ChatSidebar />
+            </div>
+
+            {/* PC: 남은 영역 / 모바일: 방 선택 됐을 때만 보임 (전체화면) */}
+            <div className={`flex-1 flex flex-col min-w-0 bg-[#1a1a24] relative shadow-2xl ${!currentRoom ? 'hidden md:flex' : 'flex'}`}>
                 {currentRoom ? (
                     <>
-                        <div className="h-20 flex-shrink-0 bg-[#1a1a24]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 z-10">
-                            <div>
-                                <h2 className="text-lg font-bold text-white tracking-tight">
-                                    {user?.role === 'admin' ? currentRoom.memberId?.name : currentRoom.adminId?.name}
-                                </h2>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full shadow-[0_0_8px_rgba(6,214,160,0.5)]"></span>
-                                    <span className="text-[9px] font-bold text-[#06d6a0] uppercase tracking-[0.2em] font-mono leading-none">ACTIVE SESSION</span>
+                        <div className="h-16 md:h-20 flex-shrink-0 bg-[#1a1a24]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 md:px-8 z-10">
+                            <div className="flex items-center gap-3">
+                                {/* 모바일 뒤로가기 버튼 */}
+                                <button
+                                    onClick={() => setCurrentRoom(null)}
+                                    className="md:hidden w-10 h-10 flex items-center justify-center text-white"
+                                >
+                                    <span className="text-xl">←</span>
+                                </button>
+                                <div>
+                                    <h2 className="text-sm md:text-lg font-bold text-white tracking-tight">
+                                        {user?.role === 'admin' ? currentRoom.memberId?.name : currentRoom.adminId?.name}
+                                    </h2>
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full shadow-[0_0_8px_rgba(6,214,160,0.5)]"></span>
+                                        <span className="text-[8px] md:text-[9px] font-bold text-[#06d6a0] uppercase tracking-[0.2em] font-mono leading-none">ACTIVE</span>
+                                    </div>
                                 </div>
                             </div>
 
                             {user.role === 'admin' && (
                                 <button
                                     onClick={() => navigate(`/admin/members?channelId=${channelId}`)}
-                                    className="px-5 py-2.5 bg-[#FF9500]/10 text-[#FF9500] text-[10px] font-bold rounded-xl border border-[#FF9500]/20 hover:bg-[#FF9500] hover:text-white transition-all uppercase tracking-widest shadow-lg shadow-[#FF9500]/5"
+                                    className="px-3 py-2 md:px-5 md:py-2.5 bg-[#FF9500]/10 text-[#FF9500] text-[9px] md:text-[10px] font-bold rounded-xl border border-[#FF9500]/20 hover:bg-[#FF9500] hover:text-white transition-all uppercase tracking-widest"
                                 >
-                                    멤버 관리
+                                    관리
                                 </button>
                             )}
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-[radial-gradient(circle_at_center,rgba(255,149,0,0.02),transparent)]">
+                        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
                             <MessageList />
                         </div>
 
-                        <div className="p-6 flex-shrink-0 bg-[#1a1a24] border-t border-white/5">
-                            <form onSubmit={handleSend} className="max-w-5xl mx-auto flex gap-4 items-end">
+                        <div className="p-4 md:p-6 flex-shrink-0 bg-[#1a1a24] border-t border-white/5">
+                            <form onSubmit={handleSend} className="max-w-5xl mx-auto flex gap-3 items-end">
                                 <div className="relative flex-1 group">
-                                    <div className="absolute -inset-1 orange-gradient rounded-3xl blur opacity-[0.05] group-focus-within:opacity-20 transition duration-500 pointer-events-none"></div>
+                                    <div className="absolute -inset-1 orange-gradient rounded-2xl blur opacity-[0.05] group-focus-within:opacity-20 transition duration-500 pointer-events-none"></div>
                                     <input
                                         type="text"
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
-                                        placeholder="따뜻한 메시지를 전해보세요..."
-                                        className="relative z-10 w-full bg-[#23232f] border border-white/5 rounded-2xl px-8 py-5 text-sm text-white focus:outline-none focus:border-[#FF9500]/30 transition-all shadow-2xl placeholder:text-[#3a3a4a]"
+                                        placeholder="메시지를 입력하세요..."
+                                        className="relative z-10 w-full bg-[#23232f] border border-white/5 rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-[#FF9500]/30 transition-all shadow-xl placeholder:text-[#3a3a4a]"
                                     />
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={!input.trim()}
-                                    className="h-[52px] px-8 orange-gradient text-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#FF9500]/20 transition-all font-bold uppercase text-xs tracking-widest disabled:opacity-20 active:scale-95"
+                                    className="h-[48px] px-6 orange-gradient text-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#FF9500]/20 transition-all font-bold uppercase text-[10px] tracking-widest disabled:opacity-20"
                                 >
-                                    전송
+                                    보내기
                                 </button>
                             </form>
                         </div>

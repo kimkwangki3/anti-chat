@@ -39,20 +39,20 @@ const MessageList = () => {
                                     {user?.role === 'admin' ? currentRoom.memberId?.name?.[0] : currentRoom.adminId?.name?.[0]}
                                 </div>
                             )}
-                            <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[80%]`}>
+                            <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%]`}>
                                 {!isMe && showAvatar && (
-                                    <span className="text-[10px] font-black text-[#5a5a6a] mb-2 ml-1 uppercase tracking-widest font-mono italic leading-none">
+                                    <span className="text-[9px] font-black text-[#5a5a6a] mb-1.5 ml-1 uppercase tracking-widest font-mono italic leading-none">
                                         {user?.role === 'admin' ? currentRoom.memberId?.name : currentRoom.adminId?.name}
                                     </span>
                                 )}
-                                <div className={`relative px-6 py-4 rounded-[2rem] text-[13px] leading-relaxed shadow-xl transition-all hover:scale-[1.01] ${isMe
+                                <div className={`relative px-4 py-3 md:px-6 md:py-4 rounded-2xl md:rounded-[2rem] text-xs md:text-[13px] leading-relaxed shadow-xl transition-all ${isMe
                                     ? 'bg-[#FF9500] text-white rounded-tr-none shadow-[#FF9500]/10'
                                     : 'bg-[#2a2a3a] text-[#e8e8f0] border border-white/5 rounded-tl-none shadow-black/20'
                                     }`}>
                                     {msg.content}
                                 </div>
                                 {showTime && (
-                                    <span className={`text-[8px] font-bold font-mono mt-2 text-[#3a3a4a] uppercase tracking-tighter italic ${isMe ? 'text-right mr-2' : 'ml-2'}`}>
+                                    <span className={`text-[7px] md:text-[8px] font-bold font-mono mt-1.5 text-[#3a3a4a] uppercase tracking-tighter italic ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
                                         {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
                                 )}
