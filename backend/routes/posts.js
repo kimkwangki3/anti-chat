@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const { protect, admin } = require('../middleware/authMiddleware');
+const { sendPushToChannelMembers } = require('../utils/pushService');
 
 // @route   POST /api/posts
 // @desc    Create a post (Admin only)
@@ -25,6 +26,14 @@ router.post('/', protect, admin, async (req, res) => {
                 authorName: req.user.name
             });
         }
+
+        // 게시글 웹 푸시 발송
+        await sendPushToChannelMembers(channelId, req.user._id, {
+            title: `📋 새 게시글: ${title}`,
+            body: '채널에 새로운 게시글이 올라왔습니다.',
+            url: `/board?channelId=${channelId}`,
+            tag: 'post'
+        });
 
         res.status(201).json(post);
     } catch (error) {

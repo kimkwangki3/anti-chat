@@ -3,6 +3,7 @@ const router = express.Router();
 const ChannelMember = require('../models/ChannelMember');
 const Channel = require('../models/Channel');
 const { protect, admin } = require('../middleware/authMiddleware');
+const { sendPushNotification } = require('../utils/pushService');
 
 // @route   POST /api/channel-members/join
 // @desc    채널 가입 신청
@@ -31,6 +32,14 @@ router.post('/join', protect, async (req, res) => {
                 userId: req.user._id,
                 userName: req.user.name,
                 memberId: member._id
+            });
+
+            // 관리자에게 웹 푸시 발송
+            await sendPushNotification(channel.ownerId, {
+                title: '👥 신규 가입 신청',
+                body: `${channel.name} 채널에 ${req.user.name}님이 가입을 신청했습니다.`,
+                url: `/admin/members?channelId=${channelId}`,
+                tag: 'member'
             });
         }
 

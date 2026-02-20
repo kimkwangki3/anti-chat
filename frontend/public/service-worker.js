@@ -66,7 +66,7 @@ self.addEventListener('push', function (event) {
             icon: '/vite.svg',
             badge: '/vite.svg',
             vibrate: [100, 50, 100],
-            tag: 'chat-notification',  // 같은 태그면 기존 알림 대체 (중복 방지)
+            tag: data.tag || 'general-notification',
             renotify: true,
             data: {
                 url: data.url || '/'

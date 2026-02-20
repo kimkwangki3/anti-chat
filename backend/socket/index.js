@@ -2,6 +2,7 @@ const Message = require('../models/Message');
 const ChatRoom = require('../models/ChatRoom');
 const User = require('../models/User');
 const { writeChatLog, writeAuthLog } = require('../utils/logService');
+const { sendPushNotification, sendPushToChannelMembers } = require('../utils/pushService');
 
 const socketHandler = (io) => {
     io.on('connection', (socket) => {
@@ -62,9 +63,17 @@ const socketHandler = (io) => {
         });
 
         // 새로운 공지사항 생성 알림
-        socket.on('new_notice', (data) => {
+        socket.on('new_notice', async (data) => {
             const { channelId, notice } = data;
             socket.to(`channel_${channelId}`).emit('notice_received', notice);
+
+            // 공지사항 웹 푸시 발송
+            await sendPushToChannelMembers(channelId, socket.userId, {
+                title: `📢 새 공지사항: ${notice.title}`,
+                body: '채널에 새로운 공지사항이 등록되었습니다.',
+                url: `/notices?channelId=${channelId}`,
+                tag: 'notice'
+            });
         });
 
         // 메시지 전송 (파일 기록 추가)
@@ -144,29 +153,13 @@ const socketHandler = (io) => {
                         channelId: channelId || room.channelId
                     });
 
-                    // 웹 푸시 발송 (백그라운드 알림용)
-                    const webpush = require('web-push');
-                    const PushSubscription = require('../models/PushSubscription');
-                    const sub = await PushSubscription.findOne({ userId: recipientId });
-
-                    if (sub && sub.subscription) {
-                        try {
-                            await webpush.sendNotification(
-                                sub.subscription,
-                                JSON.stringify({
-                                    title: `${user?.name}님의 새로운 메시지 🍑`,
-                                    body: content.length > 50 ? content.substring(0, 50) + '...' : content,
-                                    url: `/chat?channelId=${channelId || room.channelId}`
-                                })
-                            );
-                            console.log(`[PUSH] Sent to user: ${recipientId}`);
-                        } catch (error) {
-                            console.error('[PUSH] Failed to send notification:', error);
-                            if (error.statusCode === 410) { // 만료된 구독 처리
-                                await PushSubscription.deleteOne({ userId: recipientId });
-                            }
-                        }
-                    }
+                    // 웹 푸시 발송 (백그라운드 알림용) - pushService 사용
+                    await sendPushNotification(recipientId, {
+                        title: `${user?.name}님의 새로운 메시지 🍑`,
+                        body: content.length > 50 ? content.substring(0, 50) + '...' : content,
+                        url: `/chat?channelId=${channelId || room.channelId}&roomId=${roomId}`,
+                        tag: `chat-${roomId}`
+                    });
                 }
             } catch (error) {
                 console.error('[SOCKET] 메시지 전송 에러:', error);
