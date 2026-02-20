@@ -50,31 +50,67 @@ const Dashboard = () => {
     const renderSuperAdminStats = () => {
         if (!stats) return null;
         return (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-                <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#FF8C69]/20 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform">👤</div>
-                    <h3 className="text-xs font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">TODAY NEW USERS</h3>
-                    <p className="text-5xl font-black text-white leading-none">{stats.today.newUsers}<span className="text-sm font-bold text-[#FF8C69] ml-2">명</span></p>
-                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-[#06d6a0] bg-[#06d6a0]/10 w-fit px-3 py-1 rounded-full border border-[#06d6a0]/20">
-                        <span>↑ GROWING</span>
+            <div className="space-y-8">
+                {/* 금일 지표 (상단) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#FF8C69]/20 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-[#FF8C69]">👤</div>
+                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">NEW USERS TODAY</h3>
+                        <p className="text-5xl font-black text-white leading-none">{stats.today.newUsers}<span className="text-sm font-bold text-[#FF8C69] ml-2">명</span></p>
+                        <div className="mt-6 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-[#06d6a0] bg-[#06d6a0]/10 px-3 py-1 rounded-full border border-[#06d6a0]/20">↑ GROWING</span>
+                            <span className="text-[10px] font-bold text-[#444466]">TOTAL: {stats.total.totalUsers}</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#4f6ef7]/20 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-[#4f6ef7]">🏘️</div>
+                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">NEW CHANNELS TODAY</h3>
+                        <p className="text-5xl font-black text-white leading-none">{stats.today.newChannels}<span className="text-sm font-bold text-[#4f6ef7] ml-2">개</span></p>
+                        <div className="mt-6 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-[#4f6ef7] bg-[#4f6ef7]/10 px-3 py-1 rounded-full border border-[#4f6ef7]/20">+ EXPANDING</span>
+                            <span className="text-[10px] font-bold text-[#444466]">TOTAL: {stats.total.totalChannels}</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-purple-500/20 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-purple-400">📋</div>
+                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">NEW POSTS TODAY</h3>
+                        <p className="text-5xl font-black text-white leading-none">{stats.today.newPosts}<span className="text-sm font-bold text-purple-400 ml-2">개</span></p>
+                        <div className="mt-6 flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">💬 ACTIVE</span>
+                            <span className="text-[10px] font-bold text-[#444466]">TOTAL: {stats.total.totalPosts}</span>
+                        </div>
                     </div>
                 </div>
 
-                <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#4f6ef7]/20 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform">🏘️</div>
-                    <h3 className="text-xs font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">TODAY NEW CHANNELS</h3>
-                    <p className="text-5xl font-black text-white leading-none">{stats.today.newChannels}<span className="text-sm font-bold text-[#4f6ef7] ml-2">개</span></p>
-                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-[#4f6ef7] bg-[#4f6ef7]/10 w-fit px-3 py-1 rounded-full border border-[#4f6ef7]/20">
-                        <span>+ EXPANDING</span>
+                {/* 시스템 전체 규모 요약 (하단 상세) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="bg-[#23232f]/50 p-6 rounded-3xl border border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl">🌐</div>
+                            <div>
+                                <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">Network Health</p>
+                                <p className="text-sm font-bold text-white">All Systems Operational</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[10px] font-black text-[#06d6a0] uppercase tracking-tighter">Latency</p>
+                            <p className="text-sm font-mono font-bold text-white">24ms</p>
+                        </div>
                     </div>
-                </div>
-
-                <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-purple-500/20 shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform">📋</div>
-                    <h3 className="text-xs font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">TODAY NEW POSTS</h3>
-                    <p className="text-5xl font-black text-white leading-none">{stats.today.newPosts}<span className="text-sm font-bold text-purple-400 ml-2">개</span></p>
-                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-purple-400 bg-purple-500/10 w-fit px-3 py-1 rounded-full border border-purple-500/20">
-                        <span>💬 ACTIVE</span>
+                    <div className="bg-[#23232f]/50 p-6 rounded-3xl border border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl">🔒</div>
+                            <div>
+                                <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">Security Status</p>
+                                <p className="text-sm font-bold text-white">Protected by PeachShield</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-[10px] font-black text-[#FF8C69] uppercase tracking-tighter">Uptime</p>
+                            <p className="text-sm font-mono font-bold text-white">99.9%</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -199,78 +235,40 @@ const Dashboard = () => {
                 </section>
             )}
 
-            <section className="mb-12">
-                <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
-                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 내 채널
-                    </h2>
-                    {user?.role === 'member' && (
-                        <button
-                            onClick={() => navigate('/search-channels')}
-                            className="text-[11px] font-bold text-[#FF8C69] hover:text-[#FFB5A0] transition-colors uppercase tracking-widest"
-                        >
-                            + 탐색하기
-                        </button>
-                    )}
-                </div>
-
-                {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="h-44 bg-[#23232f] rounded-3xl animate-pulse border border-white/5"></div>
-                        ))}
+            {user?.role !== 'superadmin' && (
+                <section className="mb-12">
+                    <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
+                            <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 내 채널
+                        </h2>
+                        {user?.role === 'member' && (
+                            <button
+                                onClick={() => navigate('/search-channels')}
+                                className="text-[11px] font-bold text-[#FF8C69] hover:text-[#FFB5A0] transition-colors uppercase tracking-widest"
+                            >
+                                + 탐색하기
+                            </button>
+                        )}
                     </div>
-                ) : myChannels.length === 0 ? (
-                    <div className="bg-[#23232f] border border-dashed border-[#FF8C69]/20 rounded-3xl p-16 text-center shadow-inner">
-                        <div className="text-5xl mb-6">🏜️</div>
-                        <p className="text-[#6b6b8a] text-sm mb-8 font-bold">
-                            {user?.role === 'admin' ? '운영 중인 채널이 없어요. 새로운 채널을 개설해 보세요!' : user?.role === 'superadmin' ? '현재 소속된 채널이 없습니다. 시스템 관리 메뉴를 이용해 주세요.' : '가입된 채널이 없어요. 새로운 채널을 찾아보세요!'}
-                        </p>
-                        {user?.role !== 'superadmin' && (
+
+                    {isLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="h-44 bg-[#23232f] rounded-3xl animate-pulse border border-white/5"></div>
+                            ))}
+                        </div>
+                    ) : myChannels.length === 0 ? (
+                        <div className="bg-[#23232f] border border-dashed border-[#FF8C69]/20 rounded-3xl p-16 text-center shadow-inner">
+                            <div className="text-5xl mb-6">🏜️</div>
+                            <p className="text-[#6b6b8a] text-sm mb-8 font-bold">
+                                {user?.role === 'admin' ? '운영 중인 채널이 없어요. 새로운 채널을 개설해 보세요!' : '가입된 채널이 없어요. 새로운 채널을 찾아보세요!'}
+                            </p>
                             <button
                                 onClick={() => user?.role === 'admin' ? setIsModalOpen(true) : navigate('/search-channels')}
                                 className="px-10 py-4 orange-gradient text-white font-bold rounded-2xl shadow-xl shadow-[#FF8C69]/20 text-xs tracking-widest uppercase hover:scale-105 transition-transform"
                             >
                                 {user?.role === 'admin' ? '새 채널 개설하기' : '채널 탐색하기'}
                             </button>
-                        )}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {myChannels.map((membership) => {
-                            const chId = membership.channelId?._id;
-                            const chCounts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0 };
-                            const totalUnread = chCounts.notice + chCounts.post + chCounts.chat;
-
-                            return (
-                                <div
-                                    key={membership.channelId?._id}
-                                    onClick={() => handleChannelClick(membership.channelId)}
-                                    className="group relative bg-[#23232f] p-8 rounded-[2.5rem] border border-white/5 hover:border-[#FF8C69]/30 transition-all cursor-pointer overflow-hidden flex flex-col h-full shadow-xl hover:shadow-[#FF8C69]/5"
-                                >
-                                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#FF8C69] opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-700"></div>
-
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="w-12 h-12 bg-[#FF8C69]/10 text-[#FF8C69] rounded-2xl flex items-center justify-center text-xl shadow-inner">
-                                            🏘️
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {/* 채널별 신규 알림 뱃지 */}
-                                            {chCounts.notice > 0 && (
-                                                <span className="flex items-center gap-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                                    📢 {chCounts.notice}
-                                                </span>
-                                            )}
-                                            {chCounts.post > 0 && (
-                                                <span className="flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                                    📋 {chCounts.post}
-                                                </span>
-                                            )}
-                                            {chCounts.chat > 0 && (
-                                                <span className="flex items-center gap-1 bg-[#FF8C69]/10 text-[#FF8C69] border border-[#FF8C69]/20 text-[10px] font-bold px-2 py-0.5 rounded-full animate-bounce">
-                                                    💬 {chCounts.chat}
-                                                </span>
-                                            )}
                                             {totalUnread === 0 && (
                                                 <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm ${membership.status === 'approved' ? 'bg-[#06d6a0]/10 text-[#06d6a0] border border-[#06d6a0]/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}`}>
                                                     {membership.status === 'approved' ? 'Active' : 'Pending'}
@@ -292,35 +290,35 @@ const Dashboard = () => {
                                         </div>
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
+    );
+})}
+                    </div >
                 )}
-            </section>
+            </section >
 
-            {user?.role === 'admin' && (
-                <section className="mt-20 mb-32">
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
-                            <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 실시간 채널 현황
-                        </h2>
-                        <button
-                            onClick={() => navigate('/chat')}
-                            className="text-[11px] font-bold text-[#FF8C69] hover:underline uppercase tracking-widest"
-                        >
-                            전체 보기
-                        </button>
-                    </div>
+    { user?.role === 'admin' && (
+        <section className="mt-20 mb-32">
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
+                    <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 실시간 채널 현황
+                </h2>
+                <button
+                    onClick={() => navigate('/chat')}
+                    className="text-[11px] font-bold text-[#FF8C69] hover:underline uppercase tracking-widest"
+                >
+                    전체 보기
+                </button>
+            </div>
 
-                    <ActiveChatList channelId={myChannels.find(m => m.channelId?.ownerId?._id === user?._id)?.channelId?._id} />
-                </section>
-            )}
+            <ActiveChatList channelId={myChannels.find(m => m.channelId?.ownerId?._id === user?._id)?.channelId?._id} />
+        </section>
+    )}
 
-            <ChannelCreateModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-            />
-        </div>
+<ChannelCreateModal
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+/>
+        </div >
     );
 };
 

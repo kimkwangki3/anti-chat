@@ -20,10 +20,13 @@ router.get('/stats', async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const [newUsers, newChannels, newPosts] = await Promise.all([
+        const [newUsers, newChannels, newPosts, totalUsers, totalChannels, totalPosts] = await Promise.all([
             User.countDocuments({ createdAt: { $gte: today } }),
             Channel.countDocuments({ createdAt: { $gte: today } }),
-            Post.countDocuments({ createdAt: { $gte: today } })
+            Post.countDocuments({ createdAt: { $gte: today } }),
+            User.countDocuments({}),
+            Channel.countDocuments({}),
+            Post.countDocuments({})
         ]);
 
         res.json({
@@ -31,6 +34,11 @@ router.get('/stats', async (req, res) => {
                 newUsers,
                 newChannels,
                 newPosts
+            },
+            total: {
+                totalUsers,
+                totalChannels,
+                totalPosts
             }
         });
     } catch (error) {
