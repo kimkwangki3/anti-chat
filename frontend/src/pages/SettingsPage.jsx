@@ -106,7 +106,7 @@ const SettingsPage = () => {
                     </div>
 
                     <div className="flex items-center gap-6 relative z-10">
-                        <div className="w-20 h-20 rounded-3xl orange-gradient flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-[#FF9500]/20">
+                        <div className="w-20 h-20 rounded-3xl orange-gradient flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-[#FF8C69]/20">
                             {user?.name?.[0]}
                         </div>
                         <div className="flex-1">
@@ -116,14 +116,14 @@ const SettingsPage = () => {
                                         type="text"
                                         value={newName}
                                         onChange={(e) => setNewName(e.target.value)}
-                                        className="bg-[#1a1a24] border border-[#FF9500]/30 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#FF9500] transition-all w-full max-w-[200px]"
+                                        className="bg-[#1a1a24] border border-[#FF8C69]/30 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#FF8C69] transition-all w-full max-w-[200px]"
                                         placeholder="새 대화명 입력"
                                         autoFocus
                                     />
                                     <button
                                         disabled={isUpdating}
                                         onClick={handleUpdateName}
-                                        className="px-4 py-2 bg-[#FF9500] text-white text-[10px] font-bold rounded-lg hover:bg-[#ffaa33] transition-all disabled:opacity-50"
+                                        className="px-4 py-2 bg-[#FF8C69] text-white text-[10px] font-bold rounded-lg hover:bg-[#ffaa33] transition-all disabled:opacity-50"
                                     >
                                         저장
                                     </button>
@@ -139,7 +139,7 @@ const SettingsPage = () => {
                                     <h2 className="text-xl font-bold text-white">{user?.name}</h2>
                                     <button
                                         onClick={() => setIsEditingName(true)}
-                                        className="p-2 rounded-lg bg-white/5 text-[#6b6b8a] hover:text-[#FF9500] hover:bg-[#FF9500]/10 transition-all text-xs"
+                                        className="p-2 rounded-lg bg-white/5 text-[#6b6b8a] hover:text-[#FF8C69] hover:bg-[#FF8C69]/10 transition-all text-xs"
                                         title="대화명 수정"
                                     >
                                         ✏️
@@ -153,8 +153,8 @@ const SettingsPage = () => {
 
                 {/* Sound Selection */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-[#FF9500] rounded-full animate-pulse"></span> Notification Sound
+                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span> Notification Sound
                     </h3>
 
                     <div className="space-y-3">
@@ -163,7 +163,7 @@ const SettingsPage = () => {
                                 key={option.id}
                                 onClick={() => { setSoundType(option.id); playPreview(option.id); }}
                                 className={`w-full p-5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group ${soundType === option.id
-                                    ? 'bg-[#FF9500]/10 border-[#FF9500]/30 text-white'
+                                    ? 'bg-[#FF8C69]/10 border-[#FF8C69]/30 text-white'
                                     : 'bg-white/5 border-transparent text-[#6b6b8a] hover:bg-white/10'
                                     }`}
                             >
@@ -172,7 +172,7 @@ const SettingsPage = () => {
                                     <span className="text-sm font-bold">{option.label}</span>
                                 </div>
                                 {soundType === option.id && (
-                                    <span className="text-[#FF9500] text-xs">●</span>
+                                    <span className="text-[#FF8C69] text-xs">●</span>
                                 )}
                             </div>
                         ))}
@@ -181,7 +181,7 @@ const SettingsPage = () => {
 
                 {/* Volume Control */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em] mb-8">Sound Volume</h3>
+                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8">Sound Volume</h3>
                     <div className="flex items-center gap-6">
                         <span className="text-xl">🔈</span>
                         <input
@@ -191,13 +191,13 @@ const SettingsPage = () => {
                             step="0.1"
                             value={volume}
                             onChange={(e) => setVolume(parseFloat(e.target.value))}
-                            className="flex-1 accent-[#FF9500] h-1.5 bg-[#1a1a24] rounded-full appearance-none cursor-pointer"
+                            className="flex-1 accent-[#FF8C69] h-1.5 bg-[#1a1a24] rounded-full appearance-none cursor-pointer"
                         />
                         <span className="text-xl">🔊</span>
                     </div>
                     <div className="mt-4 flex justify-between text-[10px] font-bold text-[#444466] uppercase tracking-widest">
                         <span>Min</span>
-                        <span className="text-[#FF9500]">{Math.round(volume * 100)}%</span>
+                        <span className="text-[#FF8C69]">{Math.round(volume * 100)}%</span>
                         <span>Max</span>
                     </div>
                     <button
@@ -210,8 +210,8 @@ const SettingsPage = () => {
 
                 {/* Notification Permission Section */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF9500] uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-[#FF9500] rounded-full animate-bounce"></span> Push Notifications
+                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-bounce"></span> Push Notifications
                     </h3>
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/5">
@@ -225,7 +225,7 @@ const SettingsPage = () => {
                                 <button
                                     disabled={isSubscribing}
                                     onClick={handleSubscribe}
-                                    className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50"
+                                    className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF8C69]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50"
                                 >
                                     {isSubscribing ? '구독 중...' : '알림 허용하기'}
                                 </button>
@@ -234,8 +234,8 @@ const SettingsPage = () => {
                                 <p className="text-[10px] text-red-400 font-mono">브라우저 설정에서 직접 허용해 주세요</p>
                             )}
                         </div>
-                        <div className="p-5 rounded-2xl bg-[#FF9500]/5 border border-[#FF9500]/10">
-                            <p className="text-[11px] text-[#FF9500] font-bold mb-2">📱 아이폰(iOS) 사용자 안내</p>
+                        <div className="p-5 rounded-2xl bg-[#FF8C69]/5 border border-[#FF8C69]/10">
+                            <p className="text-[11px] text-[#FF8C69] font-bold mb-2">📱 아이폰(iOS) 사용자 안내</p>
                             <p className="text-[11px] text-[#6b6b8a] leading-relaxed">
                                 Safari 하단의 <span className="text-white font-bold">공유 버튼(□↑)</span>을 눌러
                                 <span className="text-white font-bold"> [홈 화면에 추가]</span>를 먼저 진행해 주세요.<br />

@@ -75,7 +75,7 @@ const MessageList = () => {
                                     </span>
                                 )}
                                 <div className={`relative px-4 py-3 md:px-6 md:py-4 rounded-2xl md:rounded-[2rem] text-xs md:text-[13px] leading-relaxed shadow-xl transition-all ${isMe
-                                    ? 'bg-[#FF9500] text-white rounded-tr-none shadow-[#FF9500]/10'
+                                    ? 'bg-[#FF8C69] text-white rounded-tr-none shadow-[#FF8C69]/10'
                                     : 'bg-[#2a2a3a] text-[#e8e8f0] border border-white/5 rounded-tl-none shadow-black/20'
                                     }`}>
                                     {msg.content}
@@ -88,7 +88,7 @@ const MessageList = () => {
                                     )}
                                     {/* 읽음 표시 */}
                                     {showReadReceipt && (
-                                        <span className={`text-[9px] font-bold font-mono tracking-tighter mr-1 transition-all ${isRead ? 'text-[#FF9500]' : 'text-[#3a3a4a]'}`}>
+                                        <span className={`text-[9px] font-bold font-mono tracking-tighter mr-1 transition-all ${isRead ? 'text-[#FF8C69]' : 'text-[#3a3a4a]'}`}>
                                             {isRead ? '✓✓' : '✓'}
                                         </span>
                                     )}

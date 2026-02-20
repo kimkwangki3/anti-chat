@@ -7,7 +7,12 @@ const replacements = [
     [/Peach Chat/g, 'Peach Chat'],
     [/peach chat/g, 'peach chat'],
     [/PEACH/g, 'PEACH'],
-    [/"peach"/g, '"peach"']
+    [/"peach"/g, '"peach"'],
+    // Color replacements
+    [/#FF8C69/g, '#FF8C69'],
+    [/#FFB5A0/g, '#FFB5A0'],
+    [/#E8735A/g, '#E8735A'],
+    [/#E8735A/g, '#E8735A']
 ];
 
 function walk(dir) {
@@ -28,7 +33,7 @@ function walk(dir) {
                         newContent = newContent.replace(regex, replacement);
                     });
 
-                    // 시스템 키워드 오치환 복구
+                    // Fix accidental system keyword replacements
                     newContent = newContent.replace(/antialiased/g, 'antialiased');
                     newContent = newContent.replace(/peach-notifications/g, 'peach-notifications');
 
@@ -45,4 +50,4 @@ function walk(dir) {
 }
 
 walk('.');
-console.log('Rebranding text replacement finished safely.');
+console.log('Rebranding and Color replacement finished safely.');

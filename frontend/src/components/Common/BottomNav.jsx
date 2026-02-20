@@ -41,7 +41,7 @@ const BottomNav = () => {
                         <button
                             key={item.label}
                             onClick={() => handleItemClick(item)}
-                            className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-all ${isActive ? 'text-[#FF9500]' : 'text-[#6b6b8a]'
+                            className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-all ${isActive ? 'text-[#FF8C69]' : 'text-[#6b6b8a]'
                                 }`}
                         >
                             <span className="relative text-xl">
@@ -59,7 +59,7 @@ const BottomNav = () => {
                             )}
 
                             {isActive && (
-                                <span className="absolute -bottom-1 w-1 h-1 bg-[#FF9500] rounded-full"></span>
+                                <span className="absolute -bottom-1 w-1 h-1 bg-[#FF8C69] rounded-full"></span>
                             )}
                         </button>
                     );
@@ -77,7 +77,7 @@ const BottomNav = () => {
                         <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8"></div>
 
                         <div className="flex items-center gap-4 mb-8">
-                            <div className="w-16 h-16 rounded-2xl orange-gradient flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-[#FF9500]/20">
+                            <div className="w-16 h-16 rounded-2xl orange-gradient flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-[#FF8C69]/20">
                                 {user?.name?.[0]}
                             </div>
                             <div>
@@ -89,7 +89,7 @@ const BottomNav = () => {
                         <div className="grid grid-cols-1 gap-3">
                             <button
                                 onClick={() => { logout(); setShowSettings(false); }}
-                                className="w-full py-5 bg-[#FF5E00]/10 text-[#FF5E00] rounded-2xl text-sm font-bold flex items-center justify-center gap-3 border border-[#FF5E00]/20 active:scale-95 transition-all"
+                                className="w-full py-5 bg-[#E8735A]/10 text-[#E8735A] rounded-2xl text-sm font-bold flex items-center justify-center gap-3 border border-[#E8735A]/20 active:scale-95 transition-all"
                             >
                                 👋 안전하게 로그아웃하기
                             </button>

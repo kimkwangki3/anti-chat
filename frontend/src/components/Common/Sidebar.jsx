@@ -41,12 +41,12 @@ const Sidebar = () => {
                     onClick={() => navigate('/')}
                     className="flex items-center gap-3 cursor-pointer group"
                 >
-                    <div className="w-10 h-10 orange-gradient rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-[#FF9500]/20 group-hover:scale-110 transition-transform">
-                        🍑
+                    <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-white/5 border border-[#FF8C69]/20 group-hover:scale-110 transition-transform">
+                        <span className="drop-shadow-sm">🍑</span>
                     </div>
                     <div>
                         <h1 className="text-lg font-bold text-white tracking-widest font-mono uppercase italic leading-none">PEACH</h1>
-                        <span className="text-[10px] font-bold text-[#FF9500] uppercase tracking-widest">Connect</span>
+                        <span className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-widest">Connect</span>
                     </div>
                 </div>
             </div>
@@ -63,7 +63,7 @@ const Sidebar = () => {
                                     key={item.id}
                                     onClick={() => navigate(item.path)}
                                     className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all group ${isActive
-                                        ? 'bg-[#FF9500]/10 text-[#FF9500] border border-[#FF9500]/20'
+                                        ? 'bg-[#FF8C69]/10 text-[#FF8C69] border border-[#FF8C69]/20'
                                         : 'text-[#6b6b8a] hover:bg-white/5 hover:text-white'
                                         }`}
                                 >
@@ -72,7 +72,7 @@ const Sidebar = () => {
                                         <span className="text-sm font-bold">{item.label}</span>
                                     </div>
                                     {item.count > 0 && (
-                                        <span className="bg-[#FF9500] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-[#FF9500]/20 animate-bounce">
+                                        <span className="bg-[#FF8C69] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-[#FF8C69]/20 animate-bounce">
                                             {item.count}
                                         </span>
                                     )}
@@ -118,7 +118,7 @@ const Sidebar = () => {
             {/* User Profile & Logout */}
             <div className="p-4 bg-black/20 mt-auto border-t border-white/5">
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 mb-3 border border-white/5">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF9500] to-[#FF5E00] flex items-center justify-center text-white font-bold shadow-lg shadow-[#FF9500]/20">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF8C69] to-[#E8735A] flex items-center justify-center text-white font-bold shadow-lg shadow-[#FF8C69]/20">
                         {user?.name?.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -128,7 +128,7 @@ const Sidebar = () => {
                 </div>
                 <button
                     onClick={logout}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-[10px] font-bold text-[#6b6b8a] hover:text-[#FF5E00] hover:bg-[#FF5E00]/5 transition-all uppercase tracking-widest border border-transparent hover:border-[#FF5E00]/20"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-[10px] font-bold text-[#6b6b8a] hover:text-[#E8735A] hover:bg-[#E8735A]/5 transition-all uppercase tracking-widest border border-transparent hover:border-[#E8735A]/20"
                 >
                     👋 Sign Out
                 </button>

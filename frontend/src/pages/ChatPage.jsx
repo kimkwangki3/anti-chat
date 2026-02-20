@@ -123,7 +123,7 @@ const ChatPage = () => {
                             {user.role === 'admin' && (
                                 <button
                                     onClick={() => navigate(`/admin/members?channelId=${channelId}`)}
-                                    className="px-3 py-2 md:px-5 md:py-2.5 bg-[#FF9500]/10 text-[#FF9500] text-[9px] md:text-[10px] font-bold rounded-xl border border-[#FF9500]/20 hover:bg-[#FF9500] hover:text-white transition-all uppercase tracking-widest"
+                                    className="px-3 py-2 md:px-5 md:py-2.5 bg-[#FF8C69]/10 text-[#FF8C69] text-[9px] md:text-[10px] font-bold rounded-xl border border-[#FF8C69]/20 hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest"
                                 >
                                     관리
                                 </button>
@@ -143,13 +143,13 @@ const ChatPage = () => {
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         placeholder="메시지를 입력하세요..."
-                                        className="relative z-10 w-full bg-[#23232f] border border-white/5 rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-[#FF9500]/30 transition-all shadow-xl placeholder:text-[#3a3a4a]"
+                                        className="relative z-10 w-full bg-[#23232f] border border-white/5 rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-xl placeholder:text-[#3a3a4a]"
                                     />
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={!input.trim()}
-                                    className="h-[48px] px-6 orange-gradient text-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#FF9500]/20 transition-all font-bold uppercase text-[10px] tracking-widest disabled:opacity-20"
+                                    className="h-[48px] px-6 orange-gradient text-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#FF8C69]/20 transition-all font-bold uppercase text-[10px] tracking-widest disabled:opacity-20"
                                 >
                                     보내기
                                 </button>
@@ -158,14 +158,14 @@ const ChatPage = () => {
                     </>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-12 select-none">
-                        <div className="w-24 h-24 mb-10 orange-gradient rounded-[2.5rem] flex items-center justify-center text-5xl shadow-2xl shadow-[#FF9500]/20 animate-pulse">🧸</div>
+                        <div className="w-24 h-24 mb-10 orange-gradient rounded-[2.5rem] flex items-center justify-center text-5xl shadow-2xl shadow-[#FF8C69]/20 animate-pulse">🧸</div>
                         <h1 className="text-3xl font-black tracking-widest uppercase italic font-mono mb-4 text-white">Message Waiting</h1>
                         <p className="max-w-xs text-[12px] font-bold uppercase tracking-[0.2em] leading-relaxed text-[#6b6b8a] mb-10">대화 상대를 선택하고<br />즐거운 소통을 시작해 보세요.</p>
 
                         {user.role === 'member' && rooms.length === 0 && (
                             <button
                                 onClick={() => navigate(`/chat?channelId=${channelId}`)}
-                                className="px-10 py-5 orange-gradient text-white text-xs font-black rounded-2xl shadow-xl shadow-[#FF9500]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em]"
+                                className="px-10 py-5 orange-gradient text-white text-xs font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em]"
                             >
                                 관리자와 첫 대화 시작하기 ✨
                             </button>

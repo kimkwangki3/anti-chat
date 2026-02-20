@@ -89,7 +89,7 @@ const NoticePage = () => {
             <header className="h-20 flex-shrink-0 bg-[#1a1a24]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 z-20">
                 <div>
                     <h1 className="text-xl font-bold font-['Bebas_Neue'] tracking-wider uppercase italic text-white flex items-center gap-2">
-                        {currentChannel?.name || 'CHANNEL'} <span className="text-[#FF9500] text-sm font-mono tracking-tighter not-italic">NOTICE STREAM</span>
+                        {currentChannel?.name || 'CHANNEL'} <span className="text-[#FF8C69] text-sm font-mono tracking-tighter not-italic">NOTICE STREAM</span>
                     </h1>
                     <div className="flex items-center gap-2 mt-0.5">
                         <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full animate-pulse shadow-[0_0_8px_rgba(6,214,160,0.5)]"></span>
@@ -118,7 +118,7 @@ const NoticePage = () => {
                             onMouseEnter={() => handleRead(notice._id, notice.readBy || [])}
                         >
                             <div className="flex items-center gap-3 mb-2 px-1">
-                                <div className="w-7 h-7 rounded-lg bg-[#FF9500] flex items-center justify-center text-[10px] font-bold text-white shadow-lg shadow-[#FF9500]/20 leading-none">
+                                <div className="w-7 h-7 rounded-lg bg-[#FF8C69] flex items-center justify-center text-[10px] font-bold text-white shadow-lg shadow-[#FF8C69]/20 leading-none">
                                     ADM
                                 </div>
                                 <span className="text-[11px] font-bold text-[#e8e8f0] uppercase tracking-widest">관리자 공지</span>
@@ -127,7 +127,7 @@ const NoticePage = () => {
 
                             <div className="max-w-[85%] sm:max-w-[75%] bg-[#23232f] border border-white/5 p-6 rounded-3xl rounded-tl-none relative group shadow-xl">
                                 {notice.imageUrl && (
-                                    <div className="mb-4 rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-inner group-hover:border-[#FF9500]/30 transition-all">
+                                    <div className="mb-4 rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-inner group-hover:border-[#FF8C69]/30 transition-all">
                                         <img
                                             src={`http://localhost:5000${notice.imageUrl}`}
                                             alt="공지 이미지"
@@ -136,7 +136,7 @@ const NoticePage = () => {
                                         />
                                     </div>
                                 )}
-                                <p className="text-[13px] leading-relaxed text-[#d1d1e0] whitespace-pre-wrap selection:bg-[#FF9500]/30">{notice.content}</p>
+                                <p className="text-[13px] leading-relaxed text-[#d1d1e0] whitespace-pre-wrap selection:bg-[#FF8C69]/30">{notice.content}</p>
 
                                 {isAdmin && (
                                     <button
@@ -149,8 +149,8 @@ const NoticePage = () => {
 
                                 <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3 opacity-40 group-hover:opacity-100 transition-opacity">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 bg-[#FF9500] rounded-full"></span>
-                                        <span className="text-[9px] font-mono text-[#FF9500] tracking-widest uppercase italic">READ BY {notice.readBy?.length || 0} MEMBERS</span>
+                                        <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full"></span>
+                                        <span className="text-[9px] font-mono text-[#FF8C69] tracking-widest uppercase italic">READ BY {notice.readBy?.length || 0} MEMBERS</span>
                                     </div>
                                 </div>
                             </div>
@@ -164,11 +164,11 @@ const NoticePage = () => {
                 <div className="p-6 bg-[#1a1a24] border-t border-white/5 relative z-30">
                     {imagePreview && (
                         <div className="absolute bottom-full left-6 mb-6 animate-in slide-in-from-bottom-4 duration-500">
-                            <div className="relative group p-2 bg-[#23232f] border border-[#FF9500]/30 rounded-2xl shadow-2xl">
+                            <div className="relative group p-2 bg-[#23232f] border border-[#FF8C69]/30 rounded-2xl shadow-2xl">
                                 <img src={imagePreview} className="w-40 h-40 object-cover rounded-xl" alt="미리보기" />
                                 <button
                                     onClick={() => { setSelectedImage(null); setImagePreview(null); }}
-                                    className="absolute -top-3 -right-3 w-8 h-8 bg-[#FF9500] text-white rounded-full flex items-center justify-center text-lg font-bold shadow-[0_0_15px_rgba(255,149,0,0.5)] hover:bg-red-500 hover:shadow-red-500/50 transition-all"
+                                    className="absolute -top-3 -right-3 w-8 h-8 bg-[#FF8C69] text-white rounded-full flex items-center justify-center text-lg font-bold shadow-[0_0_15px_rgba(255,149,0,0.5)] hover:bg-red-500 hover:shadow-red-500/50 transition-all"
                                 >
                                     ×
                                 </button>
@@ -179,7 +179,7 @@ const NoticePage = () => {
                     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto flex gap-4 items-end">
                         <div className="relative flex-1 group">
                             <div className="absolute -inset-0.5 orange-gradient rounded-3xl blur opacity-10 group-focus-within:opacity-20 transition duration-500"></div>
-                            <div className="relative flex flex-col bg-[#23232f] border border-white/5 rounded-3xl overflow-hidden focus-within:border-[#FF9500]/50 transition-all shadow-inner">
+                            <div className="relative flex flex-col bg-[#23232f] border border-white/5 rounded-3xl overflow-hidden focus-within:border-[#FF8C69]/50 transition-all shadow-inner">
                                 <textarea
                                     value={content}
                                     onChange={(e) => setContent(e.target.value)}
@@ -203,7 +203,7 @@ const NoticePage = () => {
                                         />
                                         <label
                                             htmlFor="notice-image"
-                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[#6b6b8a] hover:text-[#FF9500] hover:bg-[#FF9500]/10 cursor-pointer transition-all text-[10px] font-bold uppercase tracking-widest font-mono"
+                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[#6b6b8a] hover:text-[#FF8C69] hover:bg-[#FF8C69]/10 cursor-pointer transition-all text-[10px] font-bold uppercase tracking-widest font-mono"
                                         >
                                             <span className="text-sm">📸</span> PHOTO
                                         </label>
@@ -215,7 +215,7 @@ const NoticePage = () => {
                         <button
                             type="submit"
                             disabled={isUploading || (!content.trim() && !selectedImage)}
-                            className="h-[60px] w-[60px] orange-gradient text-white rounded-3xl flex items-center justify-center shadow-xl shadow-[#FF9500]/20 hover:scale-110 active:scale-90 transition-all disabled:opacity-20 disabled:grayscale"
+                            className="h-[60px] w-[60px] orange-gradient text-white rounded-3xl flex items-center justify-center shadow-xl shadow-[#FF8C69]/20 hover:scale-110 active:scale-90 transition-all disabled:opacity-20 disabled:grayscale"
                         >
                             {isUploading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

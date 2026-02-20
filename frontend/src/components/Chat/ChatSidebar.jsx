@@ -85,11 +85,11 @@ const ChatSidebar = () => {
     return (
         <div className="w-80 bg-[#12121a] border-r border-white/5 flex flex-col h-full z-20 shadow-2xl">
             <div className="p-6 border-b border-white/5 bg-[#12121a] flex justify-between items-center h-20">
-                <h2 className="text-xl font-bold font-['Bebas_Neue'] tracking-wider text-[#FF9500] italic leading-none">CHATS</h2>
+                <h2 className="text-xl font-bold font-['Bebas_Neue'] tracking-wider text-[#FF8C69] italic leading-none">CHATS</h2>
                 {isAdmin ? (
                     <button
                         onClick={() => setShowUserList(!showUserList)}
-                        className="w-10 h-10 rounded-xl bg-[#FF9500]/10 text-[#FF9500] flex items-center justify-center hover:bg-[#FF9500] hover:text-white transition-all shadow-inner active:scale-95"
+                        className="w-10 h-10 rounded-xl bg-[#FF8C69]/10 text-[#FF8C69] flex items-center justify-center hover:bg-[#FF8C69] hover:text-white transition-all shadow-inner active:scale-95"
                     >
                         {showUserList ? '×' : '+'}
                     </button>
@@ -97,7 +97,7 @@ const ChatSidebar = () => {
                     channelId && (
                         <button
                             onClick={() => handleCreateRoom()}
-                            className="px-4 py-2 bg-[#FF9500]/10 text-[#FF9500] text-[10px] font-bold rounded-xl border border-[#FF9500]/20 hover:bg-[#FF9500] hover:text-white transition-all uppercase tracking-widest shadow-sm"
+                            className="px-4 py-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[10px] font-bold rounded-xl border border-[#FF8C69]/20 hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest shadow-sm"
                         >
                             TALK
                         </button>
@@ -132,7 +132,7 @@ const ChatSidebar = () => {
                     </div>
                 ) : isLoading ? (
                     <div className="p-10 text-center opacity-20">
-                        <div className="w-8 h-8 border-2 border-[#FF9500] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <div className="w-8 h-8 border-2 border-[#FF8C69] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                         <p className="text-[10px] font-black uppercase tracking-[0.3em] font-mono">Loading...</p>
                     </div>
                 ) : rooms.length === 0 ? (
@@ -153,7 +153,7 @@ const ChatSidebar = () => {
                                 key={room._id}
                                 onClick={() => handleSelectRoom(room)}
                                 className={`group relative p-5 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${isActive
-                                    ? 'bg-[#FF9500]/10 border-[#FF9500]/30 shadow-lg shadow-[#FF9500]/5'
+                                    ? 'bg-[#FF8C69]/10 border-[#FF8C69]/30 shadow-lg shadow-[#FF8C69]/5'
                                     : 'bg-[#1a1a24] border-transparent hover:border-white/5'
                                     }`}
                             >
@@ -171,7 +171,7 @@ const ChatSidebar = () => {
                                                 {otherUser?.name}
                                             </h3>
                                             {unreadCount > 0 && !isActive && (
-                                                <span className="bg-[#FF9500] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg shadow-[#FF9500]/20 min-w-[18px] text-center">
+                                                <span className="bg-[#FF8C69] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg shadow-[#FF8C69]/20 min-w-[18px] text-center">
                                                     {unreadCount}
                                                 </span>
                                             )}

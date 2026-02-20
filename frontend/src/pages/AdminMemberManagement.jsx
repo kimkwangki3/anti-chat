@@ -84,16 +84,16 @@ const AdminMemberManagement = () => {
 
     if (isLoading) return (
         <div className="h-full flex items-center justify-center bg-[#1a1a24]">
-            <div className="w-10 h-10 border-4 border-[#FF9500]/20 border-t-[#FF9500] rounded-full animate-spin"></div>
+            <div className="w-10 h-10 border-4 border-[#FF8C69]/20 border-t-[#FF8C69] rounded-full animate-spin"></div>
         </div>
     );
 
     return (
         <div className="h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar p-6 md:p-12">
             <header className="mb-12 relative">
-                <div className="absolute -top-6 -left-6 w-32 h-32 bg-[#FF9500] opacity-[0.03] blur-3xl rounded-full"></div>
+                <div className="absolute -top-6 -left-6 w-32 h-32 bg-[#FF8C69] opacity-[0.03] blur-3xl rounded-full"></div>
                 <h1 className="text-4xl font-black italic tracking-tighter text-white mb-2 font-mono uppercase">
-                    Member <span className="text-[#FF9500]">Management</span>
+                    Member <span className="text-[#FF8C69]">Management</span>
                 </h1>
                 <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">가입 승인 및 멤버 권한 제어</p>
             </header>
@@ -106,7 +106,7 @@ const AdminMemberManagement = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="함께할 멤버를 찾아보세요..."
-                    className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-8 py-5 text-sm text-white focus:outline-none focus:border-[#FF9500]/30 transition-all shadow-2xl placeholder:text-[#3a3a4a]"
+                    className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-8 py-5 text-sm text-white focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-2xl placeholder:text-[#3a3a4a]"
                 />
                 <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xl opacity-20">🔍</span>
             </div>
@@ -115,30 +115,30 @@ const AdminMemberManagement = () => {
             {pendingMembers.length > 0 && (
                 <section className="mb-16">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-2 h-8 bg-[#FF9500] rounded-full"></div>
+                        <div className="w-2 h-8 bg-[#FF8C69] rounded-full"></div>
                         <h2 className="text-xl font-bold text-white tracking-tight italic">Waiting for Approval</h2>
-                        <span className="bg-[#FF9500]/10 text-[#FF9500] px-3 py-1 rounded-full text-[10px] font-black">{pendingMembers.length}</span>
+                        <span className="bg-[#FF8C69]/10 text-[#FF8C69] px-3 py-1 rounded-full text-[10px] font-black">{pendingMembers.length}</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {pendingMembers.map(m => (
                             <div key={m._id} className="bg-[#23232f] border border-white/5 rounded-[2rem] p-8 shadow-xl hover:scale-[1.02] transition-all group relative overflow-hidden">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#FF9500]/5 rounded-bl-[4rem] group-hover:bg-[#FF9500]/10 transition-colors"></div>
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-[#FF8C69]/5 rounded-bl-[4rem] group-hover:bg-[#FF8C69]/10 transition-colors"></div>
                                 <div className="relative z-10">
-                                    <div className="w-14 h-14 orange-gradient rounded-2xl flex items-center justify-center text-xl text-white font-bold mb-6 shadow-lg shadow-[#FF9500]/20">
+                                    <div className="w-14 h-14 orange-gradient rounded-2xl flex items-center justify-center text-xl text-white font-bold mb-6 shadow-lg shadow-[#FF8C69]/20">
                                         {m.userId?.name?.[0]}
                                     </div>
-                                    <h3 className="text-lg font-bold text-white mb-1 group-hover:text-[#FF9500] transition-colors">{m.userId?.name}</h3>
+                                    <h3 className="text-lg font-bold text-white mb-1 group-hover:text-[#FF8C69] transition-colors">{m.userId?.name}</h3>
                                     <p className="text-[10px] text-[#5a5a6a] font-mono uppercase tracking-widest mb-8">{m.userId?.username}</p>
                                     <div className="flex gap-3">
                                         <button
                                             onClick={() => handleUpdateStatus(m._id, 'approved', m.status)}
-                                            className="flex-1 py-3 bg-[#FF9500] text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 transition-transform uppercase tracking-widest"
+                                            className="flex-1 py-3 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest"
                                         >
                                             승인하기
                                         </button>
                                         <button
                                             onClick={() => handleUpdateStatus(m._id, 'rejected', m.status)}
-                                            className="flex-1 py-3 bg-[#1a1a24] text-[#FF9500] border border-[#FF9500]/20 text-[10px] font-black rounded-xl hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all uppercase tracking-widest"
+                                            className="flex-1 py-3 bg-[#1a1a24] text-[#FF8C69] border border-[#FF8C69]/20 text-[10px] font-black rounded-xl hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all uppercase tracking-widest"
                                         >
                                             거절
                                         </button>
@@ -172,7 +172,7 @@ const AdminMemberManagement = () => {
                                     <tr key={m._id} className="hover:bg-white/[0.01] transition-colors group">
                                         <td className="px-10 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-11 h-11 rounded-[1rem] bg-white/5 border border-white/5 flex items-center justify-center text-sm font-bold text-[#6b6b8a] group-hover:bg-[#FF9500]/10 group-hover:text-[#FF9500] group-hover:border-[#FF9500]/20 transition-all">
+                                                <div className="w-11 h-11 rounded-[1rem] bg-white/5 border border-white/5 flex items-center justify-center text-sm font-bold text-[#6b6b8a] group-hover:bg-[#FF8C69]/10 group-hover:text-[#FF8C69] group-hover:border-[#FF8C69]/20 transition-all">
                                                     {m.userId?.name?.[0]}
                                                 </div>
                                                 <div>
@@ -193,7 +193,7 @@ const AdminMemberManagement = () => {
                                             <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button
                                                     onClick={() => handleStartChat(m.userId?._id)}
-                                                    className="px-5 py-2.5 bg-[#FF9500]/10 text-[#FF9500] text-[10px] font-black rounded-xl hover:bg-[#FF9500] hover:text-white transition-all uppercase tracking-widest shadow-lg shadow-[#FF9500]/5"
+                                                    className="px-5 py-2.5 bg-[#FF8C69]/10 text-[#FF8C69] text-[10px] font-black rounded-xl hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest shadow-lg shadow-[#FF8C69]/5"
                                                 >
                                                     Chat
                                                 </button>
