@@ -10,27 +10,27 @@ const Sidebar = () => {
     const { currentChannel } = useChannelStore();
     const { unreadCounts, pendingCounts } = useNotificationStore();
 
-    // [고도화] URL에서 채널 ID 추출 (새로고침 시 메뉴 유지를 위함)
+    // [고도?? URL?�서 채널 ID 추출 (?�로고침 ??메뉴 ?��?�??�함)
     const params = new URLSearchParams(location.search);
     const urlChannelId = params.get('channelId') || currentChannel?._id;
 
     const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
     const pendingBadge = pendingCounts[urlChannelId] || 0;
 
-    // 전체 미읽음 합계 (채널 미선택 시 홈 메뉴에 표시용)
+    // ?�체 미읽???�계 (채널 미선??????메뉴???�시??
     const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
 
     const menuItems = [
-        { id: 'dashboard', label: '홈', icon: '🏠', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
-        { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
-        { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
-        { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${urlChannelId}`, count: counts.chat, hidden: !urlChannelId },
-        { id: 'settings', label: '설정', icon: '⚙️', path: '/settings' },
+        { id: 'dashboard', label: '??, icon: '?��', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
+        { id: 'notice', label: '공�??�항', icon: '?��', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
+        { id: 'board', label: '게시??, icon: '?��', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
+        { id: 'chat', label: '채팅', icon: '?��', path: `/chat?channelId=${urlChannelId}`, count: counts.chat, hidden: !urlChannelId },
+        { id: 'settings', label: '?�정', icon: '?�️', path: '/settings' },
     ];
 
     const adminMenuItems = [
-        { id: 'members', label: '멤버 관리', icon: '👥', path: `/admin/members?channelId=${urlChannelId}` },
-        { id: 'edit', label: '채널 설정', icon: '⚙️', path: `/admin/edit-channel?channelId=${urlChannelId}` },
+        { id: 'members', label: '멤버 관�?, icon: '?��', path: `/admin/members?channelId=${urlChannelId}` },
+        { id: 'edit', label: '채널 ?�정', icon: '?�️', path: `/admin/edit-channel?channelId=${urlChannelId}` },
     ];
 
     return (
@@ -42,10 +42,10 @@ const Sidebar = () => {
                     className="flex items-center gap-3 cursor-pointer group"
                 >
                     <div className="w-10 h-10 orange-gradient rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-[#FF9500]/20 group-hover:scale-110 transition-transform">
-                        🍑
+                        ?��
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold text-white tracking-widest font-mono uppercase italic leading-none">ANTI</h1>
+                        <h1 className="text-lg font-bold text-white tracking-widest font-mono uppercase italic leading-none">PEACH</h1>
                         <span className="text-[10px] font-bold text-[#FF9500] uppercase tracking-widest">Connect</span>
                     </div>
                 </div>
@@ -130,7 +130,7 @@ const Sidebar = () => {
                     onClick={logout}
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-[10px] font-bold text-[#6b6b8a] hover:text-[#FF5E00] hover:bg-[#FF5E00]/5 transition-all uppercase tracking-widest border border-transparent hover:border-[#FF5E00]/20"
                 >
-                    👋 Sign Out
+                    ?�� Sign Out
                 </button>
             </div>
         </div>

@@ -8,7 +8,7 @@ const Register = () => {
     const { register, isLoading, error } = useAuthStore();
     const navigate = useNavigate();
 
-    // 관리자 선택 시 대화명 자동 조합
+    // 관리자 ?�택 ???�?�명 ?�동 조합
     const handleChannelNameChange = (value) => {
         setChannelName(value);
         setFormData(prev => ({ ...prev, name: value }));
@@ -35,29 +35,29 @@ const Register = () => {
                 <div className="bg-[#23232f] border border-white/5 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-2xl">
                     <div className="flex flex-col items-center mb-10">
                         <div className="w-16 h-16 orange-gradient rounded-3xl flex items-center justify-center text-3xl shadow-2xl shadow-[#FF9500]/30 mb-6 animate-pulse pointer-events-none">
-                            🍑
+                            ?��
                         </div>
                         <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono">
-                            JOIN <span className="text-[#FF9500]">ANTI</span>
+                            JOIN <span className="text-[#FF9500]">PEACH</span>
                         </h1>
                         <p className="text-[#6b6b8a] text-[10px] font-bold uppercase tracking-[0.4em] mt-2 font-mono italic opacity-60">Create Your Space</p>
                     </div>
 
                     {error && (
                         <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[11px] font-bold rounded-2xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-                            <span>⚠️</span> {error}
+                            <span>?�️</span> {error}
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* 이름 / 채널명 입력 */}
+                        {/* ?�름 / 채널�??�력 */}
                         {formData.role === 'member' ? (
                             <div className="space-y-2">
                                 <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono">Full Name</label>
                                 <input
                                     type="text"
                                     required
-                                    placeholder="이름을 입력하세요"
+                                    placeholder="?�름???�력?�세??
                                     className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF9500]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -69,14 +69,14 @@ const Register = () => {
                                 <input
                                     type="text"
                                     required
-                                    placeholder="운영할 채널 이름을 입력하세요"
+                                    placeholder="?�영??채널 ?�름???�력?�세??
                                     className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF9500]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
                                     value={channelName}
                                     onChange={(e) => handleChannelNameChange(e.target.value)}
                                 />
                                 {channelName && (
                                     <p className="text-[11px] text-[#FF9500] ml-4 font-mono">
-                                        대화명: <span className="font-bold">{channelName} 관리자</span>
+                                        ?�?�명: <span className="font-bold">{channelName} 관리자</span>
                                     </p>
                                 )}
                             </div>
@@ -86,7 +86,7 @@ const Register = () => {
                             <input
                                 type="text"
                                 required
-                                placeholder="아이디를 입력하세요"
+                                placeholder="?�이?��? ?�력?�세??
                                 className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF9500]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
                                 value={formData.username}
                                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
@@ -97,7 +97,7 @@ const Register = () => {
                             <input
                                 type="password"
                                 required
-                                placeholder="패스워드를 설정하세요"
+                                placeholder="?�스?�드�??�정?�세??
                                 className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF9500]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
                                 value={formData.password}
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -132,7 +132,7 @@ const Register = () => {
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                             ) : (
-                                <>CREATE ACCOUNT ✨</>
+                                <>CREATE ACCOUNT ??/>
                             )}
                         </button>
                     </form>

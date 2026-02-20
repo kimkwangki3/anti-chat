@@ -2,11 +2,11 @@
 
 @layer base {
     :root {
-        --primary-orange: #FF9500;
-        --primary-orange-light: #FFB347;
-        --primary-orange-dark: #E68600;
+        --primary-peach: #FF8C69;
+        --primary-peach-light: #FFB5A0;
+        --primary-peach-dark: #E8735A;
         --kakao-bg: #1a1a24;
-        --kakao-bubble-me: #FF9500;
+        --kakao-bubble-me: #FF8C69;
         --kakao-bubble-other: #2a2a3a;
     }
 
@@ -17,8 +17,12 @@
 }
 
 @layer components {
+    .peach-gradient {
+        background: linear-gradient(135deg, #FF8C69 0%, #E8735A 100%);
+    }
+
     .orange-gradient {
-        background: linear-gradient(135deg, #FF9500 0%, #FF5E00 100%);
+        @apply peach-gradient;
     }
 
     .glass-card {

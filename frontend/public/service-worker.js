@@ -1,7 +1,7 @@
-const CACHE_NAME = 'anti-chat-v1';
+const CACHE_NAME = 'peach-chat-v1';
 const STATIC_ASSETS = ['/', '/index.html', '/vite.svg'];
 
-// 설치: 정적 파일 캐싱
+// ?�치: ?�적 ?�일 캐싱
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -11,7 +11,7 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// 활성화: 오래된 캐시 정리
+// ?�성?? ?�래??캐시 ?�리
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) =>
@@ -25,17 +25,17 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch: API 요청은 네트워크 우선, 나머지는 캐시 우선
+// Fetch: API ?�청?� ?�트?�크 ?�선, ?�머지??캐시 ?�선
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // API 요청 및 소켓 요청은 캐싱하지 않음
+    // API ?�청 �??�켓 ?�청?� 캐싱?��? ?�음
     if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) {
         return;
     }
 
-    // HTML 요청은 네트워크 우선 (최신 버전 유지)
+    // HTML ?�청?� ?�트?�크 ?�선 (최신 버전 ?��?)
     if (request.mode === 'navigate') {
         event.respondWith(
             fetch(request).catch(() => caches.match('/index.html'))
@@ -43,7 +43,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 정적 자산은 캐시 우선
+    // ?�적 ?�산?� 캐시 ?�선
     event.respondWith(
         caches.match(request).then((cached) => {
             return cached || fetch(request).then((response) => {
@@ -57,7 +57,7 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
-// 푸시 알림 수신
+// ?�시 ?�림 ?�신
 self.addEventListener('push', function (event) {
     if (event.data) {
         const data = event.data.json();
@@ -78,13 +78,13 @@ self.addEventListener('push', function (event) {
     }
 });
 
-// 알림 클릭 시 해당 페이지로 이동
+// ?�림 ?�릭 ???�당 ?�이지�??�동
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
     const targetUrl = event.notification.data.url;
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // 이미 열린 창이 있으면 포커스 + 해당 URL로 이동
+            // ?��? ?�린 창이 ?�으�??�커??+ ?�당 URL�??�동
             for (const client of clientList) {
                 if (client.url.includes(self.location.origin) && 'focus' in client) {
                     client.focus();
@@ -92,7 +92,7 @@ self.addEventListener('notificationclick', function (event) {
                     return;
                 }
             }
-            // 없으면 새 창 열기
+            // ?�으�???�??�기
             if (clients.openWindow) {
                 return clients.openWindow(targetUrl);
             }
