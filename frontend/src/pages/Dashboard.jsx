@@ -10,7 +10,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { myChannels, fetchMyChannels, isLoading, setCurrentChannel } = useChannelStore();
-    const { notifications, pendingCounts } = useNotificationStore();
+    const { notifications, pendingCounts, unreadCounts } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // 모든 채널의 총 미승인 수
