@@ -63,6 +63,7 @@ const noticeRoutes = require('./routes/notices');
 const postRoutes = require('./routes/posts');
 const channelRoutes = require('./routes/channels');
 const channelMemberRoutes = require('./routes/channelMembers');
+const superadminRoutes = require('./routes/superadmin');
 
 // 미들웨어 설정
 app.use(express.json());
@@ -85,6 +86,7 @@ app.use('/api/notices', noticeRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/channel-members', channelMemberRoutes);
+app.use('/api/superadmin', superadminRoutes);
 
 // 데이터베이스 연결
 mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/corporate-chat')

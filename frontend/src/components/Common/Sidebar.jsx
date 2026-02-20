@@ -33,6 +33,12 @@ const Sidebar = () => {
         { id: 'edit', label: '채널 설정', icon: '⚙️', path: `/admin/edit-channel?channelId=${urlChannelId}` },
     ];
 
+    const superAdminMenuItems = [
+        { id: 'sa-users', label: '전체 회원 관리', icon: '👑', path: '/super-admin/users' },
+        { id: 'sa-channels', label: '전체 채널 관리', icon: '🌐', path: '/super-admin/channels' },
+        { id: 'sa-chats', label: '채팅 로그 열람', icon: '🔍', path: '/super-admin/chats' },
+    ];
+
     return (
         <div className="w-64 h-full bg-[#12121a] border-r border-white/5 flex flex-col z-30">
             {/* Logo Section */}
@@ -107,6 +113,32 @@ const Sidebar = () => {
                                                 {badge}
                                             </span>
                                         )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {user?.role === 'superadmin' && (
+                    <div className="px-4 mt-8">
+                        <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] mb-4">Super Admin Suite 👑</p>
+                        <div className="space-y-2">
+                            {superAdminMenuItems.map((item) => {
+                                const isActive = location.pathname === item.path;
+                                return (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => navigate(item.path)}
+                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isActive
+                                            ? 'bg-[#FF8C69]/10 text-[#FF8C69] border border-[#FF8C69]/20 shadow-lg shadow-[#FF8C69]/5'
+                                            : 'text-[#6b6b8a] hover:bg-white/5 hover:text-white'
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className={`text-lg transition-transform ${isActive ? 'scale-110' : ''}`}>{item.icon}</span>
+                                            <span className="text-sm font-bold">{item.label}</span>
+                                        </div>
                                     </button>
                                 );
                             })}

@@ -14,6 +14,9 @@ import Sidebar from './components/Common/Sidebar';
 import BottomNav from './components/Common/BottomNav';
 import AdminEditChannel from './pages/AdminEditChannel';
 import SettingsPage from './pages/SettingsPage';
+import SuperAdminUsers from './pages/SuperAdminUsers';
+import SuperAdminChannels from './pages/SuperAdminChannels';
+import SuperAdminChats from './pages/SuperAdminChats';
 
 const ProtectedLayout = ({ children }) => {
   const { token } = useAuthStore();
@@ -107,6 +110,23 @@ function App() {
           <Route path="/settings" element={
             <ProtectedLayout>
               <SettingsPage />
+            </ProtectedLayout>
+          } />
+
+          {/* 최고관리자 전용 라우트 */}
+          <Route path="/super-admin/users" element={
+            <ProtectedLayout>
+              <SuperAdminUsers />
+            </ProtectedLayout>
+          } />
+          <Route path="/super-admin/channels" element={
+            <ProtectedLayout>
+              <SuperAdminChannels />
+            </ProtectedLayout>
+          } />
+          <Route path="/super-admin/chats" element={
+            <ProtectedLayout>
+              <SuperAdminChats />
             </ProtectedLayout>
           } />
         </Routes>
