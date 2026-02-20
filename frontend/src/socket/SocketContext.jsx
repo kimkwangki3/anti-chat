@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import socket from './socket';
 import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
@@ -31,12 +31,19 @@ export const useSocket = () => useContext(SocketContext);
 
 export const SocketProvider = ({ children }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuthStore();
     const { currentChannel } = useChannelStore();
     const { addNotification, incrementUnreadCount, removeNotification, notifications, incrementPendingCount } = useNotificationStore();
     const { soundType, volume, sounds } = useSettingsStore();
     const { markMessagesRead } = useChatStore();
     const [onlineCount, setOnlineCount] = useState(0);
+
+    // 현재 경로 추적용 Ref
+    const currentPathRef = useRef(location.pathname + location.search);
+    useEffect(() => {
+        currentPathRef.current = location.pathname + location.search;
+    }, [location]);
 
     // 알림음 재생 함수
     const playNotificationSound = () => {
@@ -100,47 +107,65 @@ export const SocketProvider = ({ children }) => {
             // 전역 알림 리스너
             socket.on('notice_received', (notice) => {
                 const channelId = notice.channelId?._id || notice.channelId;
+                const targetPath = `/notices?channelId=${channelId}`;
+
                 console.log('[SOCKET] Notice received:', notice);
-                addNotificationWithTimer({
-                    id: Date.now() + Math.random(),
-                    type: 'notice',
-                    title: '새 공지사항',
-                    message: notice.title,
-                    channelId,
-                    path: `/notices?channelId=${channelId}`
-                });
+
+                // 현재 해당 페이지에 있다면 팝업/소리 억제
+                if (currentPathRef.current !== targetPath) {
+                    addNotificationWithTimer({
+                        id: Date.now() + Math.random(),
+                        type: 'notice',
+                        title: '새 공지사항',
+                        message: notice.title,
+                        channelId,
+                        path: targetPath
+                    });
+                    playNotificationSound();
+                }
                 incrementUnreadCount(channelId, 'notice');
-                playNotificationSound();
             });
 
             socket.on('post_received', (post) => {
                 const channelId = post.channelId?._id || post.channelId;
+                const targetPath = `/board?channelId=${channelId}`;
+
                 console.log('[SOCKET] Post received:', post);
-                addNotificationWithTimer({
-                    id: Date.now() + Math.random(),
-                    type: 'post',
-                    title: '새 게시글',
-                    message: post.title,
-                    channelId,
-                    path: `/board?channelId=${channelId}`
-                });
+
+                // 현재 해당 페이지에 있다면 팝업/소리 억제
+                if (currentPathRef.current !== targetPath) {
+                    addNotificationWithTimer({
+                        id: Date.now() + Math.random(),
+                        type: 'post',
+                        title: '새 게시글',
+                        message: post.title,
+                        channelId,
+                        path: targetPath
+                    });
+                    playNotificationSound();
+                }
                 incrementUnreadCount(channelId, 'post');
-                playNotificationSound();
             });
 
             socket.on('chat_notification', (data) => {
                 const channelId = data.channelId?._id || data.channelId;
+                const targetPath = `/chat?channelId=${channelId}&roomId=${data.roomId}`;
+
                 console.log('[SOCKET] Chat notification received:', data);
-                addNotificationWithTimer({
-                    id: Date.now() + Math.random(),
-                    type: 'chat',
-                    title: '새 메시지',
-                    message: `${data.senderName}: ${data.content}`,
-                    channelId,
-                    path: `/chat?channelId=${channelId}&roomId=${data.roomId}`
-                });
+
+                // 현재 해당 채팅방에 있다면 팝업/소리 억제
+                if (currentPathRef.current !== targetPath) {
+                    addNotificationWithTimer({
+                        id: Date.now() + Math.random(),
+                        type: 'chat',
+                        title: '새 메시지',
+                        message: `${data.senderName}: ${data.content}`,
+                        channelId,
+                        path: targetPath
+                    });
+                    playNotificationSound();
+                }
                 incrementUnreadCount(channelId, 'chat');
-                playNotificationSound();
             });
 
             // 읽음 처리 이벤트

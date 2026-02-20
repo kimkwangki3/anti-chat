@@ -63,6 +63,20 @@ const useAuthStore = create((set) => ({
         useNotificationStore.getState().resetStore();
     },
 
+    updateProfile: async (name) => {
+        try {
+            const response = await axios.patch('/auth/profile', { name });
+            const updatedUser = response.data;
+
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            set({ user: updatedUser });
+            return true;
+        } catch (error) {
+            console.error('프로필 수정 에러:', error);
+            return false;
+        }
+    },
+
     checkAuth: async () => {
         const token = localStorage.getItem('token');
         if (!token) return;

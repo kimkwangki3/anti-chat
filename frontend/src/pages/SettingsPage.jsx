@@ -6,10 +6,15 @@ import axios from '../api/axios';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
-    const { user, logout } = useAuthStore();
+    const { user, logout, updateProfile } = useAuthStore();
     const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
     const [pushStatus, setPushStatus] = useState(Notification.permission);
     const [isSubscribing, setIsSubscribing] = useState(false);
+
+    // 대화명 수정 관련 상태
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [newName, setNewName] = useState(user?.name || '');
+    const [isUpdating, setIsUpdating] = useState(false);
 
     const urlBase64ToUint8Array = (base64String) => {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -48,6 +53,23 @@ const SettingsPage = () => {
         setIsSubscribing(false);
     };
 
+    const handleUpdateName = async () => {
+        if (!newName.trim() || newName === user.name) {
+            setIsEditingName(false);
+            return;
+        }
+
+        setIsUpdating(true);
+        const success = await updateProfile(newName.trim());
+        if (success) {
+            alert('대화명이 변경되었습니다! 🍑');
+            setIsEditingName(false);
+        } else {
+            alert('대화명 변경에 실패했습니다.');
+        }
+        setIsUpdating(false);
+    };
+
     const playPreview = (type) => {
         const audio = new Audio(sounds[type || soundType]);
         audio.volume = volume;
@@ -78,13 +100,52 @@ const SettingsPage = () => {
 
             <div className="max-w-2xl mx-auto space-y-8">
                 {/* Profile Section */}
-                <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <div className="flex items-center gap-6">
+                <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                        <span className="text-8xl font-black italic uppercase italic font-mono leading-none">PROFILE</span>
+                    </div>
+
+                    <div className="flex items-center gap-6 relative z-10">
                         <div className="w-20 h-20 rounded-3xl orange-gradient flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-[#FF9500]/20">
                             {user?.name?.[0]}
                         </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white mb-1">{user?.name}</h2>
+                        <div className="flex-1">
+                            {isEditingName ? (
+                                <div className="flex items-center gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="bg-[#1a1a24] border border-[#FF9500]/30 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#FF9500] transition-all w-full max-w-[200px]"
+                                        placeholder="새 대화명 입력"
+                                        autoFocus
+                                    />
+                                    <button
+                                        disabled={isUpdating}
+                                        onClick={handleUpdateName}
+                                        className="px-4 py-2 bg-[#FF9500] text-white text-[10px] font-bold rounded-lg hover:bg-[#ffaa33] transition-all disabled:opacity-50"
+                                    >
+                                        저장
+                                    </button>
+                                    <button
+                                        onClick={() => { setIsEditingName(false); setNewName(user.name); }}
+                                        className="px-4 py-2 bg-white/5 text-[#6b6b8a] text-[10px] font-bold rounded-lg hover:bg-white/10 transition-all border border-white/5"
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-3 mb-1">
+                                    <h2 className="text-xl font-bold text-white">{user?.name}</h2>
+                                    <button
+                                        onClick={() => setIsEditingName(true)}
+                                        className="p-2 rounded-lg bg-white/5 text-[#6b6b8a] hover:text-[#FF9500] hover:bg-[#FF9500]/10 transition-all text-xs"
+                                        title="대화명 수정"
+                                    >
+                                        ✏️
+                                    </button>
+                                </div>
+                            )}
                             <p className="text-xs text-[#6b6b8a] font-mono tracking-widest uppercase">{user?.role} / {user?.username}</p>
                         </div>
                     </div>

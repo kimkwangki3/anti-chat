@@ -88,17 +88,31 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// @route   GET /api/auth/me
-router.get('/me', protect, async (req, res) => {
-    res.json({
-        _id: req.user._id,
-        name: req.user.name,
-        username: req.user.username,
-        role: req.user.role,
-        isOnline: req.user.isOnline,
-        lastLoginIp: req.user.lastLoginIp,
-        lastLoginAt: req.user.lastLoginAt
-    });
+// @route   PATCH /api/auth/profile
+// @desc    Update user profile (display name)
+// @access  Private
+router.patch('/profile', protect, async (req, res) => {
+    const { name } = req.body;
+
+    try {
+        const user = await User.findById(req.user._id);
+
+        if (user) {
+            user.name = name || user.name;
+            const updatedUser = await user.save();
+
+            res.json({
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                username: updatedUser.username,
+                role: updatedUser.role
+            });
+        } else {
+            res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 module.exports = router;
