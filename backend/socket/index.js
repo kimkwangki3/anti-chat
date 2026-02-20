@@ -89,6 +89,19 @@ const socketHandler = (io) => {
                     const isAdminSender = room.adminId.toString() === senderId.toString();
                     const recipientId = isAdminSender ? room.memberId : room.adminId;
 
+                    // 수신자가 현재 방에 접속 중인지 확인 (접속 중이면 unreadCount 증가 안 함)
+                    const roomOccupants = io.sockets.adapter.rooms.get(roomId);
+                    const recipientSocketsInRoom = [];
+                    if (roomOccupants) {
+                        for (const socketId of roomOccupants) {
+                            const s = io.sockets.sockets.get(socketId);
+                            if (s && s.rooms.has(recipientId.toString())) {
+                                recipientSocketsInRoom.push(socketId);
+                            }
+                        }
+                    }
+                    const isRecipientInRoom = recipientSocketsInRoom.length > 0;
+
                     // 읽지 않은 카운트 증가 및 가시성 보장
                     const updateData = {
                         lastMessage: content,
@@ -97,10 +110,16 @@ const socketHandler = (io) => {
                         memberVisible: true
                     };
 
-                    if (isAdminSender) {
-                        updateData.$inc = { unreadCountMember: 1 };
+                    if (!isRecipientInRoom) {
+                        // 수신자가 방에 없을 때만 unreadCount 증가
+                        if (isAdminSender) {
+                            updateData.$inc = { unreadCountMember: 1 };
+                        } else {
+                            updateData.$inc = { unreadCountAdmin: 1 };
+                        }
                     } else {
-                        updateData.$inc = { unreadCountAdmin: 1 };
+                        // 수신자가 방에 있으면 isRead: true로 메시지 즉시 저장
+                        await Message.findByIdAndUpdate(message._id, { isRead: true });
                     }
 
                     const updatedRoom = await ChatRoom.findByIdAndUpdate(roomId, updateData, { new: true })

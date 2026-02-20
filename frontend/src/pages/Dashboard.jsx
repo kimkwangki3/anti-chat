@@ -128,37 +128,63 @@ const Dashboard = () => {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {myChannels.map((membership) => (
-                            <div
-                                key={membership.channelId?._id}
-                                onClick={() => handleChannelClick(membership.channelId)}
-                                className="group relative bg-[#23232f] p-8 rounded-[2.5rem] border border-white/5 hover:border-[#FF9500]/30 transition-all cursor-pointer overflow-hidden flex flex-col h-full shadow-xl hover:shadow-[#FF9500]/5"
-                            >
-                                <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#FF9500] opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                        {myChannels.map((membership) => {
+                            const chId = membership.channelId?._id;
+                            const chCounts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0 };
+                            const totalUnread = chCounts.notice + chCounts.post + chCounts.chat;
 
-                                <div className="flex justify-between items-start mb-6">
-                                    <div className="w-12 h-12 bg-[#FF9500]/10 text-[#FF9500] rounded-2xl flex items-center justify-center text-xl shadow-inner">
-                                        🏘️
+                            return (
+                                <div
+                                    key={membership.channelId?._id}
+                                    onClick={() => handleChannelClick(membership.channelId)}
+                                    className="group relative bg-[#23232f] p-8 rounded-[2.5rem] border border-white/5 hover:border-[#FF9500]/30 transition-all cursor-pointer overflow-hidden flex flex-col h-full shadow-xl hover:shadow-[#FF9500]/5"
+                                >
+                                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#FF9500] opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="w-12 h-12 bg-[#FF9500]/10 text-[#FF9500] rounded-2xl flex items-center justify-center text-xl shadow-inner">
+                                            🏘️
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            {/* 채널별 신규 알림 뱃지 */}
+                                            {chCounts.notice > 0 && (
+                                                <span className="flex items-center gap-1 bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                    📢 {chCounts.notice}
+                                                </span>
+                                            )}
+                                            {chCounts.post > 0 && (
+                                                <span className="flex items-center gap-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                    📋 {chCounts.post}
+                                                </span>
+                                            )}
+                                            {chCounts.chat > 0 && (
+                                                <span className="flex items-center gap-1 bg-[#FF9500]/10 text-[#FF9500] border border-[#FF9500]/20 text-[10px] font-bold px-2 py-0.5 rounded-full animate-bounce">
+                                                    💬 {chCounts.chat}
+                                                </span>
+                                            )}
+                                            {totalUnread === 0 && (
+                                                <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm ${membership.status === 'approved' ? 'bg-[#06d6a0]/10 text-[#06d6a0] border border-[#06d6a0]/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}`}>
+                                                    {membership.status === 'approved' ? 'Active' : 'Pending'}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm ${membership.status === 'approved' ? 'bg-[#06d6a0]/10 text-[#06d6a0] border border-[#06d6a0]/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}`}>
-                                        {membership.status === 'approved' ? 'Active' : 'Pending'}
-                                    </span>
+
+                                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-[#FF9500] transition-colors truncate tracking-tight">{membership.channelId?.name}</h3>
+                                    <p className="text-[#6b6b8a] text-xs line-clamp-2 mb-8 h-10 leading-relaxed font-medium">{membership.channelId?.description}</p>
+
+                                    <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-gray-600'}`}></div>
+                                            <span className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-widest font-mono">Host {membership.channelId?.ownerId?.isOnline ? 'Live' : 'Off'}</span>
+                                        </div>
+                                        <div className="text-[#FF9500] opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 font-bold text-xs uppercase tracking-tighter flex items-center gap-1">
+                                            Enter <span className="text-[8px]">▶</span>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-[#FF9500] transition-colors truncate tracking-tight">{membership.channelId?.name}</h3>
-                                <p className="text-[#6b6b8a] text-xs line-clamp-2 mb-8 h-10 leading-relaxed font-medium">{membership.channelId?.description}</p>
-
-                                <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-gray-600'}`}></div>
-                                        <span className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-widest font-mono">Host {membership.channelId?.ownerId?.isOnline ? 'Live' : 'Off'}</span>
-                                    </div>
-                                    <div className="text-[#FF9500] opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 font-bold text-xs uppercase tracking-tighter flex items-center gap-1">
-                                        Enter <span className="text-[8px]">▶</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </section>

@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import useChannelStore from '../../store/channelStore';
+import useAuthStore from '../../store/authStore';
 
 const ChannelCreateModal = ({ isOpen, onClose }) => {
     const [formData, setFormData] = useState({ name: '', description: '' });
     const { createChannel } = useChannelStore();
+    const { checkAuth } = useAuthStore();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         const success = await createChannel(formData);
         if (success) {
+            // 서버에서 대화명이 '{채널명} 관리자'로 변경됐으므로 user 정보 갱신
+            await checkAuth();
             onClose();
             setFormData({ name: '', description: '' });
         }

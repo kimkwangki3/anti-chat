@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Channel = require('../models/Channel');
 const ChannelMember = require('../models/ChannelMember');
+const User = require('../models/User');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // @route   POST /api/channels
@@ -33,6 +34,9 @@ router.post('/', protect, admin, async (req, res) => {
             userId: req.user._id,
             status: 'approved'
         });
+
+        // 관리자 대화명 자동 변경: '{채널명} 관리자'
+        await User.findByIdAndUpdate(req.user._id, { name: `${name} 관리자` });
 
         res.status(201).json(channel);
     } catch (error) {
