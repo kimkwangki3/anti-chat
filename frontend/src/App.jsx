@@ -115,22 +115,22 @@ function App() {
           } />
 
           {/* 최고관리자 전용 라우트 */}
-          <Route path="/super-admin/users" element={
+          <Route path="/superadmin/users" element={
             <ProtectedLayout>
               <SuperAdminUsers />
             </ProtectedLayout>
           } />
-          <Route path="/super-admin/channels" element={
+          <Route path="/superadmin/channels" element={
             <ProtectedLayout>
               <SuperAdminChannels />
             </ProtectedLayout>
           } />
-          <Route path="/super-admin/channels/:id" element={
+          <Route path="/superadmin/channels/:id" element={
             <ProtectedLayout>
               <SuperAdminChannelDetail />
             </ProtectedLayout>
           } />
-          <Route path="/super-admin/chats" element={
+          <Route path="/superadmin/chats" element={
             <ProtectedLayout>
               <SuperAdminChats />
             </ProtectedLayout>

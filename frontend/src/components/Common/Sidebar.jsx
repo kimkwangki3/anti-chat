@@ -34,9 +34,9 @@ const Sidebar = () => {
     ];
 
     const superAdminMenuItems = [
-        { id: 'sa-users', label: '전체 회원 관리', icon: '👑', path: '/super-admin/users' },
-        { id: 'sa-channels', label: '전체 채널 관리', icon: '🌐', path: '/super-admin/channels' },
-        { id: 'sa-chats', label: '채팅 로그 열람', icon: '🔍', path: '/super-admin/chats' },
+        { id: 'sa-users', label: '전체 회원 관리', icon: '👑', path: '/superadmin/users' },
+        { id: 'sa-channels', label: '전체 채널 관리', icon: '🌐', path: '/superadmin/channels' },
+        { id: 'sa-chats', label: '채팅 로그 열람', icon: '🔍', path: '/superadmin/chats' },
     ];
 
     return (
