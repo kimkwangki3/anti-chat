@@ -14,7 +14,7 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#1a1a24] flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-[100dvh] bg-[#1a1a24] flex items-center justify-center p-6 relative overflow-hidden">
             {/* Decorative Orbs */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FF8C69]/10 rounded-full blur-[120px]"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#E8735A]/5 rounded-full blur-[120px]"></div>

@@ -6,8 +6,18 @@ import useNoticeStore from './noticeStore';
 import usePostStore from './postStore';
 import useNotificationStore from './notificationStore';
 
+const getSafeUser = () => {
+    try {
+        const user = localStorage.getItem('user');
+        return user ? JSON.parse(user) : null;
+    } catch (e) {
+        localStorage.removeItem('user');
+        return null;
+    }
+};
+
 const useAuthStore = create((set) => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
+    user: getSafeUser(),
     token: localStorage.getItem('token') || null,
     isLoading: false,
     error: null,
