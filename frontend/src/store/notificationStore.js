@@ -5,9 +5,9 @@ const useNotificationStore = create(
     persist(
         (set, get) => ({
             notifications: [],
-            // 채널�??��? ?��? ??�� ??{ [channelId]: { notice: 0, post: 0, chat: 0 } }
+            // 채널별 읽지 않은 항목 수 { [channelId]: { notice: 0, post: 0, chat: 0 } }
             unreadCounts: {},
-            // 채널�?미승??가???�청 ??(관리자?? { [channelId]: number }
+            // 채널별 미승인 가입 신청 수 (관리자용) { [channelId]: number }
             pendingCounts: {},
 
             addNotification: (notification) => {
@@ -46,7 +46,7 @@ const useNotificationStore = create(
                 });
             },
 
-            // 미승??가???�청 ??증�? (관리자??
+            // 미승인 가입 신청 수 증가 (관리자용)
             incrementPendingCount: (channelId) => {
                 set((state) => ({
                     pendingCounts: {
@@ -56,7 +56,7 @@ const useNotificationStore = create(
                 }));
             },
 
-            // 미승??가???�청 ??차감 (?�인/거절 ??
+            // 미승인 가입 신청 수 차감 (승인/거절 후)
             decrementPendingCount: (channelId) => {
                 set((state) => ({
                     pendingCounts: {
@@ -66,14 +66,14 @@ const useNotificationStore = create(
                 }));
             },
 
-            // ?�정 채널 미승????초기??
+            // 특정 채널 미승인 수 초기화
             resetPendingCount: (channelId) => {
                 set((state) => ({
                     pendingCounts: { ...state.pendingCounts, [channelId]: 0 }
                 }));
             },
 
-            // ?�체 미승?????�산
+            // 전체 미승인 수 합산
             getTotalPendingCount: () => {
                 const { pendingCounts } = get();
                 return Object.values(pendingCounts).reduce((sum, n) => sum + n, 0);
@@ -82,7 +82,7 @@ const useNotificationStore = create(
             resetStore: () => set({ notifications: [], unreadCounts: {}, pendingCounts: {} })
         }),
         {
-            name: 'PEACH-notifications', // localStorage key
+            name: 'anti-notifications', // localStorage key
         }
     )
 );

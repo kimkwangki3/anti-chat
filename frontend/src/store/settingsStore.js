@@ -19,7 +19,7 @@ const useSettingsStore = create(
             setNotificationPermission: (perm) => set({ notificationPermission: perm }),
         }),
         {
-            name: 'PEACH-settings',
+            name: 'anti-settings',
         }
     )
 );
