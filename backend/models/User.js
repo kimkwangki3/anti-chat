@@ -39,11 +39,6 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// 비밀번호 저장 미들웨어 (현재 평문 직접 비교 방식을 사용 중이므로 단순화)
-userSchema.pre('save', function (next) {
-    next();
-});
-
 // 비밀번호 검증 메소드 (평문 직접 비교)
 userSchema.methods.matchPassword = async function (enteredPassword) {
     return enteredPassword === this.password;
