@@ -164,12 +164,34 @@ router.put('/users/:id/status', async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
 
+        const prevStatus = user.status;
         user.status = status;
         await user.save();
 
-        // '휴정(suspended)' 또는 '탈퇴(withdrawn)' 시 모든 채널에서 자동 탈퇴 처리
+        // 1. 관리자(Admin)인 경우 개설한 채널들에 대한 연쇄 처리
+        if (user.role === 'admin' || user.role === 'superadmin') {
+            if (status === 'suspended' || status === 'withdrawn') {
+                // 채널 정지
+                await Channel.updateMany({ ownerId: user._id }, { status: 'suspended' });
+            } else if (status === 'active' && (prevStatus === 'suspended' || prevStatus === 'withdrawn')) {
+                // 채널 복구
+                await Channel.updateMany({ ownerId: user._id }, { status: 'active' });
+            }
+        }
+
+        // 2. 모든 유저에 대해 가입된 채널(멤버십) 정기/복구 처리
         if (status === 'suspended' || status === 'withdrawn') {
-            await ChannelMember.deleteMany({ userId: user._id });
+            // 삭제 대신 'inactive'로 변경하여 데이터 보존
+            await ChannelMember.updateMany(
+                { userId: user._id, status: 'approved' },
+                { status: 'inactive' }
+            );
+        } else if (status === 'active' && (prevStatus === 'suspended' || prevStatus === 'withdrawn')) {
+            // 'inactive' 상태였던 멤버십을 다시 'approved'로 복구
+            await ChannelMember.updateMany(
+                { userId: user._id, status: 'inactive' },
+                { status: 'approved' }
+            );
         }
 
         res.json({ message: `사용자 상태가 ${status}로 변경되었습니다.`, user });

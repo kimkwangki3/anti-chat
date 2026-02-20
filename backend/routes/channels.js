@@ -73,8 +73,8 @@ router.get('/my-channels', protect, async (req, res) => {
                 populate: { path: 'ownerId', select: 'name username isOnline' }
             });
 
-        // channelId가 null인 것(비활성화된 채널 멤버십)은 제외
-        const activeMemberships = memberships.filter(m => m.channelId !== null);
+        // channelId가 null인 것(비활성화된 채널)과 membership 상태가 'approved'가 아닌 것 제외
+        const activeMemberships = memberships.filter(m => m.channelId !== null && m.status === 'approved');
         res.json(activeMemberships);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -88,6 +88,12 @@ router.get('/:id', protect, async (req, res) => {
     try {
         const channel = await Channel.findById(req.params.id).populate('ownerId', 'name username');
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+
+        // 정지된 채널은 최고관리자만 접근 가능하도록 제한 (또는 소유자)
+        if (channel.status === 'suspended' && req.user.role !== 'superadmin' && channel.ownerId._id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: '이 채널은 현재 정지된 상태입니다.' });
+        }
+
         res.json(channel);
     } catch (error) {
         res.status(500).json({ message: error.message });

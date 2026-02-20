@@ -13,7 +13,7 @@ const channelMemberSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'approved', 'rejected', 'kicked'],
+        enum: ['pending', 'approved', 'rejected', 'kicked', 'inactive'],
         default: 'pending'
     },
     isChatBlocked: {
