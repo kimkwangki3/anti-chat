@@ -34,18 +34,20 @@ const ChatPage = () => {
         initChat();
     }, [channelId, fetchRooms, resetUnreadCount, setCurrentRoom]);
 
+    // roomId URL 파라미터로 방 자동 입장 (최초 1회만)
     useEffect(() => {
-        if (rooms.length > 0) {
-            if (roomId) {
-                const targetRoom = rooms.find(r => r._id === roomId);
-                if (targetRoom && currentRoom?._id !== targetRoom._id) {
-                    setCurrentRoom(targetRoom);
-                }
-            } else if (user?.role === 'member' && rooms.length === 1 && !currentRoom) {
-                setCurrentRoom(rooms[0]);
+        if (roomId && rooms.length > 0 && !currentRoom) {
+            const targetRoom = rooms.find(r => r._id === roomId);
+            if (targetRoom) {
+                setCurrentRoom(targetRoom);
             }
+        } else if (!roomId && user?.role === 'member' && rooms.length === 1 && !currentRoom) {
+            // 멤버이면서 방이 1개뿐이고 아직 선택 안 됐을 때만 자동 입장
+            setCurrentRoom(rooms[0]);
         }
-    }, [rooms, user, currentRoom, setCurrentRoom, roomId]);
+        // currentRoom은 의존성에서 제외 - rooms 변경시 재진입 방지
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rooms, roomId]);
 
     useEffect(() => {
         if (!socket.connected) {

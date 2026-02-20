@@ -75,12 +75,17 @@ const useChatStore = create((set, get) => ({
 
     updateRoomInList: (updatedRoom) => {
         set(state => {
-            const index = state.rooms.findIndex(r => r._id === updatedRoom._id);
+            // 현재 열람 중인 방이면 unreadCount를 항상 0으로 고정
+            const processedRoom = state.currentRoom?._id === updatedRoom._id
+                ? { ...updatedRoom, unreadCountAdmin: 0, unreadCountMember: 0 }
+                : updatedRoom;
+
+            const index = state.rooms.findIndex(r => r._id === processedRoom._id);
             let newRooms = [...state.rooms];
             if (index !== -1) {
-                newRooms[index] = updatedRoom;
+                newRooms[index] = processedRoom;
             } else {
-                newRooms.push(updatedRoom);
+                newRooms.push(processedRoom);
             }
             // 최신순 정렬
             newRooms.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));

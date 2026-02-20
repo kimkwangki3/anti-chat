@@ -101,6 +101,7 @@ const socketHandler = (io) => {
                         }
                     }
                     const isRecipientInRoom = recipientSocketsInRoom.length > 0;
+                    console.log(`[SOCKET] Recipient in room: ${isRecipientInRoom} (recipient: ${recipientId})`);
 
                     // 읽지 않은 카운트 증가 및 가시성 보장
                     const updateData = {
