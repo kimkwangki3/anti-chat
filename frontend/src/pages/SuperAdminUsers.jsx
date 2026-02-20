@@ -22,6 +22,16 @@ const SuperAdminUsers = () => {
         }
     };
 
+    const handleStatusChange = async (userId, newStatus) => {
+        if (!window.confirm(`사용자 상태를 ${newStatus}로 변경하시겠습니까?`)) return;
+        try {
+            await axios.put(`/superadmin/users/${userId}/status`, { status: newStatus });
+            fetchUsers(); // 목록 새로고침
+        } catch (error) {
+            alert('상태 변경에 실패했습니다: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
     const filteredUsers = users.filter(user => {
         const matchesSearch =
             user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,7 +51,6 @@ const SuperAdminUsers = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-4">
-                    {/* Role Filter */}
                     <select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value)}
@@ -53,7 +62,6 @@ const SuperAdminUsers = () => {
                         <option value="member">일반 회원</option>
                     </select>
 
-                    {/* Search Input */}
                     <div className="relative group min-w-[300px]">
                         <input
                             type="text"
@@ -82,8 +90,8 @@ const SuperAdminUsers = () => {
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">사용자</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">역할</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">가입일</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">상태</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">접속 IP</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">등급/상태</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">관리 액션</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -112,17 +120,44 @@ const SuperAdminUsers = () => {
                                             {new Date(user.createdAt).toLocaleDateString()}
                                         </td>
                                         <td className="px-8 py-6">
-                                            <div className="flex items-center gap-2">
-                                                <span className={`w-1.5 h-1.5 rounded-full ${user.isOnline ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-gray-600'}`}></span>
-                                                <span className={`text-[10px] font-black uppercase ${user.isOnline ? 'text-[#06d6a0]' : 'text-[#444466]'}`}>
-                                                    {user.isOnline ? 'ONLINE' : 'OFFLINE'}
-                                                </span>
-                                            </div>
+                                            <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${user.status === 'active' ? 'bg-[#06d6a0]/10 text-[#06d6a0]' :
+                                                    user.status === 'suspended' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                        'bg-red-500/10 text-red-500'
+                                                }`}>
+                                                {user.status || 'active'}
+                                            </span>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <p className="text-[10px] font-mono text-[#6b6b8a] truncate max-w-[150px]">
-                                                {user.lastIp || 'N/A'}
-                                            </p>
+                                            <div className="flex items-center gap-2">
+                                                {user.role !== 'superadmin' && (
+                                                    <>
+                                                        {user.status !== 'active' && (
+                                                            <button
+                                                                onClick={() => handleStatusChange(user._id, 'active')}
+                                                                className="p-2 bg-[#06d6a0]/10 hover:bg-[#06d6a0] text-[#06d6a0] hover:text-white rounded-lg transition-all text-[10px] font-bold border border-[#06d6a0]/20"
+                                                            >
+                                                                활성화
+                                                            </button>
+                                                        )}
+                                                        {user.status !== 'suspended' && (
+                                                            <button
+                                                                onClick={() => handleStatusChange(user._id, 'suspended')}
+                                                                className="p-2 bg-yellow-500/10 hover:bg-yellow-500 text-yellow-500 hover:text-white rounded-lg transition-all text-[10px] font-bold border border-yellow-500/20"
+                                                            >
+                                                                휴정
+                                                            </button>
+                                                        )}
+                                                        {user.status !== 'withdrawn' && (
+                                                            <button
+                                                                onClick={() => handleStatusChange(user._id, 'withdrawn')}
+                                                                className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all text-[10px] font-bold border border-red-500/20"
+                                                            >
+                                                                탈퇴
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

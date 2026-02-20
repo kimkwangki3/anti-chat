@@ -16,6 +16,7 @@ import AdminEditChannel from './pages/AdminEditChannel';
 import SettingsPage from './pages/SettingsPage';
 import SuperAdminUsers from './pages/SuperAdminUsers';
 import SuperAdminChannels from './pages/SuperAdminChannels';
+import SuperAdminChannelDetail from './pages/SuperAdminChannelDetail';
 import SuperAdminChats from './pages/SuperAdminChats';
 
 const ProtectedLayout = ({ children }) => {
@@ -122,6 +123,11 @@ function App() {
           <Route path="/super-admin/channels" element={
             <ProtectedLayout>
               <SuperAdminChannels />
+            </ProtectedLayout>
+          } />
+          <Route path="/super-admin/channels/:id" element={
+            <ProtectedLayout>
+              <SuperAdminChannelDetail />
             </ProtectedLayout>
           } />
           <Route path="/super-admin/chats" element={

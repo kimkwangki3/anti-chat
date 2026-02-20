@@ -19,6 +19,11 @@ const channelSchema = new mongoose.Schema({
     profileImage: {
         type: String,
         default: ''
+    },
+    status: {
+        type: String,
+        enum: ['active', 'suspended', 'deleted'],
+        default: 'active'
     }
 }, {
     timestamps: true

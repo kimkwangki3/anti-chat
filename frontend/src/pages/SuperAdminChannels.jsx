@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 
 const SuperAdminChannels = () => {
     const [channels, setChannels] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchChannels();
@@ -18,6 +20,21 @@ const SuperAdminChannels = () => {
             console.error('Fetch channels failed:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleStatusChange = async (channelId, newStatus) => {
+        const confirmMsg = newStatus === 'deleted'
+            ? '채널을 영구 삭제하시겠습니까? 관련 데이터가 모두 삭제되지는 않지만 검색에서 제외됩니다.'
+            : `채널 상태를 ${newStatus === 'suspended' ? '임시패쇄' : '활성화'}로 변경하시겠습니까?`;
+
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            await axios.put(`/superadmin/channels/${channelId}/status`, { status: newStatus });
+            fetchChannels();
+        } catch (error) {
+            alert('상태 변경에 실패했습니다: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -49,9 +66,9 @@ const SuperAdminChannels = () => {
             </header>
 
             {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-4">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-64 bg-[#12121a] rounded-3xl animate-pulse border border-white/5"></div>
+                        <div key={i} className="h-16 bg-[#12121a] rounded-2xl animate-pulse border border-white/5"></div>
                     ))}
                 </div>
             ) : (
@@ -61,10 +78,9 @@ const SuperAdminChannels = () => {
                             <thead>
                                 <tr className="bg-white/5 border-b border-white/5">
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">채널 정보</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">상태</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">통계</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">설정</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">생성일</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">유형</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">관리 액션</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
@@ -72,46 +88,66 @@ const SuperAdminChannels = () => {
                                     <tr key={channel._id} className="hover:bg-white/[0.02] transition-colors group">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-[#4f6ef7]/10 flex items-center justify-center text-2xl shadow-inner border border-[#4f6ef7]/10 group-hover:scale-110 transition-transform">
+                                                <div className="w-12 h-12 rounded-2xl bg-[#4f6ef7]/10 flex items-center justify-center text-2xl border border-[#4f6ef7]/10">
                                                     🏘️
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-base font-bold text-white group-hover:text-[#4f6ef7] transition-colors truncate max-w-[200px]">{channel.name}</p>
-                                                    <p className="text-[10px] text-[#6b6b8a] truncate max-w-[250px] font-medium mt-0.5">{channel.description}</p>
+                                                    <p className="text-base font-bold text-white group-hover:text-[#4f6ef7] transition-colors cursor-pointer"
+                                                        onClick={() => navigate(`/superadmin/channels/${channel._id}`)}>
+                                                        {channel.name}
+                                                    </p>
+                                                    <p className="text-[10px] text-[#6b6b8a] truncate max-w-[200px] font-medium mt-0.5">{channel.description}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="text-center px-3 py-1 bg-white/5 rounded-xl border border-white/5">
-                                                    <p className="text-[8px] font-black text-[#6b6b8a] uppercase tracking-tighter">Members</p>
-                                                    <p className="text-xs font-bold text-white">{channel.stats?.memberCount || 0}</p>
-                                                </div>
-                                                <div className="text-center px-3 py-1 bg-white/5 rounded-xl border border-white/5">
-                                                    <p className="text-[8px] font-black text-[#6b6b8a] uppercase tracking-tighter">Posts</p>
-                                                    <p className="text-xs font-bold text-white">{channel.stats?.postCount || 0}</p>
-                                                </div>
-                                                <div className="text-center px-3 py-1 bg-white/5 rounded-xl border border-white/5">
-                                                    <p className="text-[8px] font-black text-[#6b6b8a] uppercase tracking-tighter">Notices</p>
-                                                    <p className="text-xs font-bold text-white">{channel.stats?.noticeCount || 0}</p>
-                                                </div>
+                                            <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${channel.status === 'active' ? 'bg-[#06d6a0]/10 text-[#06d6a0]' :
+                                                    channel.status === 'suspended' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                        'bg-red-500/10 text-red-500'
+                                                }`}>
+                                                {channel.status || 'active'}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <div className="flex gap-2 text-[10px] font-bold text-[#6b6b8a]">
+                                                <span>👥 {channel.stats?.memberCount || 0}</span>
+                                                <span>📋 {channel.stats?.postCount || 0}</span>
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-2">
-                                                <span className={`w-1.5 h-1.5 rounded-full ${channel.status !== 'withdrawn' ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-red-500'}`}></span>
-                                                <span className={`text-[10px] font-black uppercase ${channel.status !== 'withdrawn' ? 'text-[#06d6a0]' : 'text-red-500'}`}>
-                                                    {channel.status || 'ACTIVE'}
-                                                </span>
+                                                <button
+                                                    onClick={() => navigate(`/superadmin/channels/${channel._id}`)}
+                                                    className="p-2 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white rounded-lg transition-all text-[10px] font-bold border border-purple-500/20"
+                                                >
+                                                    콘텐츠 관리
+                                                </button>
+                                                <div className="w-px h-6 bg-white/5 mx-1"></div>
+                                                {channel.status !== 'active' && (
+                                                    <button
+                                                        onClick={() => handleStatusChange(channel._id, 'active')}
+                                                        className="p-2 bg-[#06d6a0]/10 hover:bg-[#06d6a0] text-[#06d6a0] hover:text-white rounded-lg transition-all text-[10px] font-bold border border-[#06d6a0]/20"
+                                                    >
+                                                        활성
+                                                    </button>
+                                                )}
+                                                {channel.status !== 'suspended' && (
+                                                    <button
+                                                        onClick={() => handleStatusChange(channel._id, 'suspended')}
+                                                        className="p-2 bg-yellow-500/10 hover:bg-yellow-500 text-yellow-500 hover:text-white rounded-lg transition-all text-[10px] font-bold border border-yellow-500/20"
+                                                    >
+                                                        폐쇄
+                                                    </button>
+                                                )}
+                                                {channel.status !== 'deleted' && (
+                                                    <button
+                                                        onClick={() => handleStatusChange(channel._id, 'deleted')}
+                                                        className="p-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all text-[10px] font-bold border border-red-500/20"
+                                                    >
+                                                        삭제
+                                                    </button>
+                                                )}
                                             </div>
-                                        </td>
-                                        <td className="px-8 py-6 text-[11px] font-bold text-[#6b6b8a] font-mono">
-                                            {new Date(channel.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="px-3 py-1 bg-[#4f6ef7]/10 text-[#4f6ef7] border border-[#4f6ef7]/20 text-[9px] font-black rounded-full uppercase tracking-widest leading-none">
-                                                {channel.type || 'PUBLIC'}
-                                            </span>
                                         </td>
                                     </tr>
                                 ))}

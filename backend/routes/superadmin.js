@@ -148,4 +148,95 @@ router.get('/channels/:id/messages', async (req, res) => {
     }
 });
 
+// @route   PUT /api/superadmin/users/:id/status
+// @desc    회원 등급(상태) 변경 (활성화, 휴정, 탈퇴)
+router.put('/users/:id/status', async (req, res) => {
+    const { status } = req.body;
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+
+        user.status = status;
+        await user.save();
+
+        // '휴정(suspended)' 또는 '탈퇴(withdrawn)' 시 모든 채널에서 자동 탈퇴 처리
+        if (status === 'suspended' || status === 'withdrawn') {
+            await ChannelMember.deleteMany({ userId: user._id });
+        }
+
+        res.json({ message: `사용자 상태가 ${status}로 변경되었습니다.`, user });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   PUT /api/superadmin/channels/:id/status
+// @desc    채널 상태 변경 (활성화, 임시패쇄, 삭제)
+router.put('/channels/:id/status', async (req, res) => {
+    const { status } = req.body;
+    try {
+        const channel = await Channel.findById(req.params.id);
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+
+        channel.status = status;
+        await channel.save();
+
+        res.json({ message: `채널 상태가 ${status}로 변경되었습니다.`, channel });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   GET /api/superadmin/channels/:id/detail
+// @desc    채널 통합 상세 관리 데이터 조회 (회원, 공지, 게시글)
+router.get('/channels/:id/detail', async (req, res) => {
+    try {
+        const [members, notices, posts] = await Promise.all([
+            ChannelMember.find({ channelId: req.params.id }).populate('userId', 'name username isOnline status'),
+            Notice.find({ channelId: req.params.id }).populate('authorId', 'name'),
+            Post.find({ channelId: req.params.id }).populate('authorId', 'name')
+        ]);
+
+        res.json({ members, notices, posts });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   DELETE /api/superadmin/posts/:id
+// @desc    관리자 권한 게시글 삭제
+router.delete('/posts/:id', async (req, res) => {
+    try {
+        await Post.findByIdAndDelete(req.params.id);
+        res.json({ message: '게시글이 삭제되었습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   DELETE /api/superadmin/notices/:id
+// @desc    관리자 권한 공지사항 삭제
+router.delete('/notices/:id', async (req, res) => {
+    try {
+        await Notice.findByIdAndDelete(req.params.id);
+        res.json({ message: '공지사항이 삭제되었습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   DELETE /api/superadmin/channels/:channelId/members/:userId
+// @desc    관리자 권한 회원 강제 추방
+router.delete('/channels/:channelId/members/:userId', async (req, res) => {
+    try {
+        await ChannelMember.findOneAndDelete({
+            channelId: req.params.channelId,
+            userId: req.params.userId
+        });
+        res.json({ message: '회원이 채널에서 제외되었습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

@@ -34,6 +34,11 @@ const userSchema = new mongoose.Schema({
     },
     lastLogoutAt: {
         type: Date
+    },
+    status: {
+        type: String,
+        enum: ['active', 'suspended', 'withdrawn'],
+        default: 'active'
     }
 }, {
     timestamps: true

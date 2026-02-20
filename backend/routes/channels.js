@@ -50,9 +50,11 @@ router.post('/', protect, admin, async (req, res) => {
 router.get('/search', protect, async (req, res) => {
     const { q } = req.query;
     try {
-        const channels = await Channel.find({
-            name: { $regex: q || '', $options: 'i' }
-        }).populate('ownerId', 'name username');
+        const query = {
+            name: { $regex: q || '', $options: 'i' },
+            status: 'active' // 활성화된 채널만 검색 허용
+        };
+        const channels = await Channel.find(query).populate('ownerId', 'name username');
         res.json(channels);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -67,9 +69,13 @@ router.get('/my-channels', protect, async (req, res) => {
         const memberships = await ChannelMember.find({ userId: req.user._id })
             .populate({
                 path: 'channelId',
+                match: { status: 'active' }, // 활성화된 채널만 매칭
                 populate: { path: 'ownerId', select: 'name username isOnline' }
             });
-        res.json(memberships);
+
+        // channelId가 null인 것(비활성화된 채널 멤버십)은 제외
+        const activeMemberships = memberships.filter(m => m.channelId !== null);
+        res.json(activeMemberships);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
