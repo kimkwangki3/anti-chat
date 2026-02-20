@@ -21,6 +21,19 @@ router.post('/join', protect, async (req, res) => {
             userId: req.user._id,
             status: 'pending'
         });
+
+        // 채널 관리자에게 실시간 알림 emit
+        const channel = await Channel.findById(channelId);
+        if (channel?.ownerId) {
+            req.io.to(channel.ownerId.toString()).emit('new_member_request', {
+                channelId,
+                channelName: channel.name,
+                userId: req.user._id,
+                userName: req.user.name,
+                memberId: member._id
+            });
+        }
+
         res.status(201).json(member);
     } catch (error) {
         res.status(500).json({ message: error.message });

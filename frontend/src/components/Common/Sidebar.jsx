@@ -8,9 +8,10 @@ const Sidebar = () => {
     const location = useLocation();
     const { logout, user } = useAuthStore();
     const { currentChannel } = useChannelStore();
-    const { unreadCounts } = useNotificationStore();
+    const { unreadCounts, pendingCounts } = useNotificationStore();
 
     const counts = unreadCounts[currentChannel?._id] || { notice: 0, post: 0, chat: 0 };
+    const pendingBadge = pendingCounts[currentChannel?._id] || 0;
 
     const menuItems = [
         { id: 'dashboard', label: '홈', icon: '🏠', path: '/' },
@@ -80,17 +81,25 @@ const Sidebar = () => {
                         <div className="space-y-2">
                             {adminMenuItems.map((item) => {
                                 const isActive = location.pathname === item.path;
+                                const badge = item.id === 'members' ? pendingBadge : 0;
                                 return (
                                     <button
                                         key={item.id}
                                         onClick={() => navigate(item.path)}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive
+                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isActive
                                             ? 'bg-white/5 text-white border border-white/10'
                                             : 'text-[#6b6b8a] hover:bg-white/5 hover:text-white'
                                             }`}
                                     >
-                                        <span className="text-lg">{item.icon}</span>
-                                        <span className="text-sm font-bold">{item.label}</span>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-lg">{item.icon}</span>
+                                            <span className="text-sm font-bold">{item.label}</span>
+                                        </div>
+                                        {badge > 0 && (
+                                            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-red-500/20 animate-pulse">
+                                                {badge}
+                                            </span>
+                                        )}
                                     </button>
                                 );
                             })}

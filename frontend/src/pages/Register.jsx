@@ -4,8 +4,20 @@ import useAuthStore from '../store/authStore';
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: '', username: '', password: '', role: 'member' });
+    const [channelName, setChannelName] = useState('');
     const { register, isLoading, error } = useAuthStore();
     const navigate = useNavigate();
+
+    // 관리자 선택 시 대화명 자동 조합
+    const handleChannelNameChange = (value) => {
+        setChannelName(value);
+        setFormData(prev => ({ ...prev, name: value ? `${value} 관리자` : '' }));
+    };
+
+    const handleRoleChange = (role) => {
+        setChannelName('');
+        setFormData(prev => ({ ...prev, role, name: role === 'member' ? prev.name : '' }));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,17 +50,37 @@ const Register = () => {
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono">Full Name</label>
-                            <input
-                                type="text"
-                                required
-                                placeholder="이름을 입력하세요"
-                                className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF9500]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            />
-                        </div>
+                        {/* 이름 / 채널명 입력 */}
+                        {formData.role === 'member' ? (
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono">Full Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="이름을 입력하세요"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF9500]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                />
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono">Channel Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="운영할 채널 이름을 입력하세요"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF9500]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    value={channelName}
+                                    onChange={(e) => handleChannelNameChange(e.target.value)}
+                                />
+                                {channelName && (
+                                    <p className="text-[11px] text-[#FF9500] ml-4 font-mono">
+                                        대화명: <span className="font-bold">{channelName} 관리자</span>
+                                    </p>
+                                )}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono">Identify</label>
                             <input
@@ -77,14 +109,14 @@ const Register = () => {
                             <div className="flex gap-4">
                                 <button
                                     type="button"
-                                    onClick={() => setFormData({ ...formData, role: 'member' })}
+                                    onClick={() => handleRoleChange('member')}
                                     className={`flex-1 py-4 rounded-2xl text-[10px] font-black tracking-widest transition-all border uppercase ${formData.role === 'member' ? 'bg-[#FF9500] border-[#FF9500] text-white shadow-lg shadow-[#FF9500]/20' : 'bg-[#1a1a24] border-white/5 text-[#3e3e56]'}`}
                                 >
                                     Member
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setFormData({ ...formData, role: 'admin' })}
+                                    onClick={() => handleRoleChange('admin')}
                                     className={`flex-1 py-4 rounded-2xl text-[10px] font-black tracking-widest transition-all border uppercase ${formData.role === 'admin' ? 'bg-[#FF9500] border-[#FF9500] text-white shadow-lg shadow-[#FF9500]/20' : 'bg-[#1a1a24] border-white/5 text-[#3e3e56]'}`}
                                 >
                                     Admin

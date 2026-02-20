@@ -3,13 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import useChatStore from '../store/chatStore';
+import useNotificationStore from '../store/notificationStore';
 import ChannelCreateModal from '../components/Common/ChannelCreateModal';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { myChannels, fetchMyChannels, isLoading, setCurrentChannel } = useChannelStore();
+    const { notifications, pendingCounts } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // 모든 채널의 총 미승인 수
+    const totalPending = Object.values(pendingCounts).reduce((s, n) => s + n, 0);
 
     useEffect(() => {
         if (user?._id) {
@@ -45,6 +50,47 @@ const Dashboard = () => {
                     </button>
                 )}
             </header>
+
+            {/* 새 소식 섹션 */}
+            {(notifications.length > 0 || (user?.role === 'admin' && totalPending > 0)) && (
+                <section className="mb-10">
+                    <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2 mb-5">
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 새 소식
+                    </h2>
+                    <div className="space-y-2">
+                        {/* 관리자: 미승인 가입 신청 요약 */}
+                        {user?.role === 'admin' && totalPending > 0 && (
+                            <div
+                                onClick={() => navigate(`/admin/members?channelId=${myChannels[0]?.channelId?._id}`)}
+                                className="flex items-center gap-4 p-4 bg-[#23232f] border border-red-500/20 rounded-2xl cursor-pointer hover:border-red-500/40 transition-all group"
+                            >
+                                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-xl">👥</div>
+                                <div className="flex-1">
+                                    <p className="text-sm font-bold text-white">미승인 가입 신청</p>
+                                    <p className="text-[11px] text-[#6b6b8a]">총 {totalPending}건의 가입 신청을 승인 대기 중입니다</p>
+                                </div>
+                                <span className="bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full">{totalPending}</span>
+                            </div>
+                        )}
+                        {/* 최근 알림 목록 */}
+                        {notifications.slice(0, 4).map(noti => (
+                            <div
+                                key={noti.id}
+                                onClick={() => navigate(noti.path)}
+                                className="flex items-center gap-4 p-4 bg-[#23232f] border border-white/5 rounded-2xl cursor-pointer hover:border-[#FF9500]/20 transition-all group"
+                            >
+                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl">
+                                    {noti.type === 'notice' ? '📢' : noti.type === 'post' ? '📋' : noti.type === 'member' ? '👤' : '💬'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-bold text-[#FF9500] uppercase tracking-wider">{noti.title}</p>
+                                    <p className="text-sm text-white truncate">{noti.message}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             <section className="mb-12">
                 <div className="flex items-center justify-between mb-8">

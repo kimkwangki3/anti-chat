@@ -37,6 +37,15 @@ const ChatSidebar = () => {
     useEffect(() => {
         const handleRoomUpdate = (updatedRoom) => {
             if (updatedRoom.channelId === channelId || !channelId) {
+                // 현재 입장 중인 방이면 unreadCount 강제 0으로 처리 (버그 수정)
+                const { currentRoom } = useChatStore.getState();
+                if (currentRoom?._id === updatedRoom._id) {
+                    updatedRoom = {
+                        ...updatedRoom,
+                        unreadCountAdmin: 0,
+                        unreadCountMember: 0
+                    };
+                }
                 updateRoomInList(updatedRoom);
             }
         };

@@ -51,13 +51,23 @@ const ChatPage = () => {
         if (!socket.connected) {
             socket.auth = { token };
             socket.connect();
-            // 개인 알림 룸 참가를 위한 setup 이벤트 호출
             socket.emit('setup', user);
         }
 
         socket.on('receive_message', (message) => {
+            const { currentRoom, markAsRead } = useChatStore.getState();
             if (message.roomId === currentRoom?._id) {
                 addMessage(message);
+                // 상대방 메시지 수신 시 현재 방이면 즉시 읽음 처리 (버그 수정)
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    const u = JSON.parse(userStr);
+                    const senderId = message.senderId?._id || message.senderId;
+                    if (senderId?.toString() !== u._id?.toString()) {
+                        socket.emit('mark_read', { roomId: currentRoom._id, userId: u._id });
+                        markAsRead(currentRoom._id);
+                    }
+                }
             }
         });
 

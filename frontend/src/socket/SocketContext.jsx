@@ -15,7 +15,7 @@ export const SocketProvider = ({ children }) => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { currentChannel } = useChannelStore();
-    const { addNotification, incrementUnreadCount, removeNotification, notifications } = useNotificationStore();
+    const { addNotification, incrementUnreadCount, removeNotification, notifications, incrementPendingCount } = useNotificationStore();
     const { soundType, volume, sounds } = useSettingsStore();
     const { markMessagesRead } = useChatStore();
     const [onlineCount, setOnlineCount] = useState(0);
@@ -89,10 +89,24 @@ export const SocketProvider = ({ children }) => {
                 playNotificationSound();
             });
 
-            // 읽음 처리 이벤트: 상대방이 채팅방 입장 시 내 메시지를 읽음 처리
+            // 읽음 처리 이벤트
             socket.on('messages_read', ({ roomId, readerId }) => {
-                console.log('[SOCKET] Messages read by:', readerId, 'in room:', roomId);
                 markMessagesRead(roomId, readerId);
+            });
+
+            // 신규 가입 신청 (관리자만 수신)
+            socket.on('new_member_request', (data) => {
+                console.log('[SOCKET] New member request:', data);
+                incrementPendingCount(data.channelId);
+                addNotificationWithTimer({
+                    id: Date.now() + Math.random(),
+                    type: 'member',
+                    title: '새 가입 신청',
+                    message: `${data.userName}님이 ${data.channelName} 채널에 가입 신청했습니다.`,
+                    channelId: data.channelId,
+                    path: `/admin/members?channelId=${data.channelId}`
+                });
+                playNotificationSound();
             });
 
             return () => {
@@ -100,10 +114,11 @@ export const SocketProvider = ({ children }) => {
                 socket.off('post_received');
                 socket.off('chat_notification');
                 socket.off('messages_read');
+                socket.off('new_member_request');
                 socket.disconnect();
             };
         }
-    }, [user, addNotification, incrementUnreadCount, markMessagesRead]);
+    }, [user, addNotification, incrementUnreadCount, markMessagesRead, incrementPendingCount]);
 
     useEffect(() => {
         if (currentChannel?._id && socket.connected) {

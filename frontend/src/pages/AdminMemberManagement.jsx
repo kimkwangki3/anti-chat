@@ -3,12 +3,14 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
 import useChatStore from '../store/chatStore';
+import useNotificationStore from '../store/notificationStore';
 
 const AdminMemberManagement = () => {
     const [members, setMembers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const { user } = useAuthStore();
     const { setCurrentRoom } = useChatStore();
+    const { decrementPendingCount } = useNotificationStore();
     const navigate = useNavigate();
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -37,9 +39,13 @@ const AdminMemberManagement = () => {
         }
     };
 
-    const handleUpdateStatus = async (memberId, status) => {
+    const handleUpdateStatus = async (memberId, status, currentStatus) => {
         try {
             await axios.put(`/channel-members/${memberId}/status`, { status });
+            // pending 상태에서 승인/거절 시 뱃지 감소
+            if (currentStatus === 'pending' && (status === 'approved' || status === 'rejected')) {
+                decrementPendingCount(channelId);
+            }
             fetchMembers();
         } catch (error) {
             alert('업데이트 실패: ' + (error.response?.data?.message || error.message));
@@ -125,13 +131,13 @@ const AdminMemberManagement = () => {
                                     <p className="text-[10px] text-[#5a5a6a] font-mono uppercase tracking-widest mb-8">{m.userId?.username}</p>
                                     <div className="flex gap-3">
                                         <button
-                                            onClick={() => handleUpdateStatus(m._id, 'approved')}
+                                            onClick={() => handleUpdateStatus(m._id, 'approved', m.status)}
                                             className="flex-1 py-3 bg-[#FF9500] text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 transition-transform uppercase tracking-widest"
                                         >
                                             승인하기
                                         </button>
                                         <button
-                                            onClick={() => handleUpdateStatus(m._id, 'rejected')}
+                                            onClick={() => handleUpdateStatus(m._id, 'rejected', m.status)}
                                             className="flex-1 py-3 bg-[#1a1a24] text-[#FF9500] border border-[#FF9500]/20 text-[10px] font-black rounded-xl hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/20 transition-all uppercase tracking-widest"
                                         >
                                             거절
