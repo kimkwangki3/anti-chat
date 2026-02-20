@@ -7,7 +7,25 @@ import useNotificationStore from '../store/notificationStore';
 import useSettingsStore from '../store/settingsStore';
 import useChatStore from '../store/chatStore';
 
+import axios from '../api/axios';
+
 const SocketContext = createContext();
+
+// VAPID 키를 base64에서 Uint8Array로 변환
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
 
 export const useSocket = () => useContext(SocketContext);
 
@@ -31,6 +49,36 @@ export const SocketProvider = ({ children }) => {
         }
     };
 
+    // 푸시 알림 구독 함수
+    const subscribeToPush = async () => {
+        try {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                console.log('[PUSH] Push not supported');
+                return;
+            }
+
+            const registration = await navigator.serviceWorker.ready;
+
+            // 1. 서버에서 공개키 가져오기
+            const { data } = await axios.get('/push/vapid-key');
+            const publicKey = data.publicKey;
+
+            if (!publicKey) return;
+
+            // 2. 브라우저 푸시 구독
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+
+            // 3. 서버에 구독 정보 전송
+            await axios.post('/push/subscribe', { subscription });
+            console.log('[PUSH] Subscription successful');
+        } catch (error) {
+            console.error('[PUSH] Subscription failed:', error);
+        }
+    };
+
     // 알림 추가 + 5초 후 자동 삭제
     const addNotificationWithTimer = (notification) => {
         addNotification(notification);
@@ -44,48 +92,54 @@ export const SocketProvider = ({ children }) => {
             socket.connect();
             socket.emit('setup', user);
 
+            // 로그인 시 푸시 알림 구독 시도
+            subscribeToPush();
+
             socket.on('connected', () => console.log('[SOCKET] Connected'));
 
             // 전역 알림 리스너
             socket.on('notice_received', (notice) => {
+                const channelId = notice.channelId?._id || notice.channelId;
                 console.log('[SOCKET] Notice received:', notice);
                 addNotificationWithTimer({
                     id: Date.now() + Math.random(),
                     type: 'notice',
                     title: '새 공지사항',
                     message: notice.title,
-                    channelId: notice.channelId,
-                    path: `/notices?channelId=${notice.channelId}`
+                    channelId,
+                    path: `/notices?channelId=${channelId}`
                 });
-                incrementUnreadCount(notice.channelId, 'notice');
+                incrementUnreadCount(channelId, 'notice');
                 playNotificationSound();
             });
 
             socket.on('post_received', (post) => {
+                const channelId = post.channelId?._id || post.channelId;
                 console.log('[SOCKET] Post received:', post);
                 addNotificationWithTimer({
                     id: Date.now() + Math.random(),
                     type: 'post',
                     title: '새 게시글',
                     message: post.title,
-                    channelId: post.channelId,
-                    path: `/board?channelId=${post.channelId}`
+                    channelId,
+                    path: `/board?channelId=${channelId}`
                 });
-                incrementUnreadCount(post.channelId, 'post');
+                incrementUnreadCount(channelId, 'post');
                 playNotificationSound();
             });
 
             socket.on('chat_notification', (data) => {
+                const channelId = data.channelId?._id || data.channelId;
                 console.log('[SOCKET] Chat notification received:', data);
                 addNotificationWithTimer({
                     id: Date.now() + Math.random(),
                     type: 'chat',
                     title: '새 메시지',
                     message: `${data.senderName}: ${data.content}`,
-                    channelId: data.channelId,
-                    path: `/chat?channelId=${data.channelId}&roomId=${data.roomId}`
+                    channelId,
+                    path: `/chat?channelId=${channelId}&roomId=${data.roomId}`
                 });
-                incrementUnreadCount(data.channelId, 'chat');
+                incrementUnreadCount(channelId, 'chat');
                 playNotificationSound();
             });
 

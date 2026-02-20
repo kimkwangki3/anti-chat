@@ -14,7 +14,7 @@ const BottomNav = () => {
     const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
 
     const navItems = [
-        { icon: '🏠', label: '홈', path: '/', count: currentChannel ? 0 : totalUnreadAll },
+        { icon: '🏠', label: '홈', path: '/', globalCount: totalUnreadAll },
         { icon: '📢', label: '공지', path: `/notices?channelId=${currentChannel?._id}`, count: counts.notice, hidden: !currentChannel },
         { icon: '📋', label: '게시물', path: `/board?channelId=${currentChannel?._id}`, count: counts.post, hidden: !currentChannel },
         { icon: '💬', label: '채팅', path: `/chat?channelId=${currentChannel?._id}`, count: counts.chat, hidden: !currentChannel },
@@ -40,11 +40,16 @@ const BottomNav = () => {
                             className={`relative flex flex-col items-center justify-center flex-1 gap-1 transition-all ${isActive ? 'text-[#FF9500]' : 'text-[#6b6b8a]'
                                 }`}
                         >
-                            <span className="text-xl">{item.icon}</span>
+                            <span className="relative text-xl">
+                                {item.icon}
+                                {item.globalCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[#12121a] shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+                                )}
+                            </span>
                             <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
 
                             {item.count > 0 && (
-                                <span className="absolute top-1 right-1/4 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full min-w-[14px] flex items-center justify-center shadow-[0_0_8px_rgba(239,68,68,0.5)]">
+                                <span className="absolute top-1 right-1/4 bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full min-w-[14px] flex items-center justify-center shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse">
                                     {item.count > 99 ? '99+' : item.count}
                                 </span>
                             )}

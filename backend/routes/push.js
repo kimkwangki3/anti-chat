@@ -14,7 +14,10 @@ router.post('/subscribe', protect, async (req, res) => {
         const { subscription } = req.body;
 
         await PushSubscription.findOneAndUpdate(
-            { userId: req.user._id },
+            {
+                userId: req.user._id,
+                'subscription.endpoint': subscription.endpoint
+            },
             {
                 userId: req.user._id,
                 subscription: subscription

@@ -5,19 +5,24 @@ const ChannelMember = require('../models/ChannelMember');
 // Web Push VAPID 설정 (server.js에서 설정되지만 안전을 위해 호출 가능하게 구성)
 const sendPushNotification = async (userId, payload) => {
     try {
-        const sub = await PushSubscription.findOne({ userId });
-        if (sub && sub.subscription) {
-            await webpush.sendNotification(
-                sub.subscription,
-                JSON.stringify(payload)
-            );
-            return true;
-        }
+        const subscriptions = await PushSubscription.find({ userId });
+        if (!subscriptions || subscriptions.length === 0) return false;
+
+        const results = await Promise.allSettled(
+            subscriptions.map(sub =>
+                webpush.sendNotification(sub.subscription, JSON.stringify(payload))
+                    .catch(async (error) => {
+                        if (error.statusCode === 410 || error.statusCode === 404) {
+                            await PushSubscription.deleteOne({ _id: sub._id });
+                        }
+                        throw error;
+                    })
+            )
+        );
+
+        return results.some(r => r.status === 'fulfilled');
     } catch (error) {
-        console.error(`[PUSH] Error sending to ${userId}:`, error.message);
-        if (error.statusCode === 410) {
-            await PushSubscription.deleteOne({ userId });
-        }
+        console.error(`[PUSH] Error sending to user ${userId}:`, error.message);
     }
     return false;
 };

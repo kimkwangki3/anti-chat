@@ -11,6 +11,43 @@ const SettingsPage = () => {
     const [pushStatus, setPushStatus] = useState(Notification.permission);
     const [isSubscribing, setIsSubscribing] = useState(false);
 
+    const urlBase64ToUint8Array = (base64String) => {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    };
+
+    const handleSubscribe = async () => {
+        setIsSubscribing(true);
+        try {
+            const permission = await Notification.requestPermission();
+            setPushStatus(permission);
+            if (permission === 'granted') {
+                const registration = await navigator.serviceWorker.ready;
+                const { data } = await axios.get('/push/vapid-key');
+
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(data.publicKey)
+                });
+
+                await axios.post('/push/subscribe', { subscription });
+                alert('푸시 알림 구독 완료! 이제 새로운 소식을 실시간으로 받을 수 있습니다. 🍑');
+            } else {
+                alert('알림 권한이 거부되었습니다. 설정에서 알림을 허용해 주세요.');
+            }
+        } catch (err) {
+            console.error('Push subscription failed:', err);
+            alert('알림 구독 중 오류가 발생했습니다. (PWA 홈 화면 추가 여부를 확인해 주세요)');
+        }
+        setIsSubscribing(false);
+    };
+
     const playPreview = (type) => {
         const audio = new Audio(sounds[type || soundType]);
         audio.volume = volume;
@@ -126,29 +163,7 @@ const SettingsPage = () => {
                             {pushStatus !== 'granted' && pushStatus !== 'denied' && (
                                 <button
                                     disabled={isSubscribing}
-                                    onClick={async () => {
-                                        setIsSubscribing(true);
-                                        try {
-                                            const permission = await Notification.requestPermission();
-                                            setPushStatus(permission);
-                                            if (permission === 'granted') {
-                                                const registration = await navigator.serviceWorker.ready;
-                                                const { data } = await axios.get('/push/vapid-key');
-                                                const subscription = await registration.pushManager.subscribe({
-                                                    userVisibleOnly: true,
-                                                    applicationServerKey: data.publicKey
-                                                });
-                                                await axios.post('/push/subscribe', { subscription });
-                                                alert('푸시 알림 구독 완료! 이제 메시지를 실시간으로 받을 수 있어요 🍑');
-                                            } else {
-                                                alert('알림 권한을 허용해야 실시간 알림을 받을 수 있어요. 🔔');
-                                            }
-                                        } catch (err) {
-                                            console.error('Push subscription failed:', err);
-                                            alert('알림 구독 중 오류가 발생했습니다.');
-                                        }
-                                        setIsSubscribing(false);
-                                    }}
+                                    onClick={handleSubscribe}
                                     className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50"
                                 >
                                     {isSubscribing ? '구독 중...' : '알림 허용하기'}
