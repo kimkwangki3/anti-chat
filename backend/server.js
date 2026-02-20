@@ -6,6 +6,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
+const User = require('./models/User'); // User 모델 추가
 const { Server } = require('socket.io');
 const webpush = require('web-push');
 
@@ -90,7 +91,25 @@ app.use('/api/superadmin', superadminRoutes);
 
 // 데이터베이스 연결
 mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/corporate-chat')
-    .then(() => console.log('MongoDB 연결 성공'))
+    .then(async () => {
+        console.log('MongoDB 연결 성공');
+
+        // 최고관리자 자동 생성 (Vercel 등 운영 환경 대응)
+        try {
+            const adminExists = await User.findOne({ username: 'admin' });
+            if (!adminExists) {
+                await User.create({
+                    name: '최고관리자',
+                    username: 'admin',
+                    password: 'dkfvkrh123',
+                    role: 'superadmin'
+                });
+                console.log('최고관리자 계정(admin)이 자동 생성되었습니다.');
+            }
+        } catch (adminErr) {
+            console.error('최고관리자 초기화 에러:', adminErr);
+        }
+    })
     .catch(err => console.error('MongoDB 연결 실패:', err));
 
 // Routes (Placeholder)
