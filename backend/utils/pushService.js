@@ -10,7 +10,7 @@ const sendPushNotification = async (userId, payload) => {
 
         const results = await Promise.allSettled(
             subscriptions.map(sub =>
-                webpush.sendNotification(sub.subscription, JSON.stringify(payload))
+                webpush.sendNotification(sub.subscription, JSON.stringify({ ...payload, url: payload.url || '/' }))
                     .catch(async (error) => {
                         if (error.statusCode === 410 || error.statusCode === 404) {
                             await PushSubscription.deleteOne({ _id: sub._id });
@@ -38,7 +38,14 @@ const sendPushToChannelMembers = async (channelId, senderId, payload) => {
             status: 'approved'
         });
 
-        const pushPromises = members.map(member => sendPushNotification(member.userId, payload));
+        // 푸시 알림 payload에 아이콘 및 뱃지 경로 추가
+        const augmentedPayload = {
+            ...payload,
+            icon: 'https://peach-chat-peach.vercel.app/icon-192.png',
+            badge: 'https://peach-chat-peach.vercel.app/icon-192.png',
+        };
+
+        const pushPromises = members.map(member => sendPushNotification(member.userId, augmentedPayload));
         await Promise.allSettled(pushPromises);
     } catch (error) {
         console.error('[PUSH] Channel push error:', error);
