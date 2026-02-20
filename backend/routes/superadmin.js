@@ -13,6 +13,31 @@ const { protect, superAdmin } = require('../middleware/authMiddleware');
 // 모든 라우트에 최고관리자 권한 적용
 router.use(protect, superAdmin);
 
+// @route   GET /api/superadmin/stats
+// @desc    금일 주요 통계 조회 (신규 회원, 채널, 게시글)
+router.get('/stats', async (req, res) => {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const [newUsers, newChannels, newPosts] = await Promise.all([
+            User.countDocuments({ createdAt: { $gte: today } }),
+            Channel.countDocuments({ createdAt: { $gte: today } }),
+            Post.countDocuments({ createdAt: { $gte: today } })
+        ]);
+
+        res.json({
+            today: {
+                newUsers,
+                newChannels,
+                newPosts
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @route   GET /api/superadmin/users
 // @desc    전체 사용자 목록 조회
 router.get('/users', async (req, res) => {

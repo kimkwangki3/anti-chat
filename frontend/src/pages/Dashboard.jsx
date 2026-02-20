@@ -12,6 +12,7 @@ const Dashboard = () => {
     const { myChannels, fetchMyChannels, isLoading, setCurrentChannel } = useChannelStore();
     const { notifications, pendingCounts, unreadCounts } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [stats, setStats] = useState(null);
 
     // 모든 채널의 총 미승인 수 (관리자)
     const totalPending = Object.values(pendingCounts).reduce((s, n) => s + n, 0);
@@ -24,13 +25,60 @@ const Dashboard = () => {
     useEffect(() => {
         if (user?._id) {
             fetchMyChannels();
+            if (user.role === 'superadmin') {
+                fetchStats();
+            }
         }
         setCurrentChannel(null);
     }, [user?._id, fetchMyChannels, setCurrentChannel]);
 
+    const fetchStats = async () => {
+        try {
+            const { data } = await axios.get('/superadmin/stats');
+            setStats(data);
+        } catch (error) {
+            console.error('Fetch stats failed:', error);
+        }
+    };
+
     const handleChannelClick = (channel) => {
         setCurrentChannel(channel);
         navigate(`/notices?channelId=${channel._id}`);
+    };
+
+    // 최고관리자 전용 대시보드 렌더링 함수
+    const renderSuperAdminStats = () => {
+        if (!stats) return null;
+        return (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#FF8C69]/20 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform">👤</div>
+                    <h3 className="text-xs font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">TODAY NEW USERS</h3>
+                    <p className="text-5xl font-black text-white leading-none">{stats.today.newUsers}<span className="text-sm font-bold text-[#FF8C69] ml-2">명</span></p>
+                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-[#06d6a0] bg-[#06d6a0]/10 w-fit px-3 py-1 rounded-full border border-[#06d6a0]/20">
+                        <span>↑ GROWING</span>
+                    </div>
+                </div>
+
+                <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#4f6ef7]/20 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform">🏘️</div>
+                    <h3 className="text-xs font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">TODAY NEW CHANNELS</h3>
+                    <p className="text-5xl font-black text-white leading-none">{stats.today.newChannels}<span className="text-sm font-bold text-[#4f6ef7] ml-2">개</span></p>
+                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-[#4f6ef7] bg-[#4f6ef7]/10 w-fit px-3 py-1 rounded-full border border-[#4f6ef7]/20">
+                        <span>+ EXPANDING</span>
+                    </div>
+                </div>
+
+                <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-purple-500/20 shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform">📋</div>
+                    <h3 className="text-xs font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">TODAY NEW POSTS</h3>
+                    <p className="text-5xl font-black text-white leading-none">{stats.today.newPosts}<span className="text-sm font-bold text-purple-400 ml-2">개</span></p>
+                    <div className="mt-6 flex items-center gap-2 text-[10px] font-bold text-purple-400 bg-purple-500/10 w-fit px-3 py-1 rounded-full border border-purple-500/20">
+                        <span>💬 ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -38,11 +86,15 @@ const Dashboard = () => {
             <header className="flex justify-between items-end mb-12">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="p-1 px-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[10px] font-bold rounded-md border border-[#FF8C69]/20 font-mono">ONLINE</span>
-                        <h2 className="text-xs font-bold text-[#6b6b8a] uppercase tracking-widest font-mono italic">Enterprise Connect</h2>
+                        <span className="p-1 px-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[10px] font-bold rounded-md border border-[#FF8C69]/20 font-mono italic">
+                            {user?.role === 'superadmin' ? 'MASTER PRIVILEGE' : 'ONLINE'}
+                        </span>
+                        <h2 className="text-xs font-bold text-[#6b6b8a] uppercase tracking-widest font-mono italic">
+                            {user?.role === 'superadmin' ? 'Super Admin Terminal' : 'Enterprise Connect'}
+                        </h2>
                     </div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">
-                        반가워요, <span className="text-[#FF8C69]">{user?.name}님</span> 🍑
+                        {user?.role === 'superadmin' ? '관리자님, 현재 가동 중입니다' : `반가워요, ${user?.name}님`} <span className="text-[#FF8C69]">{user?.role === 'superadmin' ? '👑' : '🍑'}</span>
                     </h1>
                 </div>
                 {user?.role === 'admin' && (
@@ -56,8 +108,18 @@ const Dashboard = () => {
                 )}
             </header>
 
-            {/* 새 소식 및 활동 요약 섹션 */}
-            {(notifications.length > 0 || (user?.role === 'admin' && totalPending > 0) || (user?.role === 'member' && totalUnread > 0)) && (
+            {/* 최고관리자 전용 통계 섹션 */}
+            {user?.role === 'superadmin' && (
+                <section className="mb-14">
+                    <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2 mb-8">
+                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 시스템 실시간 지표
+                    </h2>
+                    {renderSuperAdminStats()}
+                </section>
+            )}
+
+            {/* 새 소식 및 활동 요약 섹션 (최고관리자는 제외하거나 추후 필요시 추가) */}
+            {user?.role !== 'superadmin' && (notifications.length > 0 || (user?.role === 'admin' && totalPending > 0) || (user?.role === 'member' && totalUnread > 0)) && (
                 <section className="mb-10">
                     <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2 mb-5">
                         <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 새로운 소식
@@ -162,14 +224,16 @@ const Dashboard = () => {
                     <div className="bg-[#23232f] border border-dashed border-[#FF8C69]/20 rounded-3xl p-16 text-center shadow-inner">
                         <div className="text-5xl mb-6">🏜️</div>
                         <p className="text-[#6b6b8a] text-sm mb-8 font-bold">
-                            {user?.role === 'admin' ? '운영 중인 채널이 없어요. 새로운 채널을 개설해 보세요!' : '가입된 채널이 없어요. 새로운 채널을 찾아보세요!'}
+                            {user?.role === 'admin' ? '운영 중인 채널이 없어요. 새로운 채널을 개설해 보세요!' : user?.role === 'superadmin' ? '현재 소속된 채널이 없습니다. 시스템 관리 메뉴를 이용해 주세요.' : '가입된 채널이 없어요. 새로운 채널을 찾아보세요!'}
                         </p>
-                        <button
-                            onClick={() => user?.role === 'admin' ? setIsModalOpen(true) : navigate('/search-channels')}
-                            className="px-10 py-4 orange-gradient text-white font-bold rounded-2xl shadow-xl shadow-[#FF8C69]/20 text-xs tracking-widest uppercase hover:scale-105 transition-transform"
-                        >
-                            {user?.role === 'admin' ? '새 채널 개설하기' : '채널 탐색하기'}
-                        </button>
+                        {user?.role !== 'superadmin' && (
+                            <button
+                                onClick={() => user?.role === 'admin' ? setIsModalOpen(true) : navigate('/search-channels')}
+                                className="px-10 py-4 orange-gradient text-white font-bold rounded-2xl shadow-xl shadow-[#FF8C69]/20 text-xs tracking-widest uppercase hover:scale-105 transition-transform"
+                            >
+                                {user?.role === 'admin' ? '새 채널 개설하기' : '채널 탐색하기'}
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
