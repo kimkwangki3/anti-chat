@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
+import axios from '../api/axios';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuthStore();
     const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
+    const [pushStatus, setPushStatus] = useState(Notification.permission);
+    const [isSubscribing, setIsSubscribing] = useState(false);
 
     const playPreview = (type) => {
         const audio = new Audio(sounds[type || soundType]);
@@ -114,56 +118,54 @@ const SettingsPage = () => {
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/5">
                             <div>
-                                <p className="text-sm font-bold text-white mb-1">브라우저 알림 권한</p>
+                                <p className="text-sm font-bold text-white mb-1">푸시 알림</p>
                                 <p className="text-[10px] text-[#6b6b8a] uppercase tracking-wider font-mono">
-                                    현재 상태: {Notification.permission === 'granted' ? '✅ 허용됨' : Notification.permission === 'denied' ? '❌ 거부됨' : '❓ 확인 필요'}
+                                    현재 상태: {pushStatus === 'granted' ? '✅ 구독 완료' : pushStatus === 'denied' ? '❌ 권한 거부됨' : '❓ 미설정'}
                                 </p>
                             </div>
-                            {Notification.permission !== 'granted' && (
+                            {pushStatus !== 'granted' && pushStatus !== 'denied' && (
                                 <button
+                                    disabled={isSubscribing}
                                     onClick={async () => {
+                                        setIsSubscribing(true);
                                         try {
                                             const permission = await Notification.requestPermission();
+                                            setPushStatus(permission);
                                             if (permission === 'granted') {
                                                 const registration = await navigator.serviceWorker.ready;
-                                                const response = await fetch('/api/push/vapid-key');
-                                                const { publicKey } = await response.json();
-
+                                                const { data } = await axios.get('/push/vapid-key');
                                                 const subscription = await registration.pushManager.subscribe({
                                                     userVisibleOnly: true,
-                                                    applicationServerKey: publicKey
+                                                    applicationServerKey: data.publicKey
                                                 });
-
-                                                const saveRes = await fetch('/api/push/subscribe', {
-                                                    method: 'POST',
-                                                    headers: {
-                                                        'Content-Type': 'application/json',
-                                                        'Authorization': `Bearer ${localStorage.getItem('anti-auth-token')}`
-                                                    },
-                                                    body: JSON.stringify({ subscription })
-                                                });
-
-                                                if (saveRes.ok) {
-                                                    alert('상큼하게 알림 구독이 완료되었습니다! 🍑');
-                                                    window.location.reload();
-                                                }
+                                                await axios.post('/push/subscribe', { subscription });
+                                                alert('푸시 알림 구독 완료! 이제 메시지를 실시간으로 받을 수 있어요 🍑');
                                             } else {
-                                                alert('알림을 허용해주셔야 채팅 소식을 실시간으로 받을 수 있어요. 🔔');
+                                                alert('알림 권한을 허용해야 실시간 알림을 받을 수 있어요. 🔔');
                                             }
                                         } catch (err) {
                                             console.error('Push subscription failed:', err);
-                                            alert('알림 구독 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+                                            alert('알림 구독 중 오류가 발생했습니다.');
                                         }
+                                        setIsSubscribing(false);
                                     }}
-                                    className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest"
+                                    className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF9500]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50"
                                 >
-                                    알림 허용하기
+                                    {isSubscribing ? '구독 중...' : '알림 허용하기'}
                                 </button>
                             )}
+                            {pushStatus === 'denied' && (
+                                <p className="text-[10px] text-red-400 font-mono">브라우저 설정에서 직접 허용해 주세요</p>
+                            )}
                         </div>
-                        <p className="text-[11px] text-[#444466] leading-relaxed italic">
-                            💡 **아이폰 사용 시**: 반드시 하단 '공유' 버튼을 눌러 **[홈 화면에 추가]**를 먼저 진행한 후, 홈 화면의 아이콘으로 접속해야 알림을 받을 수 있습니다.
-                        </p>
+                        <div className="p-5 rounded-2xl bg-[#FF9500]/5 border border-[#FF9500]/10">
+                            <p className="text-[11px] text-[#FF9500] font-bold mb-2">📱 아이폰(iOS) 사용자 안내</p>
+                            <p className="text-[11px] text-[#6b6b8a] leading-relaxed">
+                                Safari 하단의 <span className="text-white font-bold">공유 버튼(□↑)</span>을 눌러
+                                <span className="text-white font-bold"> [홈 화면에 추가]</span>를 먼저 진행해 주세요.<br />
+                                홈 화면 아이콘으로 접속한 뒤 이 버튼을 눌러야 알림을 받을 수 있습니다.
+                            </p>
+                        </div>
                     </div>
                 </section>
 

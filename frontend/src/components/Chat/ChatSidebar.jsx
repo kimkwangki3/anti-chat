@@ -161,7 +161,7 @@ const ChatSidebar = () => {
                                             <h3 className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-[#6b6b8a]'}`}>
                                                 {otherUser?.name}
                                             </h3>
-                                            {unreadCount > 0 && (
+                                            {unreadCount > 0 && !isActive && (
                                                 <span className="bg-[#FF9500] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg shadow-[#FF9500]/20 min-w-[18px] text-center">
                                                     {unreadCount}
                                                 </span>

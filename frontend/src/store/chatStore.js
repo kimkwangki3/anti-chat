@@ -26,8 +26,15 @@ const useChatStore = create((set, get) => ({
         if (room) {
             // 소켓 룸 입장
             socket.emit('join_room', room._id);
-            // 읽음 처리 호출
+            // 읽음 처리 호출 (API)
             get().markAsRead(room._id);
+
+            // 소켓으로 읽음 처리 (isRead 필드 업데이트)
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                socket.emit('mark_read', { roomId: room._id, userId: user._id });
+            }
 
             // 해당 방의 메시지 내역 조회
             try {
@@ -100,6 +107,20 @@ const useChatStore = create((set, get) => ({
     addMessage: (message) => {
         set((state) => ({
             messages: [...state.messages, message]
+        }));
+    },
+
+    // 상대방이 읽었을 때 메시지의 isRead를 true로 업데이트
+    markMessagesRead: (roomId, readerId) => {
+        set((state) => ({
+            messages: state.messages.map(msg => {
+                // senderId가 객체({_id: ...}) 또는 문자열일 수 있으므로 처리
+                const senderIdStr = msg.senderId?._id?.toString() || msg.senderId?.toString();
+                // readerId가 보낸 메시지가 아닌 것(= 내가 보낸 메시지)을 읽음 처리
+                return senderIdStr !== readerId?.toString()
+                    ? { ...msg, isRead: true }
+                    : msg;
+            })
         }));
     },
 

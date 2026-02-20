@@ -24,6 +24,26 @@ const socketHandler = (io) => {
             }
         });
 
+        // 읽음 처리: 채팅방 입장 시 상대방 메시지를 isRead: true로 업데이트
+        socket.on('mark_read', async ({ roomId, userId }) => {
+            if (!roomId || !userId) return;
+            try {
+                // 내가 받은 메시지(상대방이 보낸 것)를 읽음 처리
+                const result = await Message.updateMany(
+                    { roomId, senderId: { $ne: userId }, isRead: false },
+                    { $set: { isRead: true } }
+                );
+
+                if (result.modifiedCount > 0) {
+                    // 발신자들에게 읽음 알림 - 방 전체에 emit (발신자 자신 포함)
+                    io.to(roomId).emit('messages_read', { roomId, readerId: userId });
+                    console.log(`[SOCKET] Marked ${result.modifiedCount} messages as read in room: ${roomId}`);
+                }
+            } catch (error) {
+                console.error('[SOCKET] mark_read 에러:', error);
+            }
+        });
+
         // 채널 룸 참가 및 인원 집계
         socket.on('join_channel', (channelId) => {
             if (channelId) {

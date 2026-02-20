@@ -5,6 +5,7 @@ import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
 import useSettingsStore from '../store/settingsStore';
+import useChatStore from '../store/chatStore';
 
 const SocketContext = createContext();
 
@@ -16,6 +17,7 @@ export const SocketProvider = ({ children }) => {
     const { currentChannel } = useChannelStore();
     const { addNotification, incrementUnreadCount, removeNotification, notifications } = useNotificationStore();
     const { soundType, volume, sounds } = useSettingsStore();
+    const { markMessagesRead } = useChatStore();
     const [onlineCount, setOnlineCount] = useState(0);
 
     // 알림음 재생 함수
@@ -29,6 +31,14 @@ export const SocketProvider = ({ children }) => {
         }
     };
 
+    // 알림 추가 + 5초 후 자동 삭제
+    const addNotificationWithTimer = (notification) => {
+        addNotification(notification);
+        setTimeout(() => {
+            removeNotification(notification.id);
+        }, 5000);
+    };
+
     useEffect(() => {
         if (user) {
             socket.connect();
@@ -39,7 +49,7 @@ export const SocketProvider = ({ children }) => {
             // 전역 알림 리스너
             socket.on('notice_received', (notice) => {
                 console.log('[SOCKET] Notice received:', notice);
-                addNotification({
+                addNotificationWithTimer({
                     id: Date.now() + Math.random(),
                     type: 'notice',
                     title: '새 공지사항',
@@ -53,7 +63,7 @@ export const SocketProvider = ({ children }) => {
 
             socket.on('post_received', (post) => {
                 console.log('[SOCKET] Post received:', post);
-                addNotification({
+                addNotificationWithTimer({
                     id: Date.now() + Math.random(),
                     type: 'post',
                     title: '새 게시글',
@@ -67,26 +77,33 @@ export const SocketProvider = ({ children }) => {
 
             socket.on('chat_notification', (data) => {
                 console.log('[SOCKET] Chat notification received:', data);
-                addNotification({
+                addNotificationWithTimer({
                     id: Date.now() + Math.random(),
                     type: 'chat',
                     title: '새 메시지',
                     message: `${data.senderName}: ${data.content}`,
                     channelId: data.channelId,
-                    path: `/chat?channelId=${data.channelId}`
+                    path: `/chat?channelId=${data.channelId}&roomId=${data.roomId}`
                 });
                 incrementUnreadCount(data.channelId, 'chat');
                 playNotificationSound();
+            });
+
+            // 읽음 처리 이벤트: 상대방이 채팅방 입장 시 내 메시지를 읽음 처리
+            socket.on('messages_read', ({ roomId, readerId }) => {
+                console.log('[SOCKET] Messages read by:', readerId, 'in room:', roomId);
+                markMessagesRead(roomId, readerId);
             });
 
             return () => {
                 socket.off('notice_received');
                 socket.off('post_received');
                 socket.off('chat_notification');
+                socket.off('messages_read');
                 socket.disconnect();
             };
         }
-    }, [user, addNotification, incrementUnreadCount]);
+    }, [user, addNotification, incrementUnreadCount, markMessagesRead]);
 
     useEffect(() => {
         if (currentChannel?._id && socket.connected) {
@@ -109,13 +126,13 @@ export const SocketProvider = ({ children }) => {
     return (
         <SocketContext.Provider value={{ socket, onlineCount }}>
             {children}
-            {/* 실시간 알림 팝업 UI */}
-            <div className="fixed bottom-8 right-8 z-[100] space-y-4 pointer-events-none">
+            {/* 실시간 알림 팝업 UI - 우측 상단 */}
+            <div className="fixed top-20 right-4 z-[100] space-y-3 pointer-events-none">
                 {notifications.map((noti) => (
                     <div
                         key={noti.id}
                         onClick={() => handleNotificationClick(noti)}
-                        className="pointer-events-auto bg-[#1a1a28]/95 backdrop-blur-xl border border-[rgba(79,110,247,0.3)] p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-right-10 duration-500 w-80 cursor-pointer hover:scale-105 hover:border-[#4f6ef7] transition-all group overflow-hidden"
+                        className="pointer-events-auto bg-[#1a1a28]/95 backdrop-blur-xl border border-[rgba(79,110,247,0.3)] p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-top-5 duration-500 w-80 cursor-pointer hover:scale-105 hover:border-[#4f6ef7] transition-all group overflow-hidden"
                     >
                         <div className="absolute top-0 left-0 w-1 h-full bg-[#4f6ef7] shadow-[0_0_15px_rgba(79,110,247,0.5)]"></div>
                         <div className="flex items-center gap-4">
@@ -132,7 +149,7 @@ export const SocketProvider = ({ children }) => {
                             </div>
                             <button
                                 onClick={(e) => { e.stopPropagation(); removeNotification(noti.id); }}
-                                className="text-[#444466] hover:text-white transition-colors"
+                                className="text-[#444466] hover:text-white transition-colors flex-shrink-0"
                             >
                                 ×
                             </button>

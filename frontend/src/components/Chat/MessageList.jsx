@@ -17,6 +17,27 @@ const MessageList = () => {
 
     if (!currentRoom) return null;
 
+    // 내가 보낸 메시지 중 isRead: true인 마지막 인덱스
+    const lastReadIndex = (() => {
+        const myMessages = messages
+            .map((msg, index) => ({ msg, index }))
+            .filter(({ msg }) => msg.senderId === user?._id || msg.senderId?._id === user?._id);
+
+        for (let i = myMessages.length - 1; i >= 0; i--) {
+            if (myMessages[i].msg.isRead) return myMessages[i].index;
+        }
+        return -1;
+    })();
+
+    // 내가 보낸 메시지 중 가장 마지막 인덱스
+    const lastSentIndex = (() => {
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const msg = messages[i];
+            if (msg.senderId === user?._id || msg.senderId?._id === user?._id) return i;
+        }
+        return -1;
+    })();
+
     return (
         <div className="space-y-10 pb-10">
             {messages.length === 0 ? (
@@ -28,6 +49,10 @@ const MessageList = () => {
                     const isMe = msg.senderId === user?._id || msg.senderId?._id === user?._id;
                     const showAvatar = index === 0 || messages[index - 1].senderId !== msg.senderId;
                     const showTime = index === messages.length - 1 || messages[index + 1].senderId !== msg.senderId;
+
+                    // 읽음 표시: 내 메시지 중 마지막 메시지에만 표시
+                    const showReadReceipt = isMe && index === lastSentIndex;
+                    const isRead = isMe && index <= lastReadIndex;
 
                     return (
                         <div
@@ -55,11 +80,19 @@ const MessageList = () => {
                                     }`}>
                                     {msg.content}
                                 </div>
-                                {showTime && (
-                                    <span className={`text-[7px] md:text-[8px] font-bold font-mono mt-1.5 text-[#3a3a4a] uppercase tracking-tighter italic ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
-                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                )}
+                                <div className={`flex items-center gap-1 mt-1.5 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                    {showTime && (
+                                        <span className={`text-[7px] md:text-[8px] font-bold font-mono text-[#3a3a4a] uppercase tracking-tighter italic ${isMe ? 'mr-1' : 'ml-1'}`}>
+                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    )}
+                                    {/* 읽음 표시 */}
+                                    {showReadReceipt && (
+                                        <span className={`text-[9px] font-bold font-mono tracking-tighter mr-1 transition-all ${isRead ? 'text-[#FF9500]' : 'text-[#3a3a4a]'}`}>
+                                            {isRead ? '✓✓' : '✓'}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );
