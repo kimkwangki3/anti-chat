@@ -39,10 +39,9 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// 비밀번호 저장 미들웨어 (암호화 해제)
-userSchema.pre('save', async function () {
-    // 해싱 과정을 생략하고 바로 저장되도록 함
-    return;
+// 비밀번호 저장 미들웨어 (현재 평문 직접 비교 방식을 사용 중이므로 단순화)
+userSchema.pre('save', function (next) {
+    next();
 });
 
 // 비밀번호 검증 메소드 (평문 직접 비교)

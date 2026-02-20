@@ -39,11 +39,28 @@ export const SocketProvider = ({ children }) => {
     const { markMessagesRead } = useChatStore();
     const [onlineCount, setOnlineCount] = useState(0);
 
-    // 현재 경로 추적용 Ref
-    const currentPathRef = useRef(location.pathname + location.search);
-    useEffect(() => {
-        currentPathRef.current = location.pathname + location.search;
-    }, [location]);
+    // [고도화] 알림 억제 여부 판단 함수
+    const shouldSuppressNotification = (targetType, targetChannelId, targetRoomId) => {
+        const params = new URLSearchParams(location.search);
+        const currentChannelId = params.get('channelId');
+        const currentRoomId = params.get('roomId');
+        const pathname = location.pathname;
+
+        // 1. 공지사항: 해당 채널의 공지사항 페이지에 있는 경우
+        if (targetType === 'notice' && pathname === '/notices' && currentChannelId === targetChannelId) {
+            return true;
+        }
+        // 2. 게시판: 해당 채널의 게시판 페이지에 있는 경우
+        if (targetType === 'post' && pathname === '/board' && currentChannelId === targetChannelId) {
+            return true;
+        }
+        // 3. 채팅: 해당 채널의 특정 채팅방에 있는 경우
+        if (targetType === 'chat' && pathname === '/chat' && currentChannelId === targetChannelId && currentRoomId === targetRoomId) {
+            return true;
+        }
+
+        return false;
+    };
 
     // 알림음 재생 함수
     const playNotificationSound = () => {
@@ -107,19 +124,17 @@ export const SocketProvider = ({ children }) => {
             // 전역 알림 리스너
             socket.on('notice_received', (notice) => {
                 const channelId = notice.channelId?._id || notice.channelId;
-                const targetPath = `/notices?channelId=${channelId}`;
-
                 console.log('[SOCKET] Notice received:', notice);
 
                 // 현재 해당 페이지에 있다면 팝업/소리 억제
-                if (currentPathRef.current !== targetPath) {
+                if (!shouldSuppressNotification('notice', channelId)) {
                     addNotificationWithTimer({
                         id: Date.now() + Math.random(),
                         type: 'notice',
                         title: '새 공지사항',
                         message: notice.title,
                         channelId,
-                        path: targetPath
+                        path: `/notices?channelId=${channelId}`
                     });
                     playNotificationSound();
                 }
@@ -128,19 +143,17 @@ export const SocketProvider = ({ children }) => {
 
             socket.on('post_received', (post) => {
                 const channelId = post.channelId?._id || post.channelId;
-                const targetPath = `/board?channelId=${channelId}`;
-
                 console.log('[SOCKET] Post received:', post);
 
                 // 현재 해당 페이지에 있다면 팝업/소리 억제
-                if (currentPathRef.current !== targetPath) {
+                if (!shouldSuppressNotification('post', channelId)) {
                     addNotificationWithTimer({
                         id: Date.now() + Math.random(),
                         type: 'post',
                         title: '새 게시글',
                         message: post.title,
                         channelId,
-                        path: targetPath
+                        path: `/board?channelId=${channelId}`
                     });
                     playNotificationSound();
                 }
@@ -149,19 +162,18 @@ export const SocketProvider = ({ children }) => {
 
             socket.on('chat_notification', (data) => {
                 const channelId = data.channelId?._id || data.channelId;
-                const targetPath = `/chat?channelId=${channelId}&roomId=${data.roomId}`;
-
+                const roomId = data.roomId;
                 console.log('[SOCKET] Chat notification received:', data);
 
                 // 현재 해당 채팅방에 있다면 팝업/소리 억제
-                if (currentPathRef.current !== targetPath) {
+                if (!shouldSuppressNotification('chat', channelId, roomId)) {
                     addNotificationWithTimer({
                         id: Date.now() + Math.random(),
                         type: 'chat',
                         title: '새 메시지',
                         message: `${data.senderName}: ${data.content}`,
                         channelId,
-                        path: targetPath
+                        path: `/chat?channelId=${channelId}&roomId=${roomId}`
                     });
                     playNotificationSound();
                 }

@@ -10,23 +10,27 @@ const Sidebar = () => {
     const { currentChannel } = useChannelStore();
     const { unreadCounts, pendingCounts } = useNotificationStore();
 
-    const counts = unreadCounts[currentChannel?._id] || { notice: 0, post: 0, chat: 0 };
-    const pendingBadge = pendingCounts[currentChannel?._id] || 0;
+    // [고도화] URL에서 채널 ID 추출 (새로고침 시 메뉴 유지를 위함)
+    const params = new URLSearchParams(location.search);
+    const urlChannelId = params.get('channelId') || currentChannel?._id;
+
+    const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
+    const pendingBadge = pendingCounts[urlChannelId] || 0;
 
     // 전체 미읽음 합계 (채널 미선택 시 홈 메뉴에 표시용)
     const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
 
     const menuItems = [
-        { id: 'dashboard', label: '홈', icon: '🏠', path: '/', count: currentChannel ? 0 : totalUnreadAll },
-        { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${currentChannel?._id}`, count: counts.notice, hidden: !currentChannel },
-        { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${currentChannel?._id}`, count: counts.post, hidden: !currentChannel },
-        { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${currentChannel?._id}`, count: counts.chat, hidden: !currentChannel },
+        { id: 'dashboard', label: '홈', icon: '🏠', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
+        { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
+        { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
+        { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${urlChannelId}`, count: counts.chat, hidden: !urlChannelId },
         { id: 'settings', label: '설정', icon: '⚙️', path: '/settings' },
     ];
 
     const adminMenuItems = [
-        { id: 'members', label: '멤버 관리', icon: '👥', path: `/admin/members?channelId=${currentChannel?._id}` },
-        { id: 'edit', label: '채널 설정', icon: '⚙️', path: `/admin/edit-channel?channelId=${currentChannel?._id}` },
+        { id: 'members', label: '멤버 관리', icon: '👥', path: `/admin/members?channelId=${urlChannelId}` },
+        { id: 'edit', label: '채널 설정', icon: '⚙️', path: `/admin/edit-channel?channelId=${urlChannelId}` },
     ];
 
     return (
@@ -78,7 +82,7 @@ const Sidebar = () => {
                     </div>
                 </div>
 
-                {(user?.role === 'admin' || user?.role === 'superadmin') && currentChannel && (
+                {(user?.role === 'admin' || user?.role === 'superadmin') && urlChannelId && (
                     <div className="px-4 mt-8">
                         <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-4">Admin Suite</p>
                         <div className="space-y-2">

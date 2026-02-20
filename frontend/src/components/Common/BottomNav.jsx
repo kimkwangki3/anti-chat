@@ -10,14 +10,18 @@ const BottomNav = () => {
     const { currentChannel } = useChannelStore();
     const { unreadCounts } = useNotificationStore();
 
-    const counts = unreadCounts[currentChannel?._id] || { notice: 0, post: 0, chat: 0 };
+    // [고도화] URL에서 채널 ID 추출 (새로고침 시 메뉴 유지를 위함)
+    const params = new URLSearchParams(location.search);
+    const urlChannelId = params.get('channelId') || currentChannel?._id;
+
+    const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
     const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
 
     const navItems = [
         { icon: '🏠', label: '홈', path: '/', globalCount: totalUnreadAll },
-        { icon: '📢', label: '공지', path: `/notices?channelId=${currentChannel?._id}`, count: counts.notice, hidden: !currentChannel },
-        { icon: '📋', label: '게시물', path: `/board?channelId=${currentChannel?._id}`, count: counts.post, hidden: !currentChannel },
-        { icon: '💬', label: '채팅', path: `/chat?channelId=${currentChannel?._id}`, count: counts.chat, hidden: !currentChannel },
+        { icon: '📢', label: '공지', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
+        { icon: '📋', label: '게시물', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
+        { icon: '💬', label: '채팅', path: `/chat?channelId=${urlChannelId}`, count: counts.chat, hidden: !urlChannelId },
         { icon: '⚙️', label: '설정', path: '/settings', isSettings: true },
     ];
 

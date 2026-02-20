@@ -85,10 +85,22 @@ const Dashboard = () => {
                             const sum = counts.notice + counts.post + counts.chat;
                             if (sum === 0) return null;
 
+                            // 이동 시 채팅이 있으면 채팅으로, 아니면 게시판, 아니면 공지로 이동
+                            const handleSmartNavigate = () => {
+                                setCurrentChannel(membership.channelId);
+                                if (counts.chat > 0) {
+                                    navigate(`/chat?channelId=${chId}`);
+                                } else if (counts.post > 0) {
+                                    navigate(`/board?channelId=${chId}`);
+                                } else {
+                                    navigate(`/notices?channelId=${chId}`);
+                                }
+                            };
+
                             return (
                                 <div
                                     key={`summary-${chId}`}
-                                    onClick={() => handleChannelClick(membership.channelId)}
+                                    onClick={handleSmartNavigate}
                                     className="flex items-center gap-4 p-5 bg-[#23232f] border border-[#FF9500]/10 rounded-3xl cursor-pointer hover:border-[#FF9500]/30 transition-all group shadow-xl"
                                 >
                                     <div className="w-12 h-12 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center text-2xl shadow-inner">🏘️</div>
