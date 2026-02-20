@@ -11,7 +11,7 @@ const Register = () => {
     // 관리자 선택 시 대화명 자동 조합
     const handleChannelNameChange = (value) => {
         setChannelName(value);
-        setFormData(prev => ({ ...prev, name: value ? `${value} 관리자` : '' }));
+        setFormData(prev => ({ ...prev, name: value }));
     };
 
     const handleRoleChange = (role) => {

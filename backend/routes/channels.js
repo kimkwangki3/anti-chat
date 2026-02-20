@@ -35,8 +35,8 @@ router.post('/', protect, admin, async (req, res) => {
             status: 'approved'
         });
 
-        // 관리자 대화명 자동 변경: '{채널명} 관리자'
-        await User.findByIdAndUpdate(req.user._id, { name: `${name} 관리자` });
+        // 관리자 대화명 자동 변경: 채널명과 동일하게
+        await User.findByIdAndUpdate(req.user._id, { name: name });
 
         res.status(201).json(channel);
     } catch (error) {

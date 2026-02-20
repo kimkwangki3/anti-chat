@@ -107,13 +107,6 @@ const ChatPage = () => {
                     <>
                         <div className="h-16 md:h-20 flex-shrink-0 bg-[#1a1a24]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 md:px-8 z-10">
                             <div className="flex items-center gap-3">
-                                {/* 모바일 뒤로가기 버튼 */}
-                                <button
-                                    onClick={() => setCurrentRoom(null)}
-                                    className="md:hidden w-10 h-10 flex items-center justify-center text-white"
-                                >
-                                    <span className="text-xl">←</span>
-                                </button>
                                 <div>
                                     <h2 className="text-sm md:text-lg font-bold text-white tracking-tight">
                                         {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)

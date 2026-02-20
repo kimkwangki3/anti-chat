@@ -13,8 +13,13 @@ const Dashboard = () => {
     const { notifications, pendingCounts, unreadCounts } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // 모든 채널의 총 미승인 수
+    // 모든 채널의 총 미승인 수 (관리자)
     const totalPending = Object.values(pendingCounts).reduce((s, n) => s + n, 0);
+
+    // 모든 채널의 총 읽지 않은 소식 수 (일반회원)
+    const totalUnread = Object.values(unreadCounts).reduce((acc, counts) => {
+        return acc + (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0);
+    }, 0);
 
     useEffect(() => {
         if (user?._id) {
@@ -51,40 +56,68 @@ const Dashboard = () => {
                 )}
             </header>
 
-            {/* 새 소식 섹션 */}
-            {(notifications.length > 0 || (user?.role === 'admin' && totalPending > 0)) && (
+            {/* 새 소식 및 활동 요약 섹션 */}
+            {(notifications.length > 0 || (user?.role === 'admin' && totalPending > 0) || (user?.role === 'member' && totalUnread > 0)) && (
                 <section className="mb-10">
                     <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2 mb-5">
-                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 새 소식
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 새로운 소식
                     </h2>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {/* 관리자: 미승인 가입 신청 요약 */}
                         {user?.role === 'admin' && totalPending > 0 && (
                             <div
                                 onClick={() => navigate(`/admin/members?channelId=${myChannels[0]?.channelId?._id}`)}
-                                className="flex items-center gap-4 p-4 bg-[#23232f] border border-red-500/20 rounded-2xl cursor-pointer hover:border-red-500/40 transition-all group"
+                                className="flex items-center gap-4 p-5 bg-[#23232f] border border-red-500/20 rounded-3xl cursor-pointer hover:border-red-500/40 transition-all group shadow-xl"
                             >
-                                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-xl">👥</div>
+                                <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-2xl">👥</div>
                                 <div className="flex-1">
                                     <p className="text-sm font-bold text-white">미승인 가입 신청</p>
-                                    <p className="text-[11px] text-[#6b6b8a]">총 {totalPending}건의 가입 신청을 승인 대기 중입니다</p>
+                                    <p className="text-[11px] text-[#6b6b8a] mt-0.5">총 {totalPending}건의 가입 신청이 승인 대기 중입니다</p>
                                 </div>
-                                <span className="bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full">{totalPending}</span>
+                                <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full">{totalPending}</span>
                             </div>
                         )}
-                        {/* 최근 알림 목록 */}
-                        {notifications.slice(0, 4).map(noti => (
+
+                        {/* 일반회원: 채널별 미읽음 소식 요약 */}
+                        {user?.role === 'member' && myChannels.map(membership => {
+                            const chId = membership.channelId?._id;
+                            const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0 };
+                            const sum = counts.notice + counts.post + counts.chat;
+                            if (sum === 0) return null;
+
+                            return (
+                                <div
+                                    key={`summary-${chId}`}
+                                    onClick={() => handleChannelClick(membership.channelId)}
+                                    className="flex items-center gap-4 p-5 bg-[#23232f] border border-[#FF9500]/10 rounded-3xl cursor-pointer hover:border-[#FF9500]/30 transition-all group shadow-xl"
+                                >
+                                    <div className="w-12 h-12 rounded-2xl bg-[#FF9500]/10 flex items-center justify-center text-2xl shadow-inner">🏘️</div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-bold text-white truncate">{membership.channelId?.name}</p>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            {counts.notice > 0 && <span className="text-[10px] text-purple-400 font-bold flex items-center gap-1">📢 {counts.notice}</span>}
+                                            {counts.post > 0 && <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">📋 {counts.post}</span>}
+                                            {counts.chat > 0 && <span className="text-[10px] text-[#FF9500] font-bold flex items-center gap-1 animate-pulse">💬 {counts.chat}</span>}
+                                        </div>
+                                    </div>
+                                    <span className="text-[#FF9500] text-xs font-black px-3 py-1.5 bg-[#FF9500]/10 rounded-full">+{sum}</span>
+                                </div>
+                            );
+                        })}
+
+                        {/* 최근 알림 목록 (최대 3개) */}
+                        {notifications.slice(0, 3).map(noti => (
                             <div
                                 key={noti.id}
                                 onClick={() => navigate(noti.path)}
-                                className="flex items-center gap-4 p-4 bg-[#23232f] border border-white/5 rounded-2xl cursor-pointer hover:border-[#FF9500]/20 transition-all group"
+                                className="flex items-center gap-4 p-4 bg-[#23232f]/50 border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition-all opacity-70 hover:opacity-100"
                             >
-                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-xl">
+                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-lg">
                                     {noti.type === 'notice' ? '📢' : noti.type === 'post' ? '📋' : noti.type === 'member' ? '👤' : '💬'}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] font-bold text-[#FF9500] uppercase tracking-wider">{noti.title}</p>
-                                    <p className="text-sm text-white truncate">{noti.message}</p>
+                                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-wider">{noti.title}</p>
+                                    <p className="text-xs text-[#a0a0b0] truncate">{noti.message}</p>
                                 </div>
                             </div>
                         ))}

@@ -13,8 +13,11 @@ const Sidebar = () => {
     const counts = unreadCounts[currentChannel?._id] || { notice: 0, post: 0, chat: 0 };
     const pendingBadge = pendingCounts[currentChannel?._id] || 0;
 
+    // 전체 미읽음 합계 (채널 미선택 시 홈 메뉴에 표시용)
+    const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
+
     const menuItems = [
-        { id: 'dashboard', label: '홈', icon: '🏠', path: '/' },
+        { id: 'dashboard', label: '홈', icon: '🏠', path: '/', count: currentChannel ? 0 : totalUnreadAll },
         { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${currentChannel?._id}`, count: counts.notice, hidden: !currentChannel },
         { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${currentChannel?._id}`, count: counts.post, hidden: !currentChannel },
         { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${currentChannel?._id}`, count: counts.chat, hidden: !currentChannel },
