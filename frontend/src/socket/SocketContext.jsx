@@ -73,33 +73,66 @@ export const SocketProvider = ({ children }) => {
         }
     };
 
-    // 푸시 알림 구독 함수
+    // 푸시 알림 구독 함수 (서비스 워커 업데이트 감지 및 자동 재구독 포함)
     const subscribeToPush = async () => {
         try {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-                console.log('[PUSH] Push not supported');
+                console.log('[PUSH] Push not supported in this browser');
+                return;
+            }
+
+            // 1. 알림 권한 먼저 요청 (iOS PWA에서 명시적 권한 요청이 필요)
+            if (Notification.permission === 'default') {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('[PUSH] Notification permission denied');
+                    return;
+                }
+            } else if (Notification.permission === 'denied') {
+                console.log('[PUSH] Notification permission was denied by user');
                 return;
             }
 
             const registration = await navigator.serviceWorker.ready;
 
-            // 1. 서버에서 공개키 가져오기
+            // 2. 서버에서 VAPID 공개키 가져오기
             const { data } = await axios.get('/push/vapid-key');
             const publicKey = data.publicKey;
-
             if (!publicKey) return;
 
-            // 2. 브라우저 푸시 구독
-            const subscription = await registration.pushManager.subscribe({
+            // 3. 기존 구독 확인
+            const existingSubscription = await registration.pushManager.getSubscription();
+
+            // 4-A. 기존 구독이 있으면: 서버에 그대로 재등록 (SW 업데이트로 무효화 대비)
+            if (existingSubscription) {
+                // 기존 endpoint가 서버에 여전히 유효한지 확인을 위해 재전송
+                await axios.post('/push/subscribe', { subscription: existingSubscription });
+                console.log('[PUSH] Existing subscription re-synced with server');
+                return;
+            }
+
+            // 4-B. 구독이 없으면: 새로 구독
+            const newSubscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicKey)
             });
 
-            // 3. 서버에 구독 정보 전송
-            await axios.post('/push/subscribe', { subscription });
-            console.log('[PUSH] Subscription successful');
+            // 5. 서버에 새 구독 정보 전송
+            await axios.post('/push/subscribe', { subscription: newSubscription });
+            console.log('[PUSH] New subscription registered successfully');
         } catch (error) {
             console.error('[PUSH] Subscription failed:', error);
+            // 구독 실패 시 기존 구독 초기화 후 재시도 가능하도록 구독 해제
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const sub = await registration.pushManager.getSubscription();
+                if (sub) {
+                    await sub.unsubscribe();
+                    console.log('[PUSH] Old subscription cleared, will retry on next login');
+                }
+            } catch (e) {
+                console.error('[PUSH] Cleanup failed:', e);
+            }
         }
     };
 
