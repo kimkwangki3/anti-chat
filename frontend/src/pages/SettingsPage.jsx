@@ -77,7 +77,7 @@ const SettingsPage = () => {
     };
 
     const soundOptions = [
-        { id: 'orange', label: '오렌지 팝 (기본)', icon: '🍑' },
+        { id: 'peach', label: '복숭아 팝 (기본)', icon: '🍑' },
         { id: 'crystal', label: '크리스탈 딩', icon: '💎' },
         { id: 'knock', label: '깔끔한 노크', icon: '🚪' },
     ];

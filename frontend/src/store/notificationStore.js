@@ -82,7 +82,7 @@ const useNotificationStore = create(
             resetStore: () => set({ notifications: [], unreadCounts: {}, pendingCounts: {} })
         }),
         {
-            name: 'anti-notifications', // localStorage key
+            name: 'peach-notifications', // localStorage key
         }
     )
 );

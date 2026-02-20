@@ -34,8 +34,8 @@ const Register = () => {
             <div className="w-full max-w-md relative">
                 <div className="bg-[#23232f] border border-white/5 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-2xl">
                     <div className="flex flex-col items-center mb-10">
-                        <div className="w-16 h-16 orange-gradient rounded-3xl flex items-center justify-center text-3xl shadow-2xl shadow-[#FF8C69]/30 mb-6 animate-pulse pointer-events-none">
-                            🍑
+                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-3xl shadow-2xl shadow-white/10 mb-6 animate-pulse border border-[#FF8C69]/20 pointer-events-none">
+                            <span className="drop-shadow-sm">🍑</span>
                         </div>
                         <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono">
                             JOIN <span className="text-[#FF8C69]">PEACH</span>
