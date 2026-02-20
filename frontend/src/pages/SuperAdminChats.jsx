@@ -11,7 +11,7 @@ const SuperAdminChats = () => {
         if (e) e.preventDefault();
         setIsLoading(true);
         try {
-            const { data } = await axios.get('/api/superadmin/chats/search', { params: searchParams });
+            const { data } = await axios.get('/superadmin/chats/search', { params: searchParams });
             setMessages(data);
             setSelectedChannelMessages(null);
         } catch (error) {
@@ -25,7 +25,7 @@ const SuperAdminChats = () => {
     const viewFullContext = async (channelId, channelName) => {
         setIsLoading(true);
         try {
-            const { data } = await axios.get(`/api/superadmin/channels/${channelId}/messages`);
+            const { data } = await axios.get(`/superadmin/channels/${channelId}/messages`);
             setSelectedChannelMessages({
                 name: channelName,
                 list: data

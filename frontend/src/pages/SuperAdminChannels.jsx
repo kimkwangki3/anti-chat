@@ -11,7 +11,7 @@ const SuperAdminChannels = () => {
 
     const fetchChannels = async () => {
         try {
-            const { data } = await axios.get('/api/superadmin/channels');
+            const { data } = await axios.get('/superadmin/channels');
             setChannels(data);
         } catch (error) {
             console.error('Fetch channels failed:', error);

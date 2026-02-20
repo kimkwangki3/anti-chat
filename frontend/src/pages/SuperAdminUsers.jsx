@@ -14,7 +14,7 @@ const SuperAdminUsers = () => {
 
     const fetchUsers = async () => {
         try {
-            const { data } = await axios.get('/api/superadmin/users');
+            const { data } = await axios.get('/superadmin/users');
             setUsers(data);
         } catch (error) {
             console.error('Fetch users failed:', error);
@@ -63,8 +63,8 @@ const SuperAdminUsers = () => {
                         >
                             <div className="flex items-center gap-5 relative z-10">
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold text-white shadow-lg ${user.role === 'superadmin' ? 'bg-purple-500 shadow-purple-500/20' :
-                                        user.role === 'admin' ? 'bg-[#FF8C69] shadow-[#FF8C69]/20' :
-                                            'bg-blue-500 shadow-blue-500/20'
+                                    user.role === 'admin' ? 'bg-[#FF8C69] shadow-[#FF8C69]/20' :
+                                        'bg-blue-500 shadow-blue-500/20'
                                     }`}>
                                     {user.name.charAt(0)}
                                 </div>
@@ -73,8 +73,8 @@ const SuperAdminUsers = () => {
                                     <p className="text-[10px] text-[#6b6b8a] font-mono uppercase tracking-wider">{user.username}</p>
                                 </div>
                                 <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter ${user.role === 'superadmin' ? 'bg-purple-500/10 text-purple-400' :
-                                        user.role === 'admin' ? 'bg-[#FF8C69]/10 text-[#FF8C69]' :
-                                            'bg-blue-500/10 text-blue-400'
+                                    user.role === 'admin' ? 'bg-[#FF8C69]/10 text-[#FF8C69]' :
+                                        'bg-blue-500/10 text-blue-400'
                                     }`}>
                                     {user.role}
                                 </div>
