@@ -88,29 +88,46 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @route   GET /api/auth/me
+// @desc    Get current user profile
+// @access  Private
+router.get('/me', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        if (user) {
+            res.json(user);
+        } else {
+            res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @route   PATCH /api/auth/profile
 // @desc    Update user profile (display name)
 // @access  Private
 router.patch('/profile', protect, async (req, res) => {
     const { name } = req.body;
 
+    if (!name || !name.trim()) {
+        return res.status(400).json({ message: '이름을 입력해주세요.' });
+    }
+
     try {
-        const user = await User.findById(req.user._id);
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { name: name.trim() },
+            { new: true, runValidators: true }
+        ).select('-password');
 
-        if (user) {
-            user.name = name || user.name;
-            const updatedUser = await user.save();
-
-            res.json({
-                _id: updatedUser._id,
-                name: updatedUser.name,
-                username: updatedUser.username,
-                role: updatedUser.role
-            });
+        if (updatedUser) {
+            res.json(updatedUser);
         } else {
             res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
     } catch (error) {
+        console.error('프로필 수정 에러:', error);
         res.status(500).json({ message: error.message });
     }
 });
