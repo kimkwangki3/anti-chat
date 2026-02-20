@@ -73,7 +73,7 @@ export const SocketProvider = ({ children }) => {
         }
     };
 
-    // 푸시 알림 구독 함수 (서비스 워커 업데이트 감지 및 자동 재구독 포함)
+    // 푸시 알림 구독 함수 (항상 재구독 - VAPID 키 변경 이후 일관성 보장)
     const subscribeToPush = async () => {
         try {
             if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -100,41 +100,35 @@ export const SocketProvider = ({ children }) => {
             const publicKey = data.publicKey;
             if (!publicKey) return;
 
-            // 3. 기존 구독 확인
+            // 3. 브라우저에 저장된 기존 구독 삭제 (키 변경으로 인한 불일치 방지)
             const existingSubscription = await registration.pushManager.getSubscription();
-
-            // 4-A. 기존 구독이 있으면: 서버에 그대로 재등록 (SW 업데이트로 무효화 대비)
             if (existingSubscription) {
-                // 기존 endpoint가 서버에 여전히 유효한지 확인을 위해 재전송
-                await axios.post('/push/subscribe', { subscription: existingSubscription });
-                console.log('[PUSH] Existing subscription re-synced with server');
-                return;
+                await existingSubscription.unsubscribe();
+                console.log('[PUSH] Old browser subscription cleared');
             }
 
-            // 4-B. 구독이 없으면: 새로 구독
+            // 4. 서버 DB의 구독 정보도 삭제 (불일치 방지)
+            try {
+                await axios.delete('/push/subscribe');
+                console.log('[PUSH] Old server subscription cleared');
+            } catch (e) {
+                console.warn('[PUSH] Server subscription cleanup failed (non-fatal):', e.message);
+            }
+
+            // 5. 새 구독 등록
             const newSubscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicKey)
             });
 
-            // 5. 서버에 새 구독 정보 전송
+            // 6. 서버에 새 구독 정보 전송
             await axios.post('/push/subscribe', { subscription: newSubscription });
             console.log('[PUSH] New subscription registered successfully');
         } catch (error) {
             console.error('[PUSH] Subscription failed:', error);
-            // 구독 실패 시 기존 구독 초기화 후 재시도 가능하도록 구독 해제
-            try {
-                const registration = await navigator.serviceWorker.ready;
-                const sub = await registration.pushManager.getSubscription();
-                if (sub) {
-                    await sub.unsubscribe();
-                    console.log('[PUSH] Old subscription cleared, will retry on next login');
-                }
-            } catch (e) {
-                console.error('[PUSH] Cleanup failed:', e);
-            }
         }
     };
+
 
     // 알림 추가 + 5초 후 자동 삭제
     const addNotificationWithTimer = (notification) => {

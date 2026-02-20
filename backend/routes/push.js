@@ -32,4 +32,16 @@ router.post('/subscribe', protect, async (req, res) => {
     }
 });
 
+// 현재 유저의 만료된 구독 정보 삭제 후 재구독 유도 (VAPID 키 변경 후 사용)
+router.delete('/subscribe', protect, async (req, res) => {
+    try {
+        await PushSubscription.deleteMany({ userId: req.user._id });
+        res.json({ message: 'Subscriptions cleared. Please resubscribe.' });
+    } catch (error) {
+        console.error('[PUSH] Clear subscription error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;
+
