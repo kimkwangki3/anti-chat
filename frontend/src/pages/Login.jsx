@@ -14,13 +14,13 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-[100dvh] bg-[#1a1a24] flex items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen min-h-[100dvh] bg-[#1a1a24] flex items-center justify-center p-6 relative overflow-hidden">
             {/* Decorative Orbs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FF8C69]/10 rounded-full blur-[120px]"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#E8735A]/5 rounded-full blur-[120px]"></div>
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FF8C69]/10 rounded-full blur-[100px]"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#E8735A]/5 rounded-full blur-[100px]"></div>
 
-            <div className="w-full max-w-md relative">
-                <div className="bg-[#23232f] border border-white/5 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-2xl">
+            <div className="w-full max-w-md relative z-10">
+                <div className="bg-[#23232f] border border-white/10 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl">
                     <div className="flex flex-col items-center mb-12">
                         <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-3xl shadow-2xl shadow-white/10 mb-6 animate-bounce duration-[2000ms] border border-[#FF8C69]/20 pointer-events-none">
                             <span className="drop-shadow-sm">🍑</span>

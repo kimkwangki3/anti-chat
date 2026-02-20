@@ -1,5 +1,5 @@
-const CACHE_NAME = 'peach-chat-v1';
-const STATIC_ASSETS = ['/', '/index.html', '/vite.svg'];
+const CACHE_NAME = 'peach-chat-v2';
+const STATIC_ASSETS = ['/', '/index.html'];
 
 // 설치: 정적 파일 캐싱
 self.addEventListener('install', (event) => {
@@ -11,13 +11,12 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// 활성화: 오래된 캐시 정리
+// 활성화: 즉시 모든 이전 캐시 삭제 및 제어권 획득
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) =>
             Promise.all(
                 cacheNames
-                    .filter((name) => name !== CACHE_NAME)
                     .map((name) => caches.delete(name))
             )
         )
