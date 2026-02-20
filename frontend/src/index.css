@@ -17,12 +17,10 @@
 }
 
 @layer components {
-    .peach-gradient {
-        background: linear-gradient(135deg, #FF8C69 0%, #E8735A 100%);
-    }
 
+    .peach-gradient,
     .orange-gradient {
-        @apply peach-gradient;
+        background: linear-gradient(135deg, #FF8C69 0%, #E8735A 100%);
     }
 
     .glass-card {
