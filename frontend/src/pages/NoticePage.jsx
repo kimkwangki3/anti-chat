@@ -86,15 +86,15 @@ const NoticePage = () => {
     return (
         <div className="flex flex-col h-full bg-[#1a1a24] text-[#e8e8f0]">
             {/* Header */}
-            <header className="h-20 flex-shrink-0 bg-[#1a1a24]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 z-20 pt-safe">
+            <header className="unified-header">
                 <div>
-                    <h1 className="text-xl font-bold font-['Bebas_Neue'] tracking-wider uppercase italic text-white flex items-center gap-2">
-                        {currentChannel?.name || 'CHANNEL'} <span className="text-[#FF8C69] text-sm font-mono tracking-tighter not-italic">NOTICE STREAM</span>
+                    <h1 className="text-xl font-bold italic text-white flex items-center gap-2">
+                        {currentChannel?.name || '채널'} <span className="text-[#FF8C69] text-xs font-mono tracking-tighter not-italic">공지 스트림</span>
                     </h1>
                     <div className="flex items-center gap-2 mt-0.5">
                         <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full animate-pulse shadow-[0_0_8px_rgba(6,214,160,0.5)]"></span>
                         <span className="text-[9px] font-bold text-[#06d6a0] font-mono uppercase tracking-[0.2em]">
-                            {onlineCount} ACTIVE USERS
+                            {onlineCount}명 대화 중
                         </span>
                     </div>
                 </div>
@@ -119,9 +119,9 @@ const NoticePage = () => {
                         >
                             <div className="flex items-center gap-3 mb-2 px-1">
                                 <div className="w-7 h-7 rounded-lg bg-[#FF8C69] flex items-center justify-center text-[10px] font-bold text-white shadow-lg shadow-[#FF8C69]/20 leading-none">
-                                    ADM
+                                    운영
                                 </div>
-                                <span className="text-[11px] font-bold text-[#e8e8f0] uppercase tracking-widest">관리자 공지</span>
+                                <span className="text-[11px] font-bold text-[#e8e8f0] uppercase tracking-widest">공식 공지</span>
                                 <span className="text-[9px] font-mono text-[#444466] uppercase tracking-tighter">{new Date(notice.createdAt).toLocaleString()}</span>
                             </div>
 
@@ -143,14 +143,14 @@ const NoticePage = () => {
                                         onClick={() => { if (window.confirm('공지를 삭제하시겠습니까?')) deleteNotice(notice._id); }}
                                         className="absolute -right-12 top-0 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-red-500/50 hover:text-red-500 text-[9px] font-bold uppercase"
                                     >
-                                        [ DEL ]
+                                        [ 삭제 ]
                                     </button>
                                 )}
 
                                 <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3 opacity-40 group-hover:opacity-100 transition-opacity">
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full"></span>
-                                        <span className="text-[9px] font-mono text-[#FF8C69] tracking-widest uppercase italic">READ BY {notice.readBy?.length || 0} MEMBERS</span>
+                                        <span className="text-[9px] font-mono text-[#FF8C69] tracking-widest uppercase italic">{notice.readBy?.length || 0}명 읽음</span>
                                     </div>
                                 </div>
                             </div>

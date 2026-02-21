@@ -121,152 +121,154 @@ const PollPage = () => {
     );
 
     return (
-        <div className="h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar p-6 md:p-12 pb-32 pt-safe">
-            <header className="mb-12 flex justify-between items-end">
+        <div className="flex flex-col h-full bg-[#1a1a24]">
+            <header className="unified-header">
                 <div>
-                    <h1 className="text-4xl font-black italic tracking-tighter text-white mb-2 font-mono uppercase">
-                        Poll <span className="text-[#FF8C69]">Tab</span>
+                    <h1 className="text-xl font-bold italic text-white flex items-center gap-2">
+                        실시간 <span className="text-[#FF8C69]">투표</span>
                     </h1>
-                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">채널의 소중한 의견을 모아주세요</p>
+                    <p className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1 mt-0.5">채널의 소중한 의견을 모아주세요</p>
                 </div>
                 {(channelRole === 'admin' || user?.role === 'superadmin') && (
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="px-6 py-3 bg-[#FF8C69] text-white text-xs font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest"
+                        className="px-6 py-2.5 bg-[#FF8C69] text-white text-[11px] font-black rounded-xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest"
                     >
-                        + 새로운 투표 개최
+                        + 신규 투표 생성
                     </button>
                 )}
             </header>
 
-            <div className="space-y-12">
-                {/* 진행 중인 투표 */}
-                <section>
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="w-2 h-8 bg-[#06d6a0] rounded-full"></div>
-                        <h2 className="text-xl font-bold text-white tracking-tight italic">Active Polls</h2>
-                    </div>
-                    {isLoading && polls.length === 0 ? (
-                        <div className="p-12 text-center text-[#6b6b8a] animate-pulse uppercase text-[10px] font-black tracking-widest">Loading polls...</div>
-                    ) : polls.filter(p => p.status === 'active' && new Date(p.expiresAt) > new Date()).length === 0 ? (
-                        <div className="py-12 bg-white/[0.02] border border-dashed border-white/5 rounded-[2rem] text-center">
-                            <p className="text-[10px] font-black text-[#3a3a4a] uppercase tracking-widest">현재 진행 중인 투표가 없습니다.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-6">
-                            {polls.filter(p => p.status === 'active' && new Date(p.expiresAt) > new Date()).map(poll => (
-                                <PollCard
-                                    key={poll._id}
-                                    poll={poll}
-                                    onVote={handleVote}
-                                    onExport={() => handleExport(poll._id, poll.title)}
-                                    isAdmin={channelRole === 'admin' || user?.role === 'superadmin'}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </section>
-
-                {/* 완료된 투표 - 관리자만 확인 가능 */}
-                {(channelRole === 'admin' || user?.role === 'superadmin') && (
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 pb-32">
+                <div className="space-y-12">
+                    {/* 진행 중인 투표 */}
                     <section>
                         <div className="flex items-center gap-3 mb-8">
-                            <div className="w-2 h-8 bg-white/10 rounded-full"></div>
-                            <h2 className="text-xl font-bold text-white tracking-tight italic opacity-50">Closed Polls</h2>
+                            <div className="w-2 h-8 bg-[#06d6a0] rounded-full"></div>
+                            <h2 className="text-xl font-bold text-white tracking-tight italic">진행 중인 투표</h2>
                         </div>
-                        <div className="grid grid-cols-1 gap-6">
-                            {polls.filter(p => p.status === 'closed' || new Date(p.expiresAt) <= new Date()).map(poll => (
-                                <PollCard
-                                    key={poll._id}
-                                    poll={poll}
-                                    isClosed={true}
-                                    onExport={() => handleExport(poll._id, poll.title)}
-                                    isAdmin={true}
-                                />
-                            ))}
-                        </div>
+                        {isLoading && polls.length === 0 ? (
+                            <div className="p-12 text-center text-[#6b6b8a] animate-pulse uppercase text-[10px] font-black tracking-widest">불러오는 중...</div>
+                        ) : polls.filter(p => p.status === 'active' && new Date(p.expiresAt) > new Date()).length === 0 ? (
+                            <div className="py-12 bg-white/[0.02] border border-dashed border-white/5 rounded-[2rem] text-center">
+                                <p className="text-[10px] font-black text-[#3a3a4a] uppercase tracking-widest">진행 중인 투표가 없습니다.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 gap-6">
+                                {polls.filter(p => p.status === 'active' && new Date(p.expiresAt) > new Date()).map(poll => (
+                                    <PollCard
+                                        key={poll._id}
+                                        poll={poll}
+                                        onVote={handleVote}
+                                        onExport={() => handleExport(poll._id, poll.title)}
+                                        isAdmin={channelRole === 'admin' || user?.role === 'superadmin'}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </section>
+
+                    {/* 완료된 투표 - 관리자만 확인 가능 */}
+                    {(channelRole === 'admin' || user?.role === 'superadmin') && (
+                        <section>
+                            <div className="flex items-center gap-3 mb-8">
+                                <div className="w-2 h-8 bg-white/10 rounded-full"></div>
+                                <h2 className="text-xl font-bold text-white tracking-tight italic opacity-50">종료된 투표</h2>
+                            </div>
+                            <div className="grid grid-cols-1 gap-6">
+                                {polls.filter(p => p.status === 'closed' || new Date(p.expiresAt) <= new Date()).map(poll => (
+                                    <PollCard
+                                        key={poll._id}
+                                        poll={poll}
+                                        isClosed={true}
+                                        onExport={() => handleExport(poll._id, poll.title)}
+                                        isAdmin={true}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </div>
+
+                {/* 투표 생성 모달 */}
+                {isCreateModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-[#0a0a0f]/90 backdrop-blur-md" onClick={() => setIsCreateModalOpen(false)}></div>
+                        <div className="relative w-full max-w-lg bg-[#1a1a24] border border-white/10 rounded-[2.5rem] p-10 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
+                            <h2 className="text-2xl font-black text-white mb-8 italic">신규 투표 만들기</h2>
+                            <form onSubmit={handleCreatePoll} className="space-y-6">
+                                <div>
+                                    <label className="block text-[10px] font-black text-[#444466] uppercase tracking-[0.2em] mb-3">투표 제목</label>
+                                    <input
+                                        type="text"
+                                        value={newPoll.title}
+                                        onChange={(e) => setNewPoll({ ...newPoll, title: e.target.value })}
+                                        placeholder="투표 주제를 입력하세요..."
+                                        className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#FF8C69]/30"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-[#444466] uppercase tracking-[0.2em] mb-3">항목 설정</label>
+                                    <div className="space-y-3">
+                                        {newPoll.options.map((opt, idx) => (
+                                            <input
+                                                key={idx}
+                                                type="text"
+                                                value={opt}
+                                                onChange={(e) => {
+                                                    const opts = [...newPoll.options];
+                                                    opts[idx] = e.target.value;
+                                                    setNewPoll({ ...newPoll, options: opts });
+                                                }}
+                                                placeholder={`옵션 ${idx + 1}`}
+                                                className="w-full bg-[#23232f] border border-white/5 rounded-xl px-6 py-3 text-xs text-white"
+                                            />
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setNewPoll({ ...newPoll, options: [...newPoll.options, ''] })}
+                                            className="text-[10px] font-bold text-[#FF8C69] hover:underline"
+                                        >
+                                            + 항목 추가
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div
+                                        onClick={() => setNewPoll({ ...newPoll, isMultipleSelection: !newPoll.isMultipleSelection })}
+                                        className={`p-4 rounded-xl border cursor-pointer transition-all ${newPoll.isMultipleSelection ? 'bg-[#FF8C69]/10 border-[#FF8C69] text-[#FF8C69]' : 'bg-white/5 border-transparent text-[#6b6b8a]'}`}
+                                    >
+                                        <p className="text-[10px] font-black uppercase text-center">복수 선택</p>
+                                    </div>
+                                    <div
+                                        onClick={() => setNewPoll({ ...newPoll, isAnonymous: !newPoll.isAnonymous })}
+                                        className={`p-4 rounded-xl border cursor-pointer transition-all ${newPoll.isAnonymous ? 'bg-[#FF8C69]/10 border-[#FF8C69] text-[#FF8C69]' : 'bg-white/5 border-transparent text-[#6b6b8a]'}`}
+                                    >
+                                        <p className="text-[10px] font-black uppercase text-center">익명 투표</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-black text-[#444466] uppercase tracking-[0.2em] mb-3">종료 시간</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={newPoll.expiresAt}
+                                        onChange={(e) => setNewPoll({ ...newPoll, expiresAt: e.target.value })}
+                                        className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-6 py-4 text-xs text-white"
+                                        required
+                                    />
+                                </div>
+
+                                <button className="w-full py-5 orange-gradient text-white font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest text-xs mt-4">
+                                    투표 개최하기
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 )}
             </div>
-
-            {/* 투표 생성 모달 */}
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-[#0a0a0f]/90 backdrop-blur-md" onClick={() => setIsCreateModalOpen(false)}></div>
-                    <div className="relative w-full max-w-lg bg-[#1a1a24] border border-white/10 rounded-[2.5rem] p-10 shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-2xl font-black text-white mb-8 italic">CREATE NEW POLL</h2>
-                        <form onSubmit={handleCreatePoll} className="space-y-6">
-                            <div>
-                                <label className="block text-[10px] font-black text-[#444466] uppercase tracking-[0.2em] mb-3">투표 제목</label>
-                                <input
-                                    type="text"
-                                    value={newPoll.title}
-                                    onChange={(e) => setNewPoll({ ...newPoll, title: e.target.value })}
-                                    placeholder="투표 주제를 입력하세요..."
-                                    className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#FF8C69]/30"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-black text-[#444466] uppercase tracking-[0.2em] mb-3">항목 설정</label>
-                                <div className="space-y-3">
-                                    {newPoll.options.map((opt, idx) => (
-                                        <input
-                                            key={idx}
-                                            type="text"
-                                            value={opt}
-                                            onChange={(e) => {
-                                                const opts = [...newPoll.options];
-                                                opts[idx] = e.target.value;
-                                                setNewPoll({ ...newPoll, options: opts });
-                                            }}
-                                            placeholder={`옵션 ${idx + 1}`}
-                                            className="w-full bg-[#23232f] border border-white/5 rounded-xl px-6 py-3 text-xs text-white"
-                                        />
-                                    ))}
-                                    <button
-                                        type="button"
-                                        onClick={() => setNewPoll({ ...newPoll, options: [...newPoll.options, ''] })}
-                                        className="text-[10px] font-bold text-[#FF8C69] hover:underline"
-                                    >
-                                        + 항목 추가
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div
-                                    onClick={() => setNewPoll({ ...newPoll, isMultipleSelection: !newPoll.isMultipleSelection })}
-                                    className={`p-4 rounded-xl border cursor-pointer transition-all ${newPoll.isMultipleSelection ? 'bg-[#FF8C69]/10 border-[#FF8C69] text-[#FF8C69]' : 'bg-white/5 border-transparent text-[#6b6b8a]'}`}
-                                >
-                                    <p className="text-[10px] font-black uppercase text-center">복수 선택</p>
-                                </div>
-                                <div
-                                    onClick={() => setNewPoll({ ...newPoll, isAnonymous: !newPoll.isAnonymous })}
-                                    className={`p-4 rounded-xl border cursor-pointer transition-all ${newPoll.isAnonymous ? 'bg-[#FF8C69]/10 border-[#FF8C69] text-[#FF8C69]' : 'bg-white/5 border-transparent text-[#6b6b8a]'}`}
-                                >
-                                    <p className="text-[10px] font-black uppercase text-center">익명 투표</p>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-black text-[#444466] uppercase tracking-[0.2em] mb-3">종료 시간</label>
-                                <input
-                                    type="datetime-local"
-                                    value={newPoll.expiresAt}
-                                    onChange={(e) => setNewPoll({ ...newPoll, expiresAt: e.target.value })}
-                                    className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-6 py-4 text-xs text-white"
-                                    required
-                                />
-                            </div>
-
-                            <button className="w-full py-5 orange-gradient text-white font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest text-xs mt-4">
-                                투표 개최하기
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

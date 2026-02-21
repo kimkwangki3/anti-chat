@@ -15,16 +15,22 @@
     }
 
     body {
-        @apply bg-[#1a1a24] text-[#e8e8f0] antialiased;
+        @apply bg-[#1a1a24] text-[#e8e8f0] antialiased selection:bg-[#FF8C69]/30;
         font-family: 'Inter', 'Pretendard', sans-serif;
     }
 
+    /* Unified Layout Utilities */
     .pb-safe {
         padding-bottom: var(--safe-bottom);
     }
 
     .pt-safe {
         padding-top: var(--safe-top);
+    }
+
+    .px-safe {
+        padding-left: var(--safe-left);
+        padding-right: var(--safe-right);
     }
 
     .mb-safe {
@@ -35,12 +41,12 @@
         margin-top: var(--safe-top);
     }
 
-    .min-h-safe {
-        min-height: calc(100vh - var(--safe-top) - var(--safe-bottom));
+    .page-container {
+        @apply h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar;
     }
 
-    .h-safe {
-        height: calc(100vh - var(--safe-top) - var(--safe-bottom));
+    .unified-header {
+        @apply h-20 flex-shrink-0 bg-[#1a1a24]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 md:px-10 z-20;
     }
 }
 

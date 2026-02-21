@@ -66,16 +66,16 @@ const SuperAdminChannelDetail = () => {
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto">
             <header className="mb-10">
-                <button onClick={() => navigate('/superadmin/channels')} className="text-[#6b6b8a] text-xs font-bold mb-6 hover:text-white transition-colors flex items-center gap-2">
-                    ← BACK TO OBSERVATORY
+                <button onClick={() => navigate('/superadmin/channels')} className="text-[#6b6b8a] text-xs font-bold mb-6 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest font-mono">
+                    ← 채널 관측소(목록)로 돌아가기
                 </button>
                 <div className="flex items-center gap-6">
                     <div className="w-20 h-20 rounded-3xl bg-[#4f6ef7]/10 flex items-center justify-center text-4xl border border-[#4f6ef7]/20 shadow-2xl">
                         🏘️
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black text-white italic uppercase tracking-tight">
-                            {channel.name} <span className="text-[#4f6ef7]">COMMAND</span> 💂‍♂️
+                        <h1 className="text-4xl font-black text-white italic uppercase tracking-tight font-mono">
+                            {channel.name} <span className="text-[#4f6ef7]">커맨드</span> 💂‍♂️
                         </h1>
                         <p className="text-[#6b6b8a] text-xs mt-1 font-medium italic">{channel.description}</p>
                     </div>
@@ -83,94 +83,109 @@ const SuperAdminChannelDetail = () => {
             </header>
 
             <nav className="flex gap-4 mb-8 border-b border-white/5 pb-4">
-                {['members', 'notices', 'posts'].map(tab => (
+                {[
+                    { key: 'members', label: '가입 멤버' },
+                    { key: 'notices', label: '채널 공지' },
+                    { key: 'posts', label: '게시물 로그' }
+                ].map(tab => (
                     <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab
-                                ? 'bg-[#4f6ef7] text-white shadow-lg shadow-[#4f6ef7]/20'
-                                : 'text-[#6b6b8a] hover:text-white'
+                        key={tab.key}
+                        onClick={() => setActiveTab(tab.key)}
+                        className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab.key
+                            ? 'bg-[#4f6ef7] text-white shadow-lg shadow-[#4f6ef7]/20'
+                            : 'text-[#6b6b8a] hover:text-white bg-white/5'
                             }`}
                     >
-                        {tab} ({content[tab].length})
+                        {tab.label} ({content[tab.key].length})
                     </button>
                 ))}
             </nav>
 
-            <div className="bg-[#12121a] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
+            <div className="bg-[#12121a] border border-white/5 rounded-[2.5rem] shadow-2xl overflow-hidden">
                 {activeTab === 'members' && (
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-white/5 border-b border-white/5">
-                                <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">사용자</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">상태</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">가입일</th>
-                                <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">액션</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {content.members.map(m => (
-                                <tr key={m._id} className="hover:bg-white/[0.02]">
-                                    <td className="px-8 py-4">
-                                        <p className="text-sm font-bold text-white">{m.userId?.name}</p>
-                                        <p className="text-[10px] font-mono text-[#6b6b8a]">{m.userId?.username}</p>
-                                    </td>
-                                    <td className="px-8 py-4">
-                                        <span className={`text-[9px] font-black uppercase ${m.userId?.status === 'active' ? 'text-[#06d6a0]' : 'text-red-500'}`}>
-                                            {m.userId?.status || 'active'}
-                                        </span>
-                                    </td>
-                                    <td className="px-8 py-4 text-[10px] font-bold text-[#6b6b8a]">
-                                        {new Date(m.createdAt).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-8 py-4">
-                                        {m.userId?.role !== 'admin' && (
-                                            <button onClick={() => handleKickMember(m.userId?._id)} className="text-red-500 hover:text-white text-[10px] font-bold">추방</button>
-                                        )}
-                                    </td>
+                    <div className="overflow-x-auto overflow-y-hidden">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-white/5 border-b border-white/5">
+                                    <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">사용자 식별정보</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">현재 상태</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">가입일시</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">관리 액션</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {content.members.map(m => (
+                                    <tr key={m._id} className="hover:bg-white/[0.02] group transition-colors">
+                                        <td className="px-8 py-4">
+                                            <p className="text-sm font-bold text-white group-hover:text-[#4f6ef7] transition-colors">{m.userId?.name}</p>
+                                            <p className="text-[10px] font-mono text-[#444466] uppercase">{m.userId?.username}</p>
+                                        </td>
+                                        <td className="px-8 py-4">
+                                            <span className={`text-[9px] font-black uppercase tracking-tight px-2 py-0.5 rounded-full ${m.userId?.status === 'active' || !m.userId?.status ? 'bg-[#06d6a0]/10 text-[#06d6a0]' : 'bg-red-500/10 text-red-500'}`}>
+                                                {(!m.userId?.status || m.userId?.status === 'active') ? '정상' : '제한/탈퇴'}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-4 text-[10px] font-bold text-[#6b6b8a] font-mono">
+                                            {new Date(m.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-8 py-4">
+                                            {m.userId?.role !== 'admin' && m.userId?.role !== 'superadmin' && (
+                                                <button
+                                                    onClick={() => handleKickMember(m.userId?._id)}
+                                                    className="px-3 py-1 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg text-[10px] font-black border border-red-500/20 transition-all uppercase"
+                                                >
+                                                    강제 추방
+                                                </button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
 
                 {activeTab === 'notices' && (
                     <div className="divide-y divide-white/5">
-                        {content.notices.map(n => (
-                            <div key={n._id} className="p-8 hover:bg-white/[0.02] flex justify-between items-start">
+                        {content.notices.length > 0 ? content.notices.map(n => (
+                            <div key={n._id} className="p-8 hover:bg-white/[0.02] flex justify-between items-start transition-colors">
                                 <div>
                                     <h3 className="text-lg font-bold text-white mb-2">{n.title}</h3>
-                                    <p className="text-sm text-[#8080a0] line-clamp-2 mb-4">{n.content}</p>
-                                    <div className="flex gap-4 text-[10px] font-bold text-[#6b6b8a]">
+                                    <p className="text-sm text-[#8080a0] line-clamp-2 mb-4 leading-relaxed">{n.content}</p>
+                                    <div className="flex gap-4 text-[10px] font-bold text-[#444466] font-mono uppercase">
                                         <span>✍️ {n.authorId?.name}</span>
                                         <span>📅 {new Date(n.createdAt).toLocaleString()}</span>
                                     </div>
                                 </div>
-                                <button onClick={() => handleDeleteNotice(n._id)} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-[10px] font-bold border border-red-500/20 transition-all">
+                                <button onClick={() => handleDeleteNotice(n._id)} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-[10px] font-black border border-red-500/20 transition-all uppercase">
                                     삭제
                                 </button>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="p-20 text-center text-[10px] font-black text-[#333344] uppercase tracking-[0.3em]">등록된 공지사항이 없습니다.</div>
+                        )}
                     </div>
                 )}
 
                 {activeTab === 'posts' && (
                     <div className="divide-y divide-white/5">
-                        {content.posts.map(p => (
-                            <div key={p._id} className="p-8 hover:bg-white/[0.02] flex justify-between items-start">
-                                <div>
-                                    <p className="text-sm text-white mb-4 whitespace-pre-wrap">{p.content}</p>
-                                    <div className="flex gap-4 text-[10px] font-bold text-[#6b6b8a]">
+                        {content.posts.length > 0 ? content.posts.map(p => (
+                            <div key={p._id} className="p-8 hover:bg-white/[0.02] flex justify-between items-start transition-colors">
+                                <div className="max-w-3xl">
+                                    <p className="text-sm text-white/90 mb-4 whitespace-pre-wrap leading-relaxed">{p.content}</p>
+                                    <div className="flex gap-4 text-[10px] font-bold text-[#444466] font-mono uppercase">
                                         <span>✍️ {p.authorId?.name}</span>
-                                        <span>💬 {p.comments?.length || 0} Comments</span>
+                                        <span>💬 {p.comments?.length || 0} 댓글</span>
                                         <span>📅 {new Date(p.createdAt).toLocaleString()}</span>
                                     </div>
                                 </div>
-                                <button onClick={() => handleDeletePost(p._id)} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-[10px] font-bold border border-red-500/20 transition-all">
-                                    삭제
+                                <button onClick={() => handleDeletePost(p._id)} className="px-4 py-2 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl text-[10px] font-black border border-red-500/20 transition-all uppercase">
+                                    피드 삭제
                                 </button>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="p-20 text-center text-[10px] font-black text-[#333344] uppercase tracking-[0.3em]">기록된 게시물이 없습니다.</div>
+                        )}
                     </div>
                 )}
             </div>

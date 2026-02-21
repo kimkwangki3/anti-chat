@@ -95,12 +95,12 @@ const SettingsPage = () => {
             {/* Header */}
             <div className="max-w-2xl mx-auto mb-12 flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono mb-2">Settings</h1>
-                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em]">Personalize your connection</p>
+                    <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono mb-2">환경 설정</h1>
+                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em]">개인 맞춤형 연결 및 보안 설정</p>
                 </div>
                 <button
                     onClick={() => navigate(-1)}
-                    className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-all"
+                    className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-all font-bold"
                 >
                     ✕
                 </button>
@@ -113,21 +113,21 @@ const SettingsPage = () => {
                         <div className="absolute top-0 right-0 p-8 opacity-[0.05] pointer-events-none">
                             <span className="text-8xl font-black italic uppercase font-mono leading-none text-[#FF8C69]">ADMIN</span>
                         </div>
-                        <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
-                            👑 Admin Management
+                        <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-6 flex items-center gap-2 font-mono">
+                            👑 채널 마스터 엔진
                         </h3>
                         <div className="grid grid-cols-1 gap-3 relative z-10">
                             <button
                                 onClick={() => navigate(`/admin/members?channelId=${ownedChannelId}`)}
-                                className="w-full py-5 bg-[#FF8C69] text-white rounded-2xl text-sm font-black flex items-center justify-center gap-3 shadow-xl shadow-[#FF8C69]/20 active:scale-95 transition-all"
+                                className="w-full py-5 bg-[#FF8C69] text-white rounded-2xl text-sm font-black flex items-center justify-center gap-3 shadow-xl shadow-[#FF8C69]/20 active:scale-95 transition-all uppercase tracking-widest"
                             >
-                                👥 채널 멤버(회원) 관리
+                                👥 채널 멤버 매니지먼트
                             </button>
                             <button
                                 onClick={() => navigate(`/admin/edit-channel?channelId=${ownedChannelId}`)}
-                                className="w-full py-5 bg-white/5 text-[#FF8C69] border border-[#FF8C69]/20 rounded-2xl text-sm font-bold flex items-center justify-center gap-3 active:scale-95 transition-all"
+                                className="w-full py-5 bg-white/5 text-[#FF8C69] border border-[#FF8C69]/20 rounded-2xl text-sm font-black flex items-center justify-center gap-3 active:scale-95 transition-all uppercase tracking-widest"
                             >
-                                ⚙️ 채널 상세 설정
+                                ⚙️ 코어 시스템 상세 구성
                             </button>
                         </div>
                     </section>
@@ -135,7 +135,7 @@ const SettingsPage = () => {
                 {/* Profile Section */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                        <span className="text-8xl font-black italic uppercase italic font-mono leading-none">PROFILE</span>
+                        <span className="text-8xl font-black italic uppercase font-mono leading-none">IDENTITY</span>
                     </div>
 
                     <div className="flex items-center gap-6 relative z-10">
@@ -149,22 +149,22 @@ const SettingsPage = () => {
                                         type="text"
                                         value={newName}
                                         onChange={(e) => setNewName(e.target.value)}
-                                        className="bg-[#1a1a24] border border-[#FF8C69]/30 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#FF8C69] transition-all w-full max-w-[200px]"
-                                        placeholder="새 대화명 입력"
+                                        className="bg-[#1a1a24] border border-[#FF8C69]/30 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#FF8C69] transition-all w-full max-w-[200px] font-bold"
+                                        placeholder="새로운 대화명"
                                         autoFocus
                                     />
                                     <button
                                         disabled={isUpdating}
                                         onClick={handleUpdateName}
-                                        className="px-4 py-2 bg-[#FF8C69] text-white text-[10px] font-bold rounded-lg hover:bg-[#ffaa33] transition-all disabled:opacity-50"
+                                        className="px-4 py-2 bg-[#FF8C69] text-white text-[10px] font-black rounded-lg hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase"
                                     >
-                                        저장
+                                        승인
                                     </button>
                                     <button
                                         onClick={() => { setIsEditingName(false); setNewName(user.name); }}
-                                        className="px-4 py-2 bg-white/5 text-[#6b6b8a] text-[10px] font-bold rounded-lg hover:bg-white/10 transition-all border border-white/5"
+                                        className="px-4 py-2 bg-white/5 text-[#6b6b8a] text-[10px] font-black rounded-lg hover:bg-white/10 transition-all border border-white/5 uppercase"
                                     >
-                                        취소
+                                        폐기
                                     </button>
                                 </div>
                             ) : (
@@ -173,21 +173,21 @@ const SettingsPage = () => {
                                     <button
                                         onClick={() => setIsEditingName(true)}
                                         className="p-2 rounded-lg bg-white/5 text-[#6b6b8a] hover:text-[#FF8C69] hover:bg-[#FF8C69]/10 transition-all text-xs"
-                                        title="대화명 수정"
+                                        title="신원 정보 수정"
                                     >
                                         ✏️
                                     </button>
                                 </div>
                             )}
-                            <p className="text-xs text-[#6b6b8a] font-mono tracking-widest uppercase">{user?.role} / {user?.username}</p>
+                            <p className="text-xs text-[#444466] font-mono tracking-widest uppercase font-bold">{user?.role} ACCESS / {user?.username}</p>
                         </div>
                     </div>
                 </section>
 
                 {/* Sound Selection */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span> Notification Sound
+                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
+                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span> 오디오 인터페이스
                     </h3>
 
                     <div className="space-y-3">
@@ -202,10 +202,10 @@ const SettingsPage = () => {
                             >
                                 <div className="flex items-center gap-4">
                                     <span className="text-xl group-hover:scale-125 transition-transform">{option.icon}</span>
-                                    <span className="text-sm font-bold">{option.label}</span>
+                                    <span className="text-sm font-black">{option.label}</span>
                                 </div>
                                 {soundType === option.id && (
-                                    <span className="text-[#FF8C69] text-xs">●</span>
+                                    <span className="text-[#FF8C69] text-xs">● ACTIVE</span>
                                 )}
                             </div>
                         ))}
@@ -214,7 +214,7 @@ const SettingsPage = () => {
 
                 {/* Volume Control */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8">Sound Volume</h3>
+                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 font-mono">마스터 볼륨 레벨</h3>
                     <div className="flex items-center gap-6">
                         <span className="text-xl">🔈</span>
                         <input
@@ -228,30 +228,30 @@ const SettingsPage = () => {
                         />
                         <span className="text-xl">🔊</span>
                     </div>
-                    <div className="mt-4 flex justify-between text-[10px] font-bold text-[#444466] uppercase tracking-widest">
-                        <span>Min</span>
-                        <span className="text-[#FF8C69]">{Math.round(volume * 100)}%</span>
-                        <span>Max</span>
+                    <div className="mt-4 flex justify-between text-[10px] font-black text-[#444466] uppercase tracking-[0.3em] font-mono">
+                        <span>MIN</span>
+                        <span className="text-[#FF8C69] text-lg">{Math.round(volume * 100)}%</span>
+                        <span>MAX</span>
                     </div>
                     <button
                         onClick={() => playPreview()}
-                        className="w-full mt-8 py-4 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black text-[#6b6b8a] hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest"
+                        className="w-full mt-8 py-4 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black text-[#6b6b8a] hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest font-mono"
                     >
-                        테스트 재생하기
+                        오디오 테스트 시작
                     </button>
                 </section>
 
                 {/* Notification Permission Section */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-bounce"></span> Push Notifications
+                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
+                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-bounce"></span> 리얼타임 푸시 알림 (PWA)
                     </h3>
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/5">
                             <div>
-                                <p className="text-sm font-bold text-white mb-1">푸시 알림</p>
-                                <p className="text-[10px] text-[#6b6b8a] uppercase tracking-wider font-mono">
-                                    현재 상태: {pushStatus === 'granted' ? '✅ 구독 완료' : pushStatus === 'denied' ? '❌ 권한 거부됨' : '❓ 미설정'}
+                                <p className="text-sm font-black text-white mb-1 uppercase">네트워크 라이브 알림</p>
+                                <p className="text-[10px] text-[#444466] uppercase tracking-wider font-mono font-bold">
+                                    Status: {pushStatus === 'granted' ? '✅ SUBSCRIPTION ACTIVE' : pushStatus === 'denied' ? '❌ ACCESS DENIED' : '❓ NO PERMISSION'}
                                 </p>
                             </div>
                             {pushStatus !== 'granted' && pushStatus !== 'denied' && (
@@ -260,19 +260,19 @@ const SettingsPage = () => {
                                     onClick={handleSubscribe}
                                     className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF8C69]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50"
                                 >
-                                    {isSubscribing ? '구독 중...' : '알림 허용하기'}
+                                    {isSubscribing ? '구독 활성화 중...' : '알림 수신 허용'}
                                 </button>
                             )}
                             {pushStatus === 'denied' && (
-                                <p className="text-[10px] text-red-400 font-mono">브라우저 설정에서 직접 허용해 주세요</p>
+                                <p className="text-[10px] text-red-400 font-mono font-bold uppercase">시스템 설정에서 직접 허용 필요</p>
                             )}
                         </div>
                         <div className="p-5 rounded-2xl bg-[#FF8C69]/5 border border-[#FF8C69]/10">
-                            <p className="text-[11px] text-[#FF8C69] font-bold mb-2">📱 아이폰(iOS) 사용자 안내</p>
-                            <p className="text-[11px] text-[#6b6b8a] leading-relaxed">
-                                Safari 하단의 <span className="text-white font-bold">공유 버튼(□↑)</span>을 눌러
-                                <span className="text-white font-bold"> [홈 화면에 추가]</span>를 먼저 진행해 주세요.<br />
-                                홈 화면 아이콘으로 접속한 뒤 이 버튼을 눌러야 알림을 받을 수 있습니다.
+                            <p className="text-[11px] text-[#FF8C69] font-black mb-2 uppercase tracking-widest">📱 iOS / iPhone 환경 구축 가이드</p>
+                            <p className="text-[11px] text-[#6b6b8a] leading-relaxed font-medium">
+                                Safari 하단의 <span className="text-white font-black italic">공유 아이콘</span>을 클릭한 후<br />
+                                <span className="text-[#FF8C69] font-black"> [홈 화면에 추가]</span> 절차를 반드시 완료해 주세요.<br />
+                                <span className="italic mt-1 block">생성된 홈 아이콘으로 접속해야 실시간 푸시 서비스가 가동됩니다.</span>
                             </p>
                         </div>
                     </div>
@@ -282,9 +282,9 @@ const SettingsPage = () => {
                 <section className="pt-8">
                     <button
                         onClick={logout}
-                        className="w-full py-6 bg-red-500/5 text-red-500 border border-red-500/10 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all shadow-xl hover:shadow-red-500/20 active:scale-95"
+                        className="w-full py-6 bg-red-500/10 text-red-500 border border-red-500/10 rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] hover:bg-red-500 hover:text-white transition-all shadow-2xl hover:shadow-red-500/40 active:scale-95 font-mono"
                     >
-                        👋 Sign Out Account
+                        🔐 세션 종료 및 시스템 로그아웃
                     </button>
                 </section>
             </div>

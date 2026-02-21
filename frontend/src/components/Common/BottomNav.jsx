@@ -105,7 +105,7 @@ const BottomNav = () => {
                             {/* 관리자 메뉴 (Admin/SuperAdmin + 채널 선택 혹은 소유 시) */}
                             {(user?.role === 'admin' || user?.role === 'superadmin') && activeChannelId && (
                                 <>
-                                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-1 px-1">Admin Suite</p>
+                                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-1 px-1">채널 관리 도구</p>
                                     <button
                                         onClick={() => { navigate(`/admin/members?channelId=${activeChannelId}`); setShowSettings(false); }}
                                         className="w-full py-4 px-6 bg-white/5 text-white rounded-2xl text-sm font-bold flex items-center gap-3 border border-white/5 active:scale-95 transition-all"
@@ -124,7 +124,7 @@ const BottomNav = () => {
                             {/* 최고 관리자 메뉴 (SuperAdmin 전용) */}
                             {user?.role === 'superadmin' && (
                                 <>
-                                    <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] mb-1 px-1">Super Admin Suite 👑</p>
+                                    <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] mb-1 px-1">최고 관리자 도구 👑</p>
                                     <button
                                         onClick={() => { navigate('/superadmin/users'); setShowSettings(false); }}
                                         className="w-full py-4 px-6 bg-[#FF8C69]/10 text-[#FF8C69] rounded-2xl text-sm font-bold flex items-center gap-3 border border-[#FF8C69]/20 active:scale-95 transition-all"

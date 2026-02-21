@@ -43,8 +43,8 @@ const SuperAdminChats = () => {
             {/* Header & Search */}
             <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 flex-shrink-0">
                 <div>
-                    <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono mb-2">Chat Inspector 🔍</h1>
-                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em]">Deep dive into communications</p>
+                    <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono mb-2">대화 <span className="text-[#FF8C69]">조사</span> 부 🔍</h1>
+                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em]">메시지 전역 로그 정밀 분석</p>
                 </div>
 
                 <form onSubmit={handleSearch} className="flex flex-wrap gap-3">
@@ -66,7 +66,7 @@ const SuperAdminChats = () => {
                         type="submit"
                         className="bg-[#FF8C69] text-white text-[10px] font-black px-6 py-3 rounded-xl shadow-lg shadow-[#FF8C69]/20 hover:scale-105 transition-all uppercase tracking-widest"
                     >
-                        Search
+                        데이터 추출
                     </button>
                     {(messages.length > 0 || selectedChannelMessages) && (
                         <button
@@ -74,7 +74,7 @@ const SuperAdminChats = () => {
                             onClick={() => { setMessages([]); setSelectedChannelMessages(null); setSearchParams({ channelName: '', userName: '' }); }}
                             className="bg-white/5 text-[#6b6b8a] text-[10px] font-black px-6 py-3 rounded-xl border border-white/5 hover:bg-white/10 transition-all uppercase tracking-widest"
                         >
-                            Reset
+                            초기화
                         </button>
                     )}
                 </form>
@@ -93,7 +93,7 @@ const SuperAdminChats = () => {
                     <div className="flex flex-col h-full">
                         <div className="p-6 border-b border-white/5 flex items-center justify-between">
                             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                                <span className="text-[#FF8C69]">#</span> {selectedChannelMessages.name} 전체 대화
+                                <span className="text-[#FF8C69]">#</span> {selectedChannelMessages.name} 전체 대화 로그
                             </h3>
                             <button
                                 onClick={() => setSelectedChannelMessages(null)}
@@ -102,7 +102,7 @@ const SuperAdminChats = () => {
                                 ← 목록으로 돌아가기
                             </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar overflow-x-hidden">
                             {selectedChannelMessages.list.map((msg) => (
                                 <div key={msg._id} className="flex flex-col gap-1">
                                     <div className="flex items-center gap-2">
@@ -124,8 +124,8 @@ const SuperAdminChats = () => {
                                 <tr className="text-[10px] font-bold text-[#4a4a6a] uppercase tracking-widest">
                                     <th className="px-8 py-5">채널</th>
                                     <th className="px-8 py-5">발신자</th>
-                                    <th className="px-8 py-5">내용</th>
-                                    <th className="px-8 py-5">일시</th>
+                                    <th className="px-8 py-5">메시지 내용</th>
+                                    <th className="px-8 py-5">전송 일시</th>
                                     <th className="px-8 py-5"></th>
                                 </tr>
                             </thead>
@@ -152,7 +152,7 @@ const SuperAdminChats = () => {
                                                 onClick={() => viewFullContext(msg.channelId?._id, msg.channelId?.name)}
                                                 className="opacity-0 group-hover:opacity-100 bg-white/5 hover:bg-[#FF8C69]/20 text-[#FF8C69] text-[9px] font-black px-4 py-2 rounded-lg transition-all uppercase tracking-widest"
                                             >
-                                                View Context
+                                                컨텍스트 확인
                                             </button>
                                         </td>
                                     </tr>
@@ -166,7 +166,7 @@ const SuperAdminChats = () => {
                         {!isLoading && (
                             <>
                                 <span className="text-5xl mb-6 opacity-30">🕵️‍♂️</span>
-                                <h3 className="text-sm font-black uppercase tracking-[0.3em] mb-2">Search Communications</h3>
+                                <h3 className="text-sm font-black uppercase tracking-[0.3em] mb-2">메시지 정밀 추적</h3>
                                 <p className="text-[11px] text-center max-w-xs leading-relaxed">
                                     조건을 입력하고 검색 버튼을 눌러주세요.<br />채널명 또는 유저명으로 정밀 추적이 가능합니다.
                                 </p>

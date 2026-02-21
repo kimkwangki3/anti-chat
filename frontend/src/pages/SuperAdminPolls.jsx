@@ -48,13 +48,13 @@ const SuperAdminPolls = () => {
         <div className="h-full bg-[#0a0a0f] overflow-y-auto p-6 md:p-12 custom-scrollbar">
             <header className="mb-12">
                 <h1 className="text-4xl font-black italic tracking-tighter text-white mb-2 font-mono uppercase">
-                    Poll <span className="text-[#FF8C69]">Management</span> 👑
+                    시스템 <span className="text-[#FF8C69]">투표</span> 부 👑
                 </h1>
-                <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">전체 채널의 투표 현황을 관리합니다.</p>
+                <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">전체 채널의 실시간 투표 현황을 제어합니다.</p>
             </header>
 
             {isLoading ? (
-                <div className="py-20 text-center text-[#3a3a4a] font-black uppercase tracking-widest animate-pulse">Scanning infrastructure...</div>
+                <div className="py-20 text-center text-[#3a3a4a] font-black uppercase tracking-widest animate-pulse">Infrastructure Loading...</div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {polls.map(poll => (
@@ -62,7 +62,7 @@ const SuperAdminPolls = () => {
                             <div className="flex justify-between items-start mb-6">
                                 <div>
                                     <span className="text-[8px] font-black bg-[#FF8C69]/10 text-[#FF8C69] px-3 py-1 rounded-full uppercase tracking-widest mb-3 inline-block">
-                                        {poll.channelId?.name || 'Unknown Channel'}
+                                        {poll.channelId?.name || '알 수 없는 채널'}
                                     </span>
                                     <h3 className="text-xl font-bold text-white mb-1">{poll.title}</h3>
                                     <p className="text-[10px] text-[#444466] font-mono font-bold">
@@ -71,9 +71,9 @@ const SuperAdminPolls = () => {
                                 </div>
                                 <button
                                     onClick={() => handleExport(poll._id, poll.title)}
-                                    className="text-[10px] font-black text-[#FF8C69] hover:underline uppercase tracking-widest"
+                                    className="text-[10px] font-black text-[#FF8C69] hover:text-[#e8735a] transition-colors uppercase tracking-widest bg-[#FF8C69]/10 px-3 py-1.5 rounded-lg border border-[#FF8C69]/20"
                                 >
-                                    Excel Download
+                                    엑셀 다운로드
                                 </button>
                             </div>
 

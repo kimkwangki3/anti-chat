@@ -105,8 +105,15 @@ const ChatPage = () => {
             <div className={`flex-1 flex flex-col min-w-0 bg-[#1a1a24] relative shadow-2xl ${!currentRoom ? 'hidden md:flex' : 'flex'}`}>
                 {currentRoom ? (
                     <>
-                        <div className="h-16 md:h-20 flex-shrink-0 bg-[#1a1a24]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 md:px-8 z-10 pt-safe md:pt-0">
+                        <div className="unified-header !px-4 md:!px-8">
                             <div className="flex items-center gap-3">
+                                {/* 뒤로가기 버튼 */}
+                                <button
+                                    onClick={() => setCurrentRoom(null)}
+                                    className="p-2 md:hidden text-white/50 hover:text-white transition-colors"
+                                >
+                                    <span className="text-xl">←</span>
+                                </button>
                                 <div>
                                     <h2 className="text-sm md:text-lg font-bold text-white tracking-tight">
                                         {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
@@ -115,19 +122,27 @@ const ChatPage = () => {
                                     </h2>
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full shadow-[0_0_8px_rgba(6,214,160,0.5)]"></span>
-                                        <span className="text-[8px] md:text-[9px] font-bold text-[#06d6a0] uppercase tracking-[0.2em] font-mono leading-none">ACTIVE</span>
+                                        <span className="text-[8px] md:text-[9px] font-bold text-[#06d6a0] uppercase tracking-[0.2em] font-mono leading-none">대화 중</span>
                                     </div>
                                 </div>
                             </div>
 
-                            {user.role === 'admin' && (
+                            <div className="flex items-center gap-2">
+                                {user.role === 'admin' && (
+                                    <button
+                                        onClick={() => navigate(`/admin/members?channelId=${channelId}`)}
+                                        className="px-3 py-1.5 md:px-5 md:py-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[9px] md:text-[10px] font-bold rounded-xl border border-[#FF8C69]/20 hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest"
+                                    >
+                                        관리
+                                    </button>
+                                )}
                                 <button
-                                    onClick={() => navigate(`/admin/members?channelId=${channelId}`)}
-                                    className="px-3 py-2 md:px-5 md:py-2.5 bg-[#FF8C69]/10 text-[#FF8C69] text-[9px] md:text-[10px] font-bold rounded-xl border border-[#FF8C69]/20 hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest"
+                                    onClick={() => setCurrentRoom(null)}
+                                    className="hidden md:flex p-2 text-white/30 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest"
                                 >
-                                    관리
+                                    닫기
                                 </button>
-                            )}
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
@@ -159,7 +174,7 @@ const ChatPage = () => {
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-12 select-none">
                         <div className="w-24 h-24 mb-10 orange-gradient rounded-[2.5rem] flex items-center justify-center text-5xl shadow-2xl shadow-[#FF8C69]/20 animate-pulse">🧸</div>
-                        <h1 className="text-3xl font-black tracking-widest uppercase italic font-mono mb-4 text-white">Message Waiting</h1>
+                        <h1 className="text-3xl font-black tracking-widest uppercase italic font-mono mb-4 text-white">대기 중</h1>
                         <p className="max-w-xs text-[12px] font-bold uppercase tracking-[0.2em] leading-relaxed text-[#6b6b8a] mb-10">대화 상대를 선택하고<br />즐거운 소통을 시작해 보세요.</p>
 
                         {user.role === 'member' && rooms.length === 0 && (

@@ -62,7 +62,7 @@ const Sidebar = () => {
             {/* Main Menu */}
             <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto custom-scrollbar">
                 <div className="px-4 mb-4">
-                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-4">Channel Menu</p>
+                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-4">채널 메뉴</p>
                     <div className="space-y-2">
                         {menuItems.filter(item => !item.hidden).map((item) => {
                             const isActive = location.pathname + location.search === item.path;
@@ -92,7 +92,7 @@ const Sidebar = () => {
 
                 {(user?.role === 'admin' || user?.role === 'superadmin') && urlChannelId && (
                     <div className="px-4 mt-8">
-                        <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-4">Admin Suite</p>
+                        <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-4">채널 관리 도구</p>
                         <div className="space-y-2">
                             {adminMenuItems.map((item) => {
                                 const isActive = location.pathname === item.path;
@@ -124,7 +124,7 @@ const Sidebar = () => {
 
                 {user?.role === 'superadmin' && (
                     <div className="px-4 mt-8">
-                        <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] mb-4">Super Admin Suite 👑</p>
+                        <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] mb-4">최고 관리자 도구 👑</p>
                         <div className="space-y-2">
                             {superAdminMenuItems.map((item) => {
                                 const isActive = location.pathname === item.path;
@@ -157,14 +157,14 @@ const Sidebar = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white truncate">{user?.name}</p>
-                        <p className="text-[10px] text-[#6b6b8a] uppercase font-mono">{user?.role}</p>
+                        <p className="text-[10px] text-[#6b6b8a] uppercase font-mono">{user?.role === 'admin' ? '운영자' : user?.role === 'superadmin' ? '최고운영자' : '멤버'}</p>
                     </div>
                 </div>
                 <button
                     onClick={logout}
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-[10px] font-bold text-[#6b6b8a] hover:text-[#E8735A] hover:bg-[#E8735A]/5 transition-all uppercase tracking-widest border border-transparent hover:border-[#E8735A]/20"
                 >
-                    👋 Sign Out
+                    👋 안전하게 로그아웃
                 </button>
             </div>
         </div>

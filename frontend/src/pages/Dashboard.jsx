@@ -58,29 +58,29 @@ const Dashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#FF8C69]/20 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-[#FF8C69]">👤</div>
-                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">NEW USERS TODAY</h3>
+                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">오늘 가입 신규 유저</h3>
                         <p className="text-5xl font-black text-white leading-none">{stats.today.newUsers}<span className="text-sm font-bold text-[#FF8C69] ml-2">명</span></p>
                         <div className="mt-6 flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#06d6a0] bg-[#06d6a0]/10 px-3 py-1 rounded-full border border-[#06d6a0]/20">↑ GROWING</span>
-                            <span className="text-[10px] font-bold text-[#444466]">TOTAL: {stats.total.totalUsers}</span>
+                            <span className="text-[10px] font-bold text-[#06d6a0] bg-[#06d6a0]/10 px-3 py-1 rounded-full border border-[#06d6a0]/20">↑ 상승 중</span>
+                            <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalUsers}</span>
                         </div>
                     </div>
                     <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#4f6ef7]/20 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-[#4f6ef7]">🏘️</div>
-                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">NEW CHANNELS TODAY</h3>
+                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">오늘 개설 신규 채널</h3>
                         <p className="text-5xl font-black text-white leading-none">{stats.today.newChannels}<span className="text-sm font-bold text-[#4f6ef7] ml-2">개</span></p>
                         <div className="mt-6 flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#4f6ef7] bg-[#4f6ef7]/10 px-3 py-1 rounded-full border border-[#4f6ef7]/20">+ EXPANDING</span>
-                            <span className="text-[10px] font-bold text-[#444466]">TOTAL: {stats.total.totalChannels}</span>
+                            <span className="text-[10px] font-bold text-[#4f6ef7] bg-[#4f6ef7]/10 px-3 py-1 rounded-full border border-[#4f6ef7]/20">+ 확장 중</span>
+                            <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalChannels}</span>
                         </div>
                     </div>
                     <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-purple-500/20 shadow-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-purple-400">📋</div>
-                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">NEW POSTS TODAY</h3>
+                        <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">오늘 등록 신규 게시글</h3>
                         <p className="text-5xl font-black text-white leading-none">{stats.today.newPosts}<span className="text-sm font-bold text-purple-400 ml-2">개</span></p>
                         <div className="mt-6 flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">💬 ACTIVE</span>
-                            <span className="text-[10px] font-bold text-[#444466]">TOTAL: {stats.total.totalPosts}</span>
+                            <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">💬 활성</span>
+                            <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalPosts}</span>
                         </div>
                     </div>
                 </div>
@@ -89,12 +89,12 @@ const Dashboard = () => {
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl">🌐</div>
                             <div>
-                                <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">Network Health</p>
-                                <p className="text-sm font-bold text-white">All Systems Operational</p>
+                                <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">네트워크 상태</p>
+                                <p className="text-sm font-bold text-white">모든 시스템 정상 작동 중</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-[10px] font-black text-[#06d6a0] uppercase tracking-tighter">Latency</p>
+                            <p className="text-[10px] font-black text-[#06d6a0] uppercase tracking-tighter">지연 시간</p>
                             <p className="text-sm font-mono font-bold text-white">24ms</p>
                         </div>
                     </div>
@@ -102,12 +102,12 @@ const Dashboard = () => {
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-xl">🔒</div>
                             <div>
-                                <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">Security Status</p>
-                                <p className="text-sm font-bold text-white">Protected by PeachShield</p>
+                                <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">보안 상태</p>
+                                <p className="text-sm font-bold text-white">PeachShield로 보호됨</p>
                             </div>
                         </div>
                         <div className="text-right">
-                            <p className="text-[10px] font-black text-[#FF8C69] uppercase tracking-tighter">Uptime</p>
+                            <p className="text-[10px] font-black text-[#FF8C69] uppercase tracking-tighter">가동 시간</p>
                             <p className="text-sm font-mono font-bold text-white">99.9%</p>
                         </div>
                     </div>
@@ -122,10 +122,10 @@ const Dashboard = () => {
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <span className="p-1 px-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[10px] font-bold rounded-md border border-[#FF8C69]/20 font-mono italic">
-                            {user?.role === 'superadmin' ? 'MASTER PRIVILEGE' : 'ONLINE'}
+                            {user?.role === 'superadmin' ? '최고 관리자 권한' : '온라인'}
                         </span>
                         <h2 className="text-xs font-bold text-[#6b6b8a] uppercase tracking-widest font-mono italic">
-                            {user?.role === 'superadmin' ? 'Super Admin Terminal' : 'Enterprise Connect'}
+                            {user?.role === 'superadmin' ? '시스템 제어 터미널' : '엔터프라이즈 커넥트'}
                         </h2>
                     </div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">
@@ -166,7 +166,7 @@ const Dashboard = () => {
                                         <div className="relative z-10">
                                             <div className="flex items-center gap-2 mb-4">
                                                 <span className={`w-2.5 h-2.5 bg-white rounded-full ${totalPending > 0 ? 'animate-ping' : ''}`}></span>
-                                                <span className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em]">Channel Management Center</span>
+                                                <span className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em]">채널 운영 센터</span>
                                             </div>
                                             <h3 className="text-2xl font-black text-white mb-2">
                                                 {totalPending > 0 ? `신규 가입 신청 ${totalPending}건` : '채널 멤버 관리'}
@@ -232,7 +232,7 @@ const Dashboard = () => {
                     <section className="mb-12">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
-                                <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 내 채널
+                                <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 참여 중인 채널
                             </h2>
                             {user?.role === 'member' && (
                                 <button
@@ -275,7 +275,7 @@ const Dashboard = () => {
                                             <div className="w-12 h-12 bg-[#FF8C69]/10 text-[#FF8C69] rounded-2xl flex items-center justify-center text-xl shadow-inner">🏘️</div>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm ${membership.status === 'approved' ? 'bg-[#06d6a0]/10 text-[#06d6a0] border border-[#06d6a0]/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}`}>
-                                                    {membership.status === 'approved' ? 'Active' : 'Pending'}
+                                                    {membership.status === 'approved' ? '참여 중' : '대기 중'}
                                                 </span>
                                             </div>
                                         </div>
@@ -284,10 +284,10 @@ const Dashboard = () => {
                                         <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                                             <div className="flex border-t-0 p-0 items-center gap-2">
                                                 <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-[#06d6a0]' : 'bg-gray-600'}`}></div>
-                                                <span className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-widest font-mono">Host {membership.channelId?.ownerId?.isOnline ? 'Live' : 'Off'}</span>
+                                                <span className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-widest font-mono">운영자 {membership.channelId?.ownerId?.isOnline ? '접속 중' : '미접속'}</span>
                                             </div>
                                             <div className="text-[#FF8C69] opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 font-bold text-xs uppercase tracking-tighter flex items-center gap-1">
-                                                Enter <span className="text-[8px]">▶</span>
+                                                입장 <span className="text-[8px]">▶</span>
                                             </div>
                                         </div>
                                     </div>
@@ -299,7 +299,7 @@ const Dashboard = () => {
                         <section className="mt-20 mb-32">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 실시간 채널 현황
+                                    <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 활발한 대화 목록
                                 </h2>
                                 <button
                                     onClick={() => navigate('/chat')}
@@ -308,7 +308,7 @@ const Dashboard = () => {
                                     전체 보기
                                 </button>
                             </div>
-                            <ActiveChatList channelId={myChannels.find(m => m.channelId?.ownerId?._id === user?._id)?.channelId?._id} />
+                            <ActiveChatList channelId={myChannels.find(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)?.channelId?._id} />
                         </section>
                     )}
                 </>
