@@ -172,9 +172,10 @@ router.put('/rooms/:id/hide', protect, async (req, res) => {
 router.put('/rooms/:id/clear', protect, async (req, res) => {
     try {
         const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const now = new Date();
         const update = isAdmin
-            ? { clearedAtAdmin: new Date() }
-            : { clearedAtMember: new Date() };
+            ? { clearedAtAdmin: now, clearedAtMember: now }
+            : { clearedAtMember: now };
 
         const room = await ChatRoom.findByIdAndUpdate(req.params.id, update, { new: true });
         res.json(room);

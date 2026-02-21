@@ -114,7 +114,7 @@ const ChatPage = () => {
     };
 
     const handleClear = async () => {
-        if (window.confirm('기존 대화내용을 모두 삭제하시겠습니까? (서버에는 보관됩니다)')) {
+        if (window.confirm('지우시겠습니까?')) {
             try {
                 const { clearMessages } = useChatStore.getState();
                 await clearMessages(currentRoom._id);
