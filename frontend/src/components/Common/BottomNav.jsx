@@ -73,7 +73,7 @@ const BottomNav = () => {
                         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                         onClick={() => setShowSettings(false)}
                     ></div>
-                    <div className="relative w-full bg-[#1a1a24] rounded-t-[2rem] p-8 border-t border-white/10 animate-in slide-in-from-bottom duration-300">
+                    <div className="relative w-full bg-[#1a1a24] rounded-t-[2rem] p-8 border-t border-white/10 animate-in slide-in-from-bottom duration-300 max-h-[90vh] overflow-y-auto">
                         <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8"></div>
 
                         <div className="flex items-center gap-4 mb-8">
@@ -87,6 +87,50 @@ const BottomNav = () => {
                         </div>
 
                         <div className="grid grid-cols-1 gap-3">
+                            {/* 관리자 메뉴 (Admin/SuperAdmin + 채널 선택 시) */}
+                            {(user?.role === 'admin' || user?.role === 'superadmin') && urlChannelId && (
+                                <>
+                                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-1 px-1">Admin Suite</p>
+                                    <button
+                                        onClick={() => { navigate(`/admin/members?channelId=${urlChannelId}`); setShowSettings(false); }}
+                                        className="w-full py-4 px-6 bg-white/5 text-white rounded-2xl text-sm font-bold flex items-center gap-3 border border-white/5 active:scale-95 transition-all"
+                                    >
+                                        <span className="text-lg">👥</span> 멤버 관리
+                                    </button>
+                                    <button
+                                        onClick={() => { navigate(`/admin/edit-channel?channelId=${urlChannelId}`); setShowSettings(false); }}
+                                        className="w-full py-4 px-6 bg-white/5 text-white rounded-2xl text-sm font-bold flex items-center gap-3 border border-white/5 active:scale-95 transition-all mb-4"
+                                    >
+                                        <span className="text-lg">⚙️</span> 채널 설정
+                                    </button>
+                                </>
+                            )}
+
+                            {/* 최고 관리자 메뉴 (SuperAdmin 전용) */}
+                            {user?.role === 'superadmin' && (
+                                <>
+                                    <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] mb-1 px-1">Super Admin Suite 👑</p>
+                                    <button
+                                        onClick={() => { navigate('/superadmin/users'); setShowSettings(false); }}
+                                        className="w-full py-4 px-6 bg-[#FF8C69]/10 text-[#FF8C69] rounded-2xl text-sm font-bold flex items-center gap-3 border border-[#FF8C69]/20 active:scale-95 transition-all"
+                                    >
+                                        <span className="text-lg">👑</span> 전체 회원 관리
+                                    </button>
+                                    <button
+                                        onClick={() => { navigate('/superadmin/channels'); setShowSettings(false); }}
+                                        className="w-full py-4 px-6 bg-[#FF8C69]/10 text-[#FF8C69] rounded-2xl text-sm font-bold flex items-center gap-3 border border-[#FF8C69]/20 active:scale-95 transition-all"
+                                    >
+                                        <span className="text-lg">🌐</span> 전체 채널 관리
+                                    </button>
+                                    <button
+                                        onClick={() => { navigate('/superadmin/chats'); setShowSettings(false); }}
+                                        className="w-full py-4 px-6 bg-[#FF8C69]/10 text-[#FF8C69] rounded-2xl text-sm font-bold flex items-center gap-3 border border-[#FF8C69]/20 active:scale-95 transition-all mb-4"
+                                    >
+                                        <span className="text-lg">🔍</span> 채팅 로그 열람
+                                    </button>
+                                </>
+                            )}
+
                             <button
                                 onClick={() => { logout(); setShowSettings(false); }}
                                 className="w-full py-5 bg-[#E8735A]/10 text-[#E8735A] rounded-2xl text-sm font-bold flex items-center justify-center gap-3 border border-[#E8735A]/20 active:scale-95 transition-all"
