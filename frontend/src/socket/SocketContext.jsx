@@ -249,7 +249,36 @@ export const SocketProvider = ({ children }) => {
                 playNotificationSound();
             });
 
-            // 신규 투표 생성 알림
+            // 가입 승인 / 거절 알림 (일반 회원 수신)
+            socket.on('member_status_updated', (data) => {
+                console.log('[SOCKET] Member status updated:', data);
+                const { fetchMyChannels } = useChannelStore.getState();
+
+                if (data.status === 'approved') {
+                    addNotificationWithTimer({
+                        id: Date.now() + Math.random(),
+                        type: 'member',
+                        title: '✅ 채널 가입 승인',
+                        message: `${data.channelName} 채널 가입이 승인되었습니다!`,
+                        channelId: data.channelId,
+                        path: '/'
+                    });
+                } else if (data.status === 'rejected') {
+                    addNotificationWithTimer({
+                        id: Date.now() + Math.random(),
+                        type: 'member',
+                        title: '❌ 채널 가입 거절',
+                        message: `${data.channelName} 채널 가입이 거절되었습니다.`,
+                        channelId: data.channelId,
+                        path: '/search-channels'
+                    });
+                }
+
+                // 채널 목록 자동 새로고침
+                fetchMyChannels();
+                playNotificationSound();
+            });
+
             socket.on('new_poll_created', (data) => {
                 console.log('[SOCKET] New poll created:', data);
                 addNotificationWithTimer({
@@ -283,6 +312,7 @@ export const SocketProvider = ({ children }) => {
                 socket.off('chat_notification');
                 socket.off('messages_read');
                 socket.off('new_member_request');
+                socket.off('member_status_updated');
                 socket.off('new_poll_created');
                 socket.off('poll_reminder');
                 socket.disconnect();

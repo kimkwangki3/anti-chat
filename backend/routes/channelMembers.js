@@ -116,6 +116,32 @@ router.put('/:id/status', protect, admin, async (req, res) => {
         if (typeof isChatBlocked === 'boolean') member.isChatBlocked = isChatBlocked;
 
         await member.save();
+
+        // 승인 또는 거절 시 해당 멤버에게 실시간 알림 전송
+        if (status === 'approved' || status === 'rejected') {
+            const targetUserId = member.userId.toString();
+            const channelName = channel.name;
+
+            // 소켓 실시간 알림
+            req.io.to(targetUserId).emit('member_status_updated', {
+                channelId: member.channelId,
+                channelName,
+                status
+            });
+
+            // 웹 푸시 알림 (오프라인 사용자용)
+            const pushTitle = status === 'approved' ? '✅ 채널 가입 승인' : '❌ 채널 가입 거절';
+            const pushBody = status === 'approved'
+                ? `${channelName} 채널 가입이 승인되었습니다! 이제 채널에 접속해보세요.`
+                : `${channelName} 채널 가입이 거절되었습니다.`;
+
+            await sendPushNotification(targetUserId, {
+                title: pushTitle,
+                body: pushBody,
+                url: '/search-channels'
+            });
+        }
+
         res.json(member);
     } catch (error) {
         res.status(500).json({ message: error.message });
