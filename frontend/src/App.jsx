@@ -32,7 +32,7 @@ const ProtectedLayout = ({ children }) => {
         <Sidebar />
       </div>
 
-      <main className="flex-1 h-full overflow-y-auto relative pb-24 md:pb-0">
+      <main className="flex-1 h-full overflow-y-auto relative pb-24 md:pb-0 pt-safe">
         {children}
       </main>
 

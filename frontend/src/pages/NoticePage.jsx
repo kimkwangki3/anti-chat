@@ -86,7 +86,7 @@ const NoticePage = () => {
     return (
         <div className="flex flex-col h-full bg-[#1a1a24] text-[#e8e8f0]">
             {/* Header */}
-            <header className="h-20 flex-shrink-0 bg-[#1a1a24]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 z-20">
+            <header className="h-20 flex-shrink-0 bg-[#1a1a24]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-8 z-20 pt-safe">
                 <div>
                     <h1 className="text-xl font-bold font-['Bebas_Neue'] tracking-wider uppercase italic text-white flex items-center gap-2">
                         {currentChannel?.name || 'CHANNEL'} <span className="text-[#FF8C69] text-sm font-mono tracking-tighter not-italic">NOTICE STREAM</span>

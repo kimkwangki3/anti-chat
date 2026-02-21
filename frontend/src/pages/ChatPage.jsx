@@ -97,7 +97,7 @@ const ChatPage = () => {
     return (
         <div className="flex h-full bg-[#1a1a24] overflow-hidden relative">
             {/* PC: 항상 보임 / 모바일: 방 선택 안됐을 때만 보임 */}
-            <div className={`w-full md:w-80 h-full ${currentRoom ? 'hidden md:block' : 'block'}`}>
+            <div className={`w-full md:w-80 h-full pt-safe md:pt-0 ${currentRoom ? 'hidden md:block' : 'block'}`}>
                 <ChatSidebar />
             </div>
 
@@ -105,7 +105,7 @@ const ChatPage = () => {
             <div className={`flex-1 flex flex-col min-w-0 bg-[#1a1a24] relative shadow-2xl ${!currentRoom ? 'hidden md:flex' : 'flex'}`}>
                 {currentRoom ? (
                     <>
-                        <div className="h-16 md:h-20 flex-shrink-0 bg-[#1a1a24]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 md:px-8 z-10">
+                        <div className="h-16 md:h-20 flex-shrink-0 bg-[#1a1a24]/90 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-4 md:px-8 z-10 pt-safe md:pt-0">
                             <div className="flex items-center gap-3">
                                 <div>
                                     <h2 className="text-sm md:text-lg font-bold text-white tracking-tight">

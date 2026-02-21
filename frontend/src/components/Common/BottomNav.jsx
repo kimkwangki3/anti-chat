@@ -4,12 +4,15 @@ import useAuthStore from '../../store/authStore';
 import useChannelStore from '../../store/channelStore';
 import useNotificationStore from '../../store/notificationStore';
 
+import useDevice from '../../hooks/useDevice';
+
 const BottomNav = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { currentChannel, myChannels } = useChannelStore();
     const { user, logout } = useAuthStore();
     const { unreadCounts } = useNotificationStore();
+    const { isIOS } = useDevice();
 
     // [고도화] URL에서 채널 ID 추출 (새로고침 시 메뉴 유지를 위함)
     const params = new URLSearchParams(location.search);
@@ -46,7 +49,7 @@ const BottomNav = () => {
 
     return (
         <>
-            <nav className="fixed bottom-0 left-0 right-0 bg-[#12121a]/95 backdrop-blur-xl border-t border-white/5 flex items-center justify-around h-16 px-2 z-50 md:hidden pb-safe">
+            <nav className={`fixed bottom-0 left-0 right-0 bg-[#12121a]/95 backdrop-blur-xl border-t border-white/5 flex items-center justify-around px-2 z-50 md:hidden pb-safe ${isIOS ? 'h-20' : 'h-16'}`}>
                 {navItems.filter(item => !item.hidden).map((item) => {
                     const isActive = location.pathname + location.search === item.path;
                     return (

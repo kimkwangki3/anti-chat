@@ -121,7 +121,7 @@ const PollPage = () => {
     );
 
     return (
-        <div className="h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar p-6 md:p-12 pb-32">
+        <div className="h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar p-6 md:p-12 pb-32 pt-safe">
             <header className="mb-12 flex justify-between items-end">
                 <div>
                     <h1 className="text-4xl font-black italic tracking-tighter text-white mb-2 font-mono uppercase">
