@@ -1,0 +1,9 @@
+{
+  "appId": "com.peach.chat",
+  "appName": "Peach Connect",
+  "webDir": "dist",
+  "server": {
+    "url": "https://anti-chat-sigma.vercel.app/",
+    "cleartext": true
+  }
+}
