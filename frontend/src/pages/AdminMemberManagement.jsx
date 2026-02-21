@@ -102,7 +102,7 @@ const AdminMemberManagement = () => {
     );
 
     return (
-        <div className="page-container">
+        <div className="page-container custom-scrollbar">
             <div className="unified-header">
                 <div className="flex items-center gap-3">
                     <button

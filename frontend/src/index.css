@@ -42,7 +42,7 @@
     }
 
     .page-container {
-        @apply h-full bg-[#1a1a24] overflow-y-auto custom-scrollbar;
+        @apply h-full bg-[#1a1a24] overflow-y-auto;
     }
 
     .unified-header {
