@@ -14,6 +14,7 @@ const PollPage = () => {
     const [polls, setPolls] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [channelRole, setChannelRole] = useState('none');
 
     // 투표 생성 폼 상태
     const [newPoll, setNewPoll] = useState({
@@ -28,8 +29,18 @@ const PollPage = () => {
     useEffect(() => {
         if (channelId) {
             fetchPolls();
+            fetchChannelRole();
         }
     }, [channelId]);
+
+    const fetchChannelRole = async () => {
+        try {
+            const { data } = await axios.get(`/channel-members/role/${channelId}`);
+            setChannelRole(data.role);
+        } catch (error) {
+            console.error('Fetch role failed:', error);
+        }
+    };
 
     const fetchPolls = async () => {
         setIsLoading(true);
@@ -118,7 +129,7 @@ const PollPage = () => {
                     </h1>
                     <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">채널의 소중한 의견을 모아주세요</p>
                 </div>
-                {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                {(channelRole === 'admin' || user?.role === 'superadmin') && (
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
                         className="px-6 py-3 bg-[#FF8C69] text-white text-xs font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest"
@@ -149,7 +160,7 @@ const PollPage = () => {
                                     poll={poll}
                                     onVote={handleVote}
                                     onExport={() => handleExport(poll._id, poll.title)}
-                                    isAdmin={user?.role === 'admin' || user?.role === 'superadmin'}
+                                    isAdmin={channelRole === 'admin' || user?.role === 'superadmin'}
                                 />
                             ))}
                         </div>
@@ -169,7 +180,7 @@ const PollPage = () => {
                                 poll={poll}
                                 isClosed={true}
                                 onExport={() => handleExport(poll._id, poll.title)}
-                                isAdmin={user?.role === 'admin' || user?.role === 'superadmin'}
+                                isAdmin={channelRole === 'admin' || user?.role === 'superadmin'}
                             />
                         ))}
                     </div>

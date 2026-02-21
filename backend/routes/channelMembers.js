@@ -49,6 +49,32 @@ router.post('/join', protect, async (req, res) => {
     }
 });
 
+// @route   GET /api/channel-members/role/:channelId
+// @desc    해당 채널에서의 유저 역할 조회
+// @access  Private
+router.get('/role/:channelId', protect, async (req, res) => {
+    try {
+        const channel = await Channel.findById(req.params.channelId);
+        if (!channel) return res.status(404).json({ message: '채널 없음' });
+
+        if (channel.ownerId.toString() === req.user._id.toString()) {
+            return res.json({ role: 'admin', isOwner: true });
+        }
+
+        const member = await ChannelMember.findOne({
+            channelId: req.params.channelId,
+            userId: req.user._id
+        });
+
+        res.json({
+            role: member ? member.role : 'none',
+            status: member ? member.status : 'none'
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @route   GET /api/channel-members/management/:channelId
 // @desc    특정 채널의 멤버 관리 (관리자 전용)
 // @access  Private/Admin

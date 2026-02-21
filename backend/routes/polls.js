@@ -5,12 +5,26 @@ const Vote = require('../models/Vote');
 const ChannelMember = require('../models/ChannelMember');
 const { protect, admin, superAdmin } = require('../middleware/authMiddleware');
 
-// @desc    투표 생성 (채널 관리자 전역)
+const Channel = require('../models/Channel');
+
+// @desc    투표 생성 (채널 관리자/최고관리자 가능)
 // @route   POST /api/polls
-router.post('/', protect, admin, async (req, res) => {
+router.post('/', protect, async (req, res) => {
     const { channelId, title, options, isMultipleSelection, isAnonymous, allowAddOption, expiresAt } = req.body;
 
     try {
+        // 권한 체크: 최고관리자이거나 해당 채널의 관리자(멤버 테이블 또는 소유자)여부 확인
+        const channel = await Channel.findById(channelId);
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+
+        const channelMember = await ChannelMember.findOne({ channelId, userId: req.user._id });
+        const isChannelAdmin = channelMember?.role === 'admin' || channel.ownerId.toString() === req.user._id.toString();
+        const isSuperAdmin = req.user.role === 'superadmin';
+
+        if (!isChannelAdmin && !isSuperAdmin) {
+            return res.status(403).json({ message: '투표 생성 권한이 없습니다.' });
+        }
+
         const poll = await Poll.create({
             channelId,
             creatorId: req.user._id,
