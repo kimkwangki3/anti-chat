@@ -75,9 +75,9 @@ const useChannelStore = create((set, get) => ({
     joinChannel: async (channelId) => {
         try {
             await axios.post('/channel-members/join', { channelId });
-            alert('가입 신청이 완료되었습니다.');
+            return true;
         } catch (error) {
-            alert(error.response?.data?.message || '가입 신청 실패');
+            return false;
         }
     },
 
