@@ -11,6 +11,12 @@ const MessageList = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    const getFileUrl = (url) => {
+        if (!url) return '';
+        if (url.startsWith('http')) return url;
+        return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${url}`;
+    };
+
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -83,15 +89,15 @@ const MessageList = () => {
                                             {msg.fileType?.startsWith('image/') ? (
                                                 <div className="group/img relative">
                                                     <img
-                                                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${msg.fileUrl}`}
+                                                        src={getFileUrl(msg.fileUrl)}
                                                         alt={msg.fileName}
                                                         className="max-w-full max-h-[300px] object-cover rounded-xl md:rounded-[1.5rem] cursor-pointer hover:scale-[1.02] transition-transform"
-                                                        onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${msg.fileUrl}`, '_blank')}
+                                                        onClick={() => window.open(getFileUrl(msg.fileUrl), '_blank')}
                                                     />
                                                 </div>
                                             ) : (
                                                 <a
-                                                    href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${msg.fileUrl}`}
+                                                    href={getFileUrl(msg.fileUrl)}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className={`flex items-center gap-3 p-3 rounded-xl border ${isMe ? 'bg-white/10 border-white/10 hover:bg-white/20' : 'bg-black/20 border-white/5 hover:bg-black/30'} transition-all`}

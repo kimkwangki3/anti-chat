@@ -7,26 +7,11 @@ const User = require('../models/User');
 const ChannelMember = require('../models/ChannelMember');
 const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier'); // npm install streamifier might be needed or use simplified approach
 
-// Multer Storage 설정
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        const uploadDir = 'uploads/chat';
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        // 원본 파일명을 유지하면서 타임스탬프를 붙여 중복 방지
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const ext = path.extname(file.originalname);
-        cb(null, 'chat-' + uniqueSuffix + ext);
-    }
-});
-
+// Multer Storage 설정 (메모리 스토리지 사용)
+const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB 제한
@@ -196,21 +181,38 @@ router.get('/rooms/:id/messages', protect, async (req, res) => {
 });
 
 // @route   POST /api/chat/upload
-// @desc    채팅 파일 업로드
+// @desc    채팅 파일 업로드 (Cloudinary 이용)
 router.post('/upload', protect, upload.single('file'), (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
         }
 
-        // 정적 파일 접근을 위해 백엔드 주소와 함께 경로 반환
-        const fileUrl = `/uploads/chat/${req.file.filename}`;
-        res.json({
-            fileUrl,
-            fileType: req.file.mimetype,
-            fileName: req.file.originalname,
-            size: req.file.size
-        });
+        // Cloudinary 업로드 스트림 생성
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'chat',
+                resource_type: 'auto'
+            },
+            (error, result) => {
+                if (error) {
+                    console.error('Cloudinary 업로드 에러:', error);
+                    return res.status(500).json({ message: 'Cloudinary 업로드 중 오류가 발생했습니다.' });
+                }
+
+                // 업로드 성공 시 안전한 URL 반환
+                res.json({
+                    fileUrl: result.secure_url,
+                    fileType: req.file.mimetype,
+                    fileName: req.file.originalname,
+                    size: req.file.size
+                });
+            }
+        );
+
+        // 버퍼를 스트림으로 변환하여 업로드
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+
     } catch (error) {
         console.error('파일 업로드 에러:', error);
         res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.' });
