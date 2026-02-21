@@ -23,6 +23,7 @@ const Sidebar = () => {
     const menuItems = [
         { id: 'dashboard', label: '홈', icon: '🏠', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
         { id: 'notice', label: '공지사항', icon: '📢', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
+        { id: 'poll', label: '투표', icon: '🗳️', path: `/polls?channelId=${urlChannelId}`, count: 0, hidden: !urlChannelId },
         { id: 'board', label: '게시판', icon: '📋', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
         { id: 'chat', label: '채팅', icon: '💬', path: `/chat?channelId=${urlChannelId}`, count: counts.chat, hidden: !urlChannelId },
         { id: 'settings', label: '설정', icon: '⚙️', path: '/settings' },
@@ -37,6 +38,7 @@ const Sidebar = () => {
         { id: 'sa-users', label: '전체 회원 관리', icon: '👑', path: '/superadmin/users' },
         { id: 'sa-channels', label: '전체 채널 관리', icon: '🌐', path: '/superadmin/channels' },
         { id: 'sa-chats', label: '채팅 로그 열람', icon: '🔍', path: '/superadmin/chats' },
+        { id: 'sa-polls', label: '전체 투표 관리', icon: '🗳️', path: '/superadmin/polls' },
     ];
 
     return (

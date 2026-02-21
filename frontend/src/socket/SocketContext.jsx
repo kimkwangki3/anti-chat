@@ -232,12 +232,42 @@ export const SocketProvider = ({ children }) => {
                 playNotificationSound();
             });
 
+            // 신규 투표 생성 알림
+            socket.on('new_poll_created', (data) => {
+                console.log('[SOCKET] New poll created:', data);
+                addNotificationWithTimer({
+                    id: Date.now() + Math.random(),
+                    type: 'poll',
+                    title: '새 투표 개최 🗳️',
+                    message: data.title,
+                    channelId: data.channelId,
+                    path: `/polls?channelId=${data.channelId}`
+                });
+                playNotificationSound();
+            });
+
+            // 투표 리마인더 (미참여회원)
+            socket.on('poll_reminder', (data) => {
+                console.log('[SOCKET] Poll reminder received:', data);
+                addNotificationWithTimer({
+                    id: Date.now() + Math.random(),
+                    type: 'poll',
+                    title: data.title,
+                    message: data.message,
+                    channelId: data.channelId,
+                    path: `/polls?channelId=${data.channelId}`
+                });
+                playNotificationSound();
+            });
+
             return () => {
                 socket.off('notice_received');
                 socket.off('post_received');
                 socket.off('chat_notification');
                 socket.off('messages_read');
                 socket.off('new_member_request');
+                socket.off('new_poll_created');
+                socket.off('poll_reminder');
                 socket.disconnect();
             };
         }
@@ -275,7 +305,7 @@ export const SocketProvider = ({ children }) => {
                         <div className="absolute top-0 left-0 w-1 h-full bg-[#4f6ef7] shadow-[0_0_15px_rgba(79,110,247,0.5)]"></div>
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-[#4f6ef7]/10 flex items-center justify-center text-2xl group-hover:bg-[#4f6ef7]/20 transition-colors">
-                                {noti.type === 'notice' ? '📢' : noti.type === 'post' ? '📋' : '💬'}
+                                {noti.type === 'notice' ? '📢' : noti.type === 'post' ? '📋' : noti.type === 'poll' ? '🗳️' : noti.type === 'member' ? '👥' : '💬'}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <h4 className="text-[10px] font-bold text-[#4f6ef7] uppercase tracking-[0.2em] font-mono mb-1">

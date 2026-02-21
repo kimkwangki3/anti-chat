@@ -28,6 +28,7 @@ const BottomNav = () => {
     const navItems = [
         { icon: '🏠', label: '홈', path: '/', globalCount: totalUnreadAll },
         { icon: '📢', label: '공지', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
+        { icon: '🗳️', label: '투표', path: `/polls?channelId=${urlChannelId}`, count: 0, hidden: !urlChannelId },
         { icon: '📋', label: '게시물', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
         { icon: '💬', label: '채팅', path: `/chat?channelId=${urlChannelId}`, count: counts.chat, hidden: !urlChannelId },
         { icon: '⚙️', label: '설정', path: '/settings', isSettings: true },

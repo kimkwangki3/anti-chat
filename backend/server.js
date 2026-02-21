@@ -62,6 +62,7 @@ const io = new Server(server, {
 
 const socketHandler = require('./socket/index');
 socketHandler(io);
+app.set('io', io);
 
 // 소켓 IO를 요청 객체에 첨부
 app.use((req, res, next) => {
@@ -76,6 +77,8 @@ const postRoutes = require('./routes/posts');
 const channelRoutes = require('./routes/channels');
 const channelMemberRoutes = require('./routes/channelMembers');
 const superadminRoutes = require('./routes/superadmin');
+const pollRoutes = require('./routes/polls');
+const initPollReminders = require('./utils/pollReminder');
 
 // 미들웨어 설정
 app.use(express.json());
@@ -99,11 +102,15 @@ app.use('/api/posts', postRoutes);
 app.use('/api/channels', channelRoutes);
 app.use('/api/channel-members', channelMemberRoutes);
 app.use('/api/superadmin', superadminRoutes);
+app.use('/api/polls', pollRoutes);
 
 // 데이터베이스 연결
 mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/corporate-chat')
     .then(async () => {
         console.log('MongoDB 연결 성공');
+
+        // 투표 리마인더 초기화
+        initPollReminders(io);
 
         // 최고관리자 자동 생성 (Vercel 등 운영 환경 대응)
         try {

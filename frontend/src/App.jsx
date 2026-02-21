@@ -10,6 +10,7 @@ import ChatPage from './pages/ChatPage';
 import NoticePage from './pages/NoticePage';
 import BoardPage from './pages/BoardPage';
 import PostDetailPage from './pages/PostDetailPage';
+import PollPage from './pages/PollPage';
 import Sidebar from './components/Common/Sidebar';
 import BottomNav from './components/Common/BottomNav';
 import AdminEditChannel from './pages/AdminEditChannel';
@@ -18,6 +19,7 @@ import SuperAdminUsers from './pages/SuperAdminUsers';
 import SuperAdminChannels from './pages/SuperAdminChannels';
 import SuperAdminChannelDetail from './pages/SuperAdminChannelDetail';
 import SuperAdminChats from './pages/SuperAdminChats';
+import SuperAdminPolls from './pages/SuperAdminPolls';
 
 const ProtectedLayout = ({ children }) => {
   const { token } = useAuthStore();
@@ -113,6 +115,11 @@ function App() {
               <SettingsPage />
             </ProtectedLayout>
           } />
+          <Route path="/polls" element={
+            <ProtectedLayout>
+              <PollPage />
+            </ProtectedLayout>
+          } />
 
           {/* 최고관리자 전용 라우트 */}
           <Route path="/superadmin/users" element={
@@ -133,6 +140,11 @@ function App() {
           <Route path="/superadmin/chats" element={
             <ProtectedLayout>
               <SuperAdminChats />
+            </ProtectedLayout>
+          } />
+          <Route path="/superadmin/polls" element={
+            <ProtectedLayout>
+              <SuperAdminPolls />
             </ProtectedLayout>
           } />
         </Routes>
