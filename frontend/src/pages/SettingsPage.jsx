@@ -3,18 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
 import axios from '../api/axios';
+import useChannelStore from '../store/channelStore';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
     const { user, logout, updateProfile } = useAuthStore();
+    const { myChannels } = useChannelStore();
     const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
+
+    // 관리자가 소유한 채널 확인
+    const ownedChannelId = myChannels.find(m =>
+        (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)
+    )?.channelId?._id;
     const [pushStatus, setPushStatus] = useState(Notification.permission);
     const [isSubscribing, setIsSubscribing] = useState(false);
 
-    // 대화명 수정 관련 상태
     const [isEditingName, setIsEditingName] = useState(false);
     const [newName, setNewName] = useState(user?.name || '');
     const [isUpdating, setIsUpdating] = useState(false);
+
+    // 이 줄을 추가하여 react에서 useState를 가져오도록 함 (기존 import 수정 필요할 수 있음)
 
     const urlBase64ToUint8Array = (base64String) => {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -98,7 +106,32 @@ const SettingsPage = () => {
                 </button>
             </div>
 
-            <div className="max-w-2xl mx-auto space-y-8">
+            <div className="max-w-2xl mx-auto space-y-8 pb-32">
+                {/* Admin Section (관리자 전용) */}
+                {(user?.role === 'admin' || user?.role === 'superadmin') && ownedChannelId && (
+                    <section className="bg-gradient-to-br from-[#FF8C69]/20 to-[#E8735A]/5 rounded-[2.5rem] p-8 border border-[#FF8C69]/30 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-[0.05] pointer-events-none">
+                            <span className="text-8xl font-black italic uppercase font-mono leading-none text-[#FF8C69]">ADMIN</span>
+                        </div>
+                        <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+                            👑 Admin Management
+                        </h3>
+                        <div className="grid grid-cols-1 gap-3 relative z-10">
+                            <button
+                                onClick={() => navigate(`/admin/members?channelId=${ownedChannelId}`)}
+                                className="w-full py-5 bg-[#FF8C69] text-white rounded-2xl text-sm font-black flex items-center justify-center gap-3 shadow-xl shadow-[#FF8C69]/20 active:scale-95 transition-all"
+                            >
+                                👥 채널 멤버(회원) 관리
+                            </button>
+                            <button
+                                onClick={() => navigate(`/admin/edit-channel?channelId=${ownedChannelId}`)}
+                                className="w-full py-5 bg-white/5 text-[#FF8C69] border border-[#FF8C69]/20 rounded-2xl text-sm font-bold flex items-center justify-center gap-3 active:scale-95 transition-all"
+                            >
+                                ⚙️ 채널 상세 설정
+                            </button>
+                        </div>
+                    </section>
+                )}
                 {/* Profile Section */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">

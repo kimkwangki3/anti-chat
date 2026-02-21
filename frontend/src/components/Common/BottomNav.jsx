@@ -36,7 +36,11 @@ const BottomNav = () => {
     const [showSettings, setShowSettings] = useState(false);
 
     const handleItemClick = (item) => {
-        navigate(item.path);
+        if (item.isSettings) {
+            setShowSettings(true);
+        } else {
+            navigate(item.path);
+        }
     };
 
     return (
@@ -137,6 +141,13 @@ const BottomNav = () => {
                                     </button>
                                 </>
                             )}
+
+                            <button
+                                onClick={() => { navigate('/settings'); setShowSettings(false); }}
+                                className="w-full py-5 bg-white/5 text-white rounded-2xl text-sm font-bold flex items-center justify-center gap-3 border border-white/10 active:scale-95 transition-all mb-2"
+                            >
+                                ⚙️ 시스템 설정 및 알림
+                            </button>
 
                             <button
                                 onClick={() => { logout(); setShowSettings(false); }}
