@@ -191,8 +191,9 @@ const AdminMemberManagement = () => {
                         <h2 className="text-xl font-bold text-white tracking-tight italic">활동 중인 전체 멤버</h2>
                         <span className="bg-[#06d6a0]/10 text-[#06d6a0] px-3 py-1 rounded-full text-[10px] font-black">{activeMembers.length}</span>
                     </div>
-                    <div className="bg-[#23232f] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
-                        <div className="overflow-x-auto overflow-y-hidden">
+                    <div className="bg-[#23232f] border border-white/5 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-2xl">
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-white/[0.02] border-b border-white/5">
@@ -244,6 +245,38 @@ const AdminMemberManagement = () => {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden divide-y divide-white/5">
+                            {activeMembers.map(m => (
+                                <div
+                                    key={m._id}
+                                    onClick={() => openMemberDetail(m)}
+                                    className="p-6 flex items-center justify-between active:bg-white/5 transition-all"
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-[#1a1a24] border border-white/5 flex items-center justify-center text-lg font-bold text-[#6b6b8a]">
+                                            {m.userId?.name?.[0]}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <p className="font-black text-white text-sm tracking-tight">{m.userId?.name}</p>
+                                                <span className={`w-1.5 h-1.5 rounded-full ${m.userId?.isOnline ? 'bg-[#06d6a0] shadow-[0_0_5px_#06d6a0]' : 'bg-[#3a3a4a]'}`}></span>
+                                            </div>
+                                            <p className="text-[10px] text-[#444466] font-mono uppercase tracking-widest">{m.userId?.username}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                        <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest ${m.status === 'approved' ? 'bg-[#06d6a0]/10 text-[#06d6a0]' :
+                                            m.status === 'suspended' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-red-500/20 text-red-500'
+                                            }`}>
+                                            {m.status === 'approved' ? 'Active' : m.status === 'suspended' ? 'Paused' : 'Banned'}
+                                        </span>
+                                        <span className="text-xs text-[#3a3a4a]">➔</span>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>
