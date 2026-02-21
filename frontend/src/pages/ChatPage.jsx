@@ -113,6 +113,17 @@ const ChatPage = () => {
         }
     };
 
+    const handleClear = async () => {
+        if (window.confirm('기존 대화내용을 모두 삭제하시겠습니까? (서버에는 보관됩니다)')) {
+            try {
+                const { clearMessages } = useChatStore.getState();
+                await clearMessages(currentRoom._id);
+            } catch (error) {
+                alert('대화내용 삭제에 실패했습니다.');
+            }
+        }
+    };
+
     if (!channelId && !currentRoom) {
         return (
             <div className="flex h-full items-center justify-center bg-[#1a1a24] text-[#6b6b8a] flex-col gap-4">
@@ -157,12 +168,20 @@ const ChatPage = () => {
 
                             <div className="flex items-center gap-2">
                                 {user.role === 'admin' && (
-                                    <button
-                                        onClick={() => navigate(`/admin/members?channelId=${channelId}`)}
-                                        className="px-3 py-1.5 md:px-5 md:py-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[9px] md:text-[10px] font-bold rounded-xl border border-[#FF8C69]/20 hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest"
-                                    >
-                                        관리
-                                    </button>
+                                    <>
+                                        <button
+                                            onClick={handleClear}
+                                            className="px-3 py-1.5 md:px-5 md:py-2 bg-red-500/10 text-red-500 text-[9px] md:text-[10px] font-bold rounded-xl border border-red-500/20 hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest"
+                                        >
+                                            대화내용 삭제
+                                        </button>
+                                        <button
+                                            onClick={() => navigate(`/admin/members?channelId=${channelId}`)}
+                                            className="px-3 py-1.5 md:px-5 md:py-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[9px] md:text-[10px] font-bold rounded-xl border border-[#FF8C69]/20 hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest"
+                                        >
+                                            관리
+                                        </button>
+                                    </>
                                 )}
                                 <button
                                     onClick={() => setCurrentRoom(null)}

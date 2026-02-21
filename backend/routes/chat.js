@@ -167,13 +167,41 @@ router.put('/rooms/:id/hide', protect, async (req, res) => {
     }
 });
 
+// @route   PUT /api/chat/rooms/:id/clear
+// @desc    채팅방 대화내용 전체 삭제 (숨기기)
+router.put('/rooms/:id/clear', protect, async (req, res) => {
+    try {
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const update = isAdmin
+            ? { clearedAtAdmin: new Date() }
+            : { clearedAtMember: new Date() };
+
+        const room = await ChatRoom.findByIdAndUpdate(req.params.id, update, { new: true });
+        res.json(room);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @route   GET /api/chat/rooms/:id/messages
-// @desc    채팅 메시지 조회
+// @desc    채팅 메시지 조회 (삭제 시점 이후 메시지만)
 // @access  Private
 router.get('/rooms/:id/messages', protect, async (req, res) => {
     try {
-        const messages = await Message.find({ roomId: req.params.id })
-            .sort({ createdAt: 1 });
+        const room = await ChatRoom.findById(req.params.id);
+        if (!room) {
+            return res.status(404).json({ message: '채팅방을 찾을 수 없습니다.' });
+        }
+
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const clearedAt = isAdmin ? room.clearedAtAdmin : room.clearedAtMember;
+
+        let query = { roomId: req.params.id };
+        if (clearedAt) {
+            query.createdAt = { $gt: clearedAt };
+        }
+
+        const messages = await Message.find(query).sort({ createdAt: 1 });
         res.json(messages);
     } catch (error) {
         res.status(500).json({ message: '메시지를 불러오는데 실패했습니다.' });

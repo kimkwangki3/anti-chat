@@ -39,6 +39,14 @@ const chatRoomSchema = new mongoose.Schema({
     memberVisible: {
         type: Boolean,
         default: true
+    },
+    clearedAtAdmin: {
+        type: Date,
+        default: null
+    },
+    clearedAtMember: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true

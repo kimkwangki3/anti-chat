@@ -73,6 +73,18 @@ const useChatStore = create((set, get) => ({
         }
     },
 
+    clearMessages: async (roomId) => {
+        try {
+            await axios.put(`/chat/rooms/${roomId}/clear`);
+            set({ messages: [] });
+            // 방 목록 정보도 업데이트하여 가시성 유지 및 최신 상태 반영
+            get().fetchRooms();
+        } catch (error) {
+            console.error('대화내용 삭제 실패:', error);
+            throw error;
+        }
+    },
+
     updateRoomInList: (updatedRoom) => {
         set(state => {
             // 현재 열람 중인 방이면 unreadCount를 항상 0으로 고정
