@@ -4,6 +4,14 @@
   "webDir": "dist",
   "server": {
     "url": "https://anti-chat-sigma.vercel.app/",
+    "allowNavigation": [
+      "*"
+    ],
     "cleartext": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
   }
 }
