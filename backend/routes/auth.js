@@ -17,7 +17,7 @@ const generateToken = (id) => {
 // @desc    회원가입
 // @access  Public
 router.post('/register', async (req, res) => {
-    const { name, username, password, role } = req.body;
+    const { username, password, nickname, gender, birthdate, region, recommender } = req.body;
 
     try {
         const userExists = await User.findOne({ username });
@@ -26,24 +26,30 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: '이미 존재하는 아이디입니다.' });
         }
 
-        const allowedRoles = ['admin', 'member'];
-        const userRole = (role && allowedRoles.includes(role)) ? role : 'member';
-
         const sessionId = uuidv4();
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
         const user = await User.create({
-            name,
+            name: nickname || username, // 기존 name 필드 호환성을 위해 nickname 또는 username 사용
             username,
             password,
-            role: userRole,
+            nickname,
+            gender: gender || 'none',
+            birthdate,
+            region,
+            recommender,
+            registrationIp: clientIp,
+            role: 'member', // 회원가입 시 기본은 항상 일반 회원
             currentSessionId: sessionId
         });
 
         if (user) {
-            writeAuthLog(`회원가입 완료: ${user.username} (${req.ip})`);
+            writeAuthLog(`회원가입 완료: ${user.username} (IP: ${clientIp})`);
             return res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 username: user.username,
+                nickname: user.nickname,
                 role: user.role,
                 sessionId: user.currentSessionId,
                 token: generateToken(user._id),

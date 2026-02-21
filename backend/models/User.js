@@ -17,6 +17,33 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    nickname: {
+        type: String,
+        trim: true
+    },
+    gender: {
+        type: String,
+        enum: ['male', 'female', 'other', 'none'],
+        default: 'none'
+    },
+    birthdate: {
+        type: String // YYYY-MM-DD format
+    },
+    region: {
+        type: String,
+        trim: true
+    },
+    recommender: {
+        type: String,
+        trim: true
+    },
+    registrationIp: {
+        type: String
+    },
+    registrationMac: {
+        type: String,
+        default: 'N/A (Browser Restricted)'
+    },
     role: {
         type: String,
         enum: ['superadmin', 'admin', 'member', 'withdrawn'],

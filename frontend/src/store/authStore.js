@@ -43,11 +43,11 @@ const useAuthStore = create((set) => ({
         }
     },
 
-    register: async (name, username, password, role) => {
+    register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post('/auth/register', { name, username, password, role });
-            const { token, sessionId, ...userData } = response.data;
+            const response = await axios.post('/auth/register', userData);
+            const { token, sessionId, ...data } = response.data;
 
             localStorage.setItem('token', token);
             localStorage.setItem('sessionId', sessionId);
