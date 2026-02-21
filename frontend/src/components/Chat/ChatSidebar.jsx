@@ -83,62 +83,69 @@ const ChatSidebar = () => {
     };
 
     return (
-        <div className="w-80 bg-[#12121a] border-r border-white/5 flex flex-col h-full z-20 shadow-2xl">
-            <div className="p-6 border-b border-white/5 bg-[#12121a] flex justify-between items-center h-20">
-                <h2 className="text-xl font-bold font-['Bebas_Neue'] tracking-wider text-[#FF8C69] italic leading-none">CHATS</h2>
+        <div className="w-full bg-[#12121a] border-r border-white/5 flex flex-col h-full z-20 shadow-2xl">
+            <div className="p-6 md:p-8 border-b border-white/5 bg-[#12121a] flex justify-between items-end h-24 md:h-28">
+                <div>
+                    <h2 className="text-2xl md:text-3xl font-black font-mono tracking-tighter text-white italic leading-none mb-1">CHATS</h2>
+                    <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] leading-none">Messenger</p>
+                </div>
                 {isAdmin ? (
                     <button
                         onClick={() => setShowUserList(!showUserList)}
-                        className="w-10 h-10 rounded-xl bg-[#FF8C69]/10 text-[#FF8C69] flex items-center justify-center hover:bg-[#FF8C69] hover:text-white transition-all shadow-inner active:scale-95"
+                        className="w-12 h-12 rounded-2xl bg-[#FF8C69] text-white flex items-center justify-center hover:bg-[#FFB5A0] transition-all shadow-xl shadow-[#FF8C69]/20 active:scale-95 border border-white/10"
                     >
-                        {showUserList ? '×' : '+'}
+                        <span className="text-2xl leading-none">{showUserList ? '×' : '+'}</span>
                     </button>
                 ) : (
                     channelId && (
                         <button
                             onClick={() => handleCreateRoom()}
-                            className="px-4 py-2 bg-[#FF8C69]/10 text-[#FF8C69] text-[10px] font-bold rounded-xl border border-[#FF8C69]/20 hover:bg-[#FF8C69] hover:text-white transition-all uppercase tracking-widest shadow-sm"
+                            className="px-6 py-2.5 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl border border-white/10 hover:bg-[#FFB5A0] transition-all uppercase tracking-widest shadow-xl shadow-[#FF8C69]/10"
                         >
-                            TALK
+                            New Talk
                         </button>
                     )
                 )}
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar relative p-2 space-y-2">
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative p-4 md:p-6 space-y-3">
                 {showUserList ? (
                     <div className="absolute inset-0 bg-[#12121a] z-10 animate-in slide-in-from-right duration-300">
-                        <div className="p-5 bg-white/[0.02] text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] border-b border-white/5">Select Member</div>
+                        <div className="p-6 bg-white/[0.02] text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] border-b border-white/5">Select Member</div>
                         {users.length === 0 ? (
-                            <p className="p-10 text-center text-[#3a3a4a] text-[11px] font-bold uppercase tracking-widest">No Members</p>
+                            <div className="flex flex-col items-center justify-center py-20 opacity-30">
+                                <span className="text-4xl mb-4">👥</span>
+                                <p className="text-[11px] font-bold uppercase tracking-widest">No Members Found</p>
+                            </div>
                         ) : users.map(u => (
                             <div
                                 key={u._id}
                                 onClick={() => handleCreateRoom(u._id)}
-                                className="p-5 border-b border-white/5 hover:bg-white/5 cursor-pointer flex items-center gap-4 transition-all"
+                                className="p-6 border-b border-white/5 hover:bg-white/5 cursor-pointer flex items-center gap-5 transition-all group"
                             >
                                 <div className="relative">
-                                    <div className="w-10 h-10 rounded-xl bg-white/5 text-[#6b6b8a] flex items-center justify-center text-sm font-bold border border-white/10">
+                                    <div className="w-12 h-12 rounded-2xl bg-[#23232f] text-[#6b6b8a] flex items-center justify-center text-sm font-bold border border-white/5 group-hover:border-[#FF8C69]/30 transition-all">
                                         {u.name?.[0]}
                                     </div>
-                                    {u.isOnline && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#06d6a0] border-2 border-[#12121a] rounded-full shadow-[0_0_5px_#06d6a0]"></span>}
+                                    {u.isOnline && <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#06d6a0] border-[3px] border-[#12121a] rounded-full"></span>}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <span className="text-sm font-bold text-[#e8e8f0] block truncate">{u.name}</span>
-                                    <span className="text-[10px] text-[#444466] font-mono truncate block uppercase">{u.username}</span>
+                                    <span className="text-sm font-bold text-white block truncate">{u.name}</span>
+                                    <span className="text-[10px] text-[#444466] font-mono truncate block uppercase tracking-tighter">{u.username}</span>
                                 </div>
+                                <span className="text-[10px] font-bold text-[#FF8C69] opacity-0 group-hover:opacity-100 transition-opacity">START ▶</span>
                             </div>
                         ))}
                     </div>
                 ) : isLoading ? (
-                    <div className="p-10 text-center opacity-20">
-                        <div className="w-8 h-8 border-2 border-[#FF8C69] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] font-mono">Loading...</p>
+                    <div className="p-20 text-center opacity-20">
+                        <div className="w-10 h-10 border-2 border-[#FF8C69] border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.4em] font-mono">Syncing...</p>
                     </div>
                 ) : rooms.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 px-8 text-center opacity-20 select-none">
-                        <span className="text-5xl mb-6">🏜️</span>
-                        <p className="text-[10px] font-black uppercase tracking-[0.3em] font-mono">No Active Chats</p>
+                    <div className="flex flex-col items-center justify-center py-32 px-10 text-center opacity-20 select-none">
+                        <span className="text-6xl mb-8">🏜️</span>
+                        <p className="text-[11px] font-black uppercase tracking-[0.4em] font-mono leading-relaxed">No Active<br />Conversations</p>
                     </div>
                 ) : (
                     rooms.map((room) => {
@@ -152,35 +159,35 @@ const ChatSidebar = () => {
                             <div
                                 key={room._id}
                                 onClick={() => handleSelectRoom(room)}
-                                className={`group relative p-5 rounded-2xl border transition-all cursor-pointer flex items-center gap-4 ${isActive
-                                    ? 'bg-[#FF8C69]/10 border-[#FF8C69]/30 shadow-lg shadow-[#FF8C69]/5'
-                                    : 'bg-[#1a1a24] border-transparent hover:border-white/5'
+                                className={`group relative p-4 md:p-5 rounded-[2rem] border transition-all cursor-pointer flex items-center gap-4 ${isActive
+                                    ? 'bg-[#FF8C69] border-[#FF8C69] shadow-2xl shadow-[#FF8C69]/20 translate-x-1'
+                                    : 'bg-[#1a1a24] border-white/5 hover:border-[#FF8C69]/20'
                                     }`}
                             >
                                 <div className="relative flex-shrink-0">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-white shadow-xl transition-all ${isActive ? 'orange-gradient' : 'bg-white/5 opacity-50'}`}>
+                                    <div className={`w-14 h-14 rounded-[1.25rem] flex items-center justify-center text-xl font-black shadow-2xl transition-all ${isActive ? 'bg-white text-[#FF8C69]' : 'bg-[#23232f] text-[#6b6b8a] border border-white/5'}`}>
                                         {otherUser?.name?.[0] || '?'}
                                     </div>
-                                    {isOnline && <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#06d6a0] border-[3px] border-[#1a1a24] rounded-full shadow-lg animate-pulse"></span>}
+                                    {isOnline && <span className={`absolute -bottom-1 -right-1 w-5 h-5 bg-[#06d6a0] border-[4px] rounded-full animate-pulse ${isActive ? 'border-[#FF8C69]' : 'border-[#1a1a24]'}`}></span>}
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-center mb-1">
+                                    <div className="flex justify-between items-start mb-0.5">
                                         <div className="flex items-center gap-2">
-                                            <h3 className={`text-sm font-bold truncate transition-colors ${isActive ? 'text-white' : 'text-[#6b6b8a]'}`}>
+                                            <h3 className={`text-[15px] font-black truncate transition-colors ${isActive ? 'text-white' : 'text-[#e8e8f0]'}`}>
                                                 {otherUser?.name}
                                             </h3>
                                             {unreadCount > 0 && !isActive && (
-                                                <span className="bg-[#FF8C69] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg shadow-[#FF8C69]/20 min-w-[18px] text-center">
+                                                <span className="bg-[#FF8C69] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-[#FF8C69]/20 min-w-[20px] text-center border border-white/10">
                                                     {unreadCount}
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="text-[9px] font-bold font-mono text-[#3a3a4a] uppercase">
+                                        <span className={`text-[9px] font-bold font-mono uppercase mt-1 ${isActive ? 'text-white/60' : 'text-[#444466]'}`}>
                                             {room.lastMessageAt ? new Date(room.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                                         </span>
                                     </div>
-                                    <p className={`text-[11px] truncate transition-colors ${isActive ? 'text-[#d1d1e0] font-medium' : 'text-[#3a3a4a]'}`}>
+                                    <p className={`text-[12px] truncate transition-colors leading-normal ${isActive ? 'text-white/80 font-bold' : 'text-[#6b6b8a] font-medium'}`}>
                                         {room.lastMessage || '새로운 대화 제안...'}
                                     </p>
                                 </div>
@@ -188,7 +195,7 @@ const ChatSidebar = () => {
                                 {/* 방 숨기기 버튼 */}
                                 <button
                                     onClick={(e) => handleHideRoom(e, room._id)}
-                                    className="absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all z-10 shadow-2xl"
+                                    className={`absolute -right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all z-10 shadow-2xl ${isActive ? 'bg-white/20 text-white hover:bg-white hover:text-red-500' : 'bg-black text-white hover:bg-red-500'}`}
                                 >
                                     ✕
                                 </button>
