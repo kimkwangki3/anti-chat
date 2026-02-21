@@ -308,24 +308,62 @@ const AdminMemberManagement = () => {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 mb-10">
-                                    <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
-                                        <p className="text-[10px] font-black text-[#444466] uppercase tracking-widest mb-2">가입상태</p>
-                                        <p className="text-sm font-bold text-white uppercase">{selectedMember.status === 'approved' ? '승인됨' : selectedMember.status === 'suspended' ? '정지됨' : '대기 중'}</p>
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-[9px] font-black text-[#444466] uppercase tracking-widest mb-1">가입상태</p>
+                                        <p className="text-xs font-bold text-white uppercase">{selectedMember.status === 'approved' ? '승인됨' : selectedMember.status === 'suspended' ? '정지됨' : '대기 중'}</p>
                                     </div>
-                                    <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
-                                        <p className="text-[10px] font-black text-[#444466] uppercase tracking-widest mb-2">가입일시</p>
-                                        <p className="text-sm font-bold text-white">{new Date(selectedMember.createdAt).toLocaleDateString()}</p>
+                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-[9px] font-black text-[#444466] uppercase tracking-widest mb-1">가입일시</p>
+                                        <p className="text-xs font-bold text-white">{new Date(selectedMember.createdAt).toLocaleDateString()}</p>
                                     </div>
-                                    <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
-                                        <p className="text-[10px] font-black text-[#444466] uppercase tracking-widest mb-2">채팅권한</p>
-                                        <p className={`text-sm font-bold ${selectedMember.isChatBlocked ? 'text-red-500' : 'text-[#06d6a0]'}`}>
-                                            {selectedMember.isChatBlocked ? '차단됨' : '정상'}
-                                        </p>
+                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-[9px] font-black text-[#444466] uppercase tracking-widest mb-1">닉네임</p>
+                                        <p className="text-xs font-bold text-[#FF8C69]">{selectedMember.userId?.nickname || '없음'}</p>
                                     </div>
+                                    <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                                        <p className="text-[9px] font-black text-[#444466] uppercase tracking-widest mb-1">성별</p>
+                                        <p className="text-xs font-bold text-white">{selectedMember.userId?.gender === 'male' ? '남성' : selectedMember.userId?.gender === 'female' ? '여성' : '미지정'}</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4 mb-10">
                                     <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
-                                        <p className="text-[10px] font-black text-[#444466] uppercase tracking-widest mb-2">마지막 활동</p>
-                                        <p className="text-sm font-bold text-white">최근</p>
+                                        <h4 className="text-[10px] font-black text-[#FF8C69] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                            <span className="w-1 h-3 bg-[#FF8C69] rounded-full"></span>
+                                            Additional Info
+                                        </h4>
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <div className="flex justify-between items-center bg-[#1a1a24] p-3 rounded-xl border border-white/5">
+                                                <span className="text-[10px] text-[#444466] font-bold uppercase">생년월일</span>
+                                                <span className="text-xs text-white font-mono">{selectedMember.userId?.birthdate || '미입력'}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center bg-[#1a1a24] p-3 rounded-xl border border-white/5">
+                                                <span className="text-[10px] text-[#444466] font-bold uppercase">거주지역</span>
+                                                <span className="text-xs text-white">{selectedMember.userId?.region || '미입력'}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center bg-[#1a1a24] p-3 rounded-xl border border-white/5">
+                                                <span className="text-[10px] text-[#444466] font-bold uppercase">추천인</span>
+                                                <span className="text-xs text-[#FF8C69] font-bold">{selectedMember.userId?.recommender || '없음'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
+                                        <h4 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                            <span className="w-1 h-3 bg-[#6b6b8a] rounded-full"></span>
+                                            Security Logs
+                                        </h4>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            <div className="flex justify-between items-center px-1">
+                                                <span className="text-[9px] text-[#444466] font-bold uppercase">가입 IP</span>
+                                                <span className="text-[10px] text-[#6b6b8a] font-mono">{selectedMember.userId?.registrationIp || '기록없음'}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center px-1">
+                                                <span className="text-[9px] text-[#444466] font-bold uppercase">가입 MAC</span>
+                                                <span className="text-[10px] text-[#6b6b8a] font-mono">{selectedMember.userId?.registrationMac}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

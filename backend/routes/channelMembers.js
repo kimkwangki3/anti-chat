@@ -89,7 +89,7 @@ router.get('/management/:channelId', protect, admin, async (req, res) => {
         }
 
         const members = await ChannelMember.find({ channelId: req.params.channelId })
-            .populate('userId', 'name username isOnline');
+            .populate('userId', 'name username nickname gender birthdate region recommender registrationIp registrationMac isOnline');
         res.json(members);
     } catch (error) {
         res.status(500).json({ message: error.message });
