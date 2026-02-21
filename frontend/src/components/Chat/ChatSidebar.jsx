@@ -188,7 +188,7 @@ const ChatSidebar = () => {
                                         </span>
                                     </div>
                                     <p className={`text-[12px] truncate transition-colors leading-normal ${isActive ? 'text-white/80 font-bold' : 'text-[#6b6b8a] font-medium'}`}>
-                                        {room.lastMessage || '새로운 대화 제안...'}
+                                        {room.lastMessage || '대화내용없음'}
                                     </p>
                                 </div>
 

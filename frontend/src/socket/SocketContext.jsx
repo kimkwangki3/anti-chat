@@ -225,6 +225,15 @@ export const SocketProvider = ({ children }) => {
                 markMessagesRead(roomId, readerId);
             });
 
+            // 대화내용 삭제 (동기화)
+            socket.on('messages_cleared', ({ roomId, updatedRoom }) => {
+                const { currentRoom, updateRoomInList } = useChatStore.getState();
+                if (currentRoom?._id === roomId) {
+                    useChatStore.setState({ messages: [] });
+                }
+                updateRoomInList(updatedRoom);
+            });
+
             // 신규 가입 신청 (관리자만 수신)
             socket.on('new_member_request', (data) => {
                 console.log('[SOCKET] New member request:', data);

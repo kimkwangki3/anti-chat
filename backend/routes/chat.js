@@ -173,11 +173,32 @@ router.put('/rooms/:id/clear', protect, async (req, res) => {
     try {
         const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
         const now = new Date();
-        const update = isAdmin
-            ? { clearedAtAdmin: now, clearedAtMember: now }
-            : { clearedAtMember: now };
+        const update = {
+            lastMessage: '', // 대화 미리보기 초기화
+            lastMessageAt: now
+        };
 
-        const room = await ChatRoom.findByIdAndUpdate(req.params.id, update, { new: true });
+        if (isAdmin) {
+            update.clearedAtAdmin = now;
+            update.clearedAtMember = now;
+        } else {
+            update.clearedAtMember = now;
+        }
+
+        const room = await ChatRoom.findByIdAndUpdate(req.params.id, update, { new: true })
+            .populate('adminId', 'name username isOnline')
+            .populate('memberId', 'name username isOnline');
+
+        // 실시간 동기화: 해당 방에 있는 유저들에게 삭제 알림
+        const io = req.app.get('io');
+        if (io) {
+            io.to(req.params.id).emit('messages_cleared', {
+                roomId: req.params.id,
+                clearedAt: now,
+                updatedRoom: room
+            });
+        }
+
         res.json(room);
     } catch (error) {
         res.status(500).json({ message: error.message });
