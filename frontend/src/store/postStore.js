@@ -33,6 +33,7 @@ const usePostStore = create((set, get) => ({
         try {
             const response = await axios.get(`/posts/${id}`);
             set({ currentPost: response.data, isLoading: false });
+            return response.data;
         } catch (error) {
             set({ error: '게시글 상세 내용을 불러오는데 실패했습니다.', isLoading: false });
         }

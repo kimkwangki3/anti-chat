@@ -44,7 +44,16 @@ const BoardPage = () => {
     }
 
     const isAdmin = user?.role === 'admin' && currentChannel?.ownerId?._id === user?._id;
-    const channelRole = currentChannel?.members.find(member => member.userId._id === user?._id)?.role;
+
+    if (error) {
+        return (
+            <div className="flex h-full items-center justify-center bg-[#1a1a24] text-red-500/50 flex-col gap-4">
+                <div className="w-20 h-20 bg-[#23232f] rounded-[2.5rem] flex items-center justify-center text-3xl shadow-inner border border-red-500/10">🚨</div>
+                <p className="font-bold uppercase tracking-widest text-[10px] font-mono">{error}</p>
+                <button onClick={() => fetchPostsByChannel(channelId)} className="text-[10px] font-black text-[#FF8C69] uppercase tracking-widest hover:underline mt-2">다시 시도</button>
+            </div>
+        );
+    }
 
 
     return (
