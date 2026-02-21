@@ -24,7 +24,7 @@ const ProtectedLayout = ({ children }) => {
   if (!token) return <Navigate to="/login" />;
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[#1a1a24]">
+    <div className="flex h-screen h-[100dvh] w-full min-w-0 overflow-hidden bg-[#1a1a24] isolation-auto">
       {/* PC 사이드바: 768px 이상에서만 노출 */}
       <div className="hidden md:flex">
         <Sidebar />

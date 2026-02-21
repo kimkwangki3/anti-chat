@@ -82,14 +82,19 @@ export const SocketProvider = ({ children }) => {
             }
 
             // 1. 알림 권한 먼저 요청 (iOS PWA에서 명시적 권한 요청이 필요)
-            if (Notification.permission === 'default') {
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    console.log('[PUSH] Notification permission denied');
+            if (typeof window !== 'undefined' && 'Notification' in window) {
+                if (Notification.permission === 'default') {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        console.log('[PUSH] Notification permission denied');
+                        return;
+                    }
+                } else if (Notification.permission === 'denied') {
+                    console.log('[PUSH] Notification permission was denied by user');
                     return;
                 }
-            } else if (Notification.permission === 'denied') {
-                console.log('[PUSH] Notification permission was denied by user');
+            } else {
+                console.log('[PUSH] Notification API not available');
                 return;
             }
 
