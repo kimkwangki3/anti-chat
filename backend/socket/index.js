@@ -78,19 +78,23 @@ const socketHandler = (io) => {
 
         // 메시지 전송 (파일 기록 추가)
         socket.on('send_message', async (data) => {
-            const { roomId, senderId, content, channelId } = data;
-            console.log(`[SOCKET] Message logic - Room: ${roomId}, Sender: ${senderId}`);
+            const { roomId, senderId, content, channelId, fileUrl, fileType, fileName } = data;
+            console.log(`[SOCKET] Message logic - Room: ${roomId}, Sender: ${senderId}, HasFile: ${!!fileUrl}`);
 
             try {
                 const message = await Message.create({
                     roomId,
                     senderId,
-                    content
+                    content,
+                    fileUrl,
+                    fileType,
+                    fileName
                 });
 
                 const user = await User.findById(senderId);
                 if (user) {
-                    writeChatLog(roomId, user.name, content);
+                    const logContent = fileUrl ? `[${fileName || (fileType?.startsWith('image/') ? '사진' : '파일')}] ${content || ''}` : content;
+                    writeChatLog(roomId, user.name, logContent);
                 }
 
                 const room = await ChatRoom.findById(roomId);
@@ -112,9 +116,15 @@ const socketHandler = (io) => {
                     const isRecipientInRoom = recipientSocketsInRoom.length > 0;
                     console.log(`[SOCKET] Recipient in room: ${isRecipientInRoom} (recipient: ${recipientId})`);
 
-                    // 읽지 않은 카운트 증가 및 가시성 보장
+                    // 가시성 보장 및 마지막 메시지 텍스트 결정
+                    let lastMsgText = content;
+                    if (fileUrl) {
+                        const typeLabel = fileType?.startsWith('image/') ? '사진' : '파일';
+                        lastMsgText = content ? `[${typeLabel}] ${content}` : `[${typeLabel}] ${fileName || ''}`;
+                    }
+
                     const updateData = {
-                        lastMessage: content,
+                        lastMessage: lastMsgText,
                         lastMessageAt: Date.now(),
                         adminVisible: true,
                         memberVisible: true
@@ -149,14 +159,14 @@ const socketHandler = (io) => {
                     io.to(recipientRoom).emit('chat_notification', {
                         roomId,
                         senderName: user?.name,
-                        content: content.substring(0, 20),
+                        content: lastMsgText.substring(0, 20),
                         channelId: channelId || room.channelId
                     });
 
                     // 웹 푸시 발송 (백그라운드 알림용) - pushService 사용
                     await sendPushNotification(recipientId, {
                         title: `${user?.name}님의 새로운 메시지 🍑`,
-                        body: content.length > 50 ? content.substring(0, 50) + '...' : content,
+                        body: lastMsgText.length > 50 ? lastMsgText.substring(0, 50) + '...' : lastMsgText,
                         url: `/chat?channelId=${channelId || room.channelId}&roomId=${roomId}`,
                         tag: `chat-${roomId}`
                     });

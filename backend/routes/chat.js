@@ -6,6 +6,31 @@ const Message = require('../models/Message');
 const User = require('../models/User');
 const ChannelMember = require('../models/ChannelMember');
 const { protect, admin } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Multer Storage 설정
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = 'uploads/chat';
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        // 원본 파일명을 유지하면서 타임스탬프를 붙여 중복 방지
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'chat-' + uniqueSuffix + ext);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB 제한
+});
 
 // @route   GET /api/chat/users/:channelId
 // @desc    해당 채널의 멤버 목록 조회 (관리자 전용)
@@ -167,6 +192,28 @@ router.get('/rooms/:id/messages', protect, async (req, res) => {
         res.json(messages);
     } catch (error) {
         res.status(500).json({ message: '메시지를 불러오는데 실패했습니다.' });
+    }
+});
+
+// @route   POST /api/chat/upload
+// @desc    채팅 파일 업로드
+router.post('/upload', protect, upload.single('file'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
+        }
+
+        // 정적 파일 접근을 위해 백엔드 주소와 함께 경로 반환
+        const fileUrl = `/uploads/chat/${req.file.filename}`;
+        res.json({
+            fileUrl,
+            fileType: req.file.mimetype,
+            fileName: req.file.originalname,
+            size: req.file.size
+        });
+    } catch (error) {
+        console.error('파일 업로드 에러:', error);
+        res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.' });
     }
 });
 

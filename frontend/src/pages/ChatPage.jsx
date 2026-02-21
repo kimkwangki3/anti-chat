@@ -9,7 +9,9 @@ import socket from '../socket/socket';
 
 const ChatPage = () => {
     const [input, setInput] = useState('');
-    const { currentRoom, setCurrentRoom, sendMessage, addMessage, fetchRooms, rooms } = useChatStore();
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const { currentRoom, setCurrentRoom, sendMessage, addMessage, fetchRooms, rooms, uploadFile } = useChatStore();
     const { resetUnreadCount } = useNotificationStore();
     const { user, token } = useAuthStore();
     const location = useLocation();
@@ -78,11 +80,37 @@ const ChatPage = () => {
         };
     }, [currentRoom?._id, addMessage, token]);
 
-    const handleSend = (e) => {
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setSelectedFile(file);
+        }
+    };
+
+    const handleSend = async (e) => {
         e.preventDefault();
-        if (!input.trim() || !currentRoom) return;
-        sendMessage(input);
-        setInput('');
+        if ((!input.trim() && !selectedFile) || !currentRoom || isUploading) return;
+
+        try {
+            let fileData = {};
+            if (selectedFile) {
+                setIsUploading(true);
+                const uploaded = await uploadFile(selectedFile);
+                fileData = {
+                    fileUrl: uploaded.fileUrl,
+                    fileType: uploaded.fileType,
+                    fileName: uploaded.fileName
+                };
+            }
+
+            sendMessage(input, fileData);
+            setInput('');
+            setSelectedFile(null);
+            setIsUploading(false);
+        } catch (error) {
+            alert('전송에 실패했습니다. 다시 시도해 주세요.');
+            setIsUploading(false);
+        }
     };
 
     if (!channelId && !currentRoom) {
@@ -150,25 +178,58 @@ const ChatPage = () => {
                         </div>
 
                         <div className="p-4 md:p-6 flex-shrink-0 bg-[#1a1a24] border-t border-white/5">
-                            <form onSubmit={handleSend} className="max-w-5xl mx-auto flex gap-3 items-end">
-                                <div className="relative flex-1 group">
-                                    <div className="absolute -inset-1 orange-gradient rounded-2xl blur opacity-[0.05] group-focus-within:opacity-20 transition duration-500 pointer-events-none"></div>
-                                    <input
-                                        type="text"
-                                        value={input}
-                                        onChange={(e) => setInput(e.target.value)}
-                                        placeholder="메시지를 입력하세요..."
-                                        className="relative z-10 w-full bg-[#23232f] border border-white/5 rounded-2xl px-5 py-3.5 text-sm text-white focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-xl placeholder:text-[#3a3a4a]"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={!input.trim()}
-                                    className="h-[48px] px-6 orange-gradient text-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#FF8C69]/20 transition-all font-bold uppercase text-[10px] tracking-widest disabled:opacity-20"
-                                >
-                                    보내기
-                                </button>
-                            </form>
+                            <div className="max-w-5xl mx-auto flex flex-col gap-3">
+                                {selectedFile && (
+                                    <div className="flex items-center justify-between bg-[#23232f] border border-white/5 rounded-xl px-4 py-2 animate-in fade-in slide-in-from-bottom-2">
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <span className="text-xl">{selectedFile.type.startsWith('image/') ? '🖼️' : '📄'}</span>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-[11px] text-white font-bold truncate">{selectedFile.name}</span>
+                                                <span className="text-[9px] text-[#444466] font-mono">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedFile(null)}
+                                            className="p-1 hover:text-white transition-colors text-[#444466]"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
+                                <form onSubmit={handleSend} className="flex gap-3 items-end">
+                                    <div className="relative flex-1 group">
+                                        <div className="absolute -inset-1 orange-gradient rounded-2xl blur opacity-[0.05] group-focus-within:opacity-20 transition duration-500 pointer-events-none"></div>
+                                        <div className="relative z-10 flex items-center bg-[#23232f] border border-white/5 rounded-2xl overflow-hidden focus-within:border-[#FF8C69]/30 transition-all shadow-xl">
+                                            <label className="p-3.5 cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-center">
+                                                <span className="text-lg opacity-40 hover:opacity-100 transition-opacity">📎</span>
+                                                <input
+                                                    type="file"
+                                                    onChange={handleFileChange}
+                                                    className="hidden"
+                                                />
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={input}
+                                                onChange={(e) => setInput(e.target.value)}
+                                                placeholder={isUploading ? "파일을 업로드하는 중..." : "메시지를 입력하세요..."}
+                                                disabled={isUploading}
+                                                className="flex-1 bg-transparent px-4 py-3.5 text-sm text-white focus:outline-none placeholder:text-[#3a3a4a] disabled:opacity-50"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={(!input.trim() && !selectedFile) || isUploading}
+                                        className="h-[48px] px-6 orange-gradient text-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#FF8C69]/20 transition-all font-bold uppercase text-[10px] tracking-widest disabled:opacity-20"
+                                    >
+                                        {isUploading ? (
+                                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        ) : '보내기'}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </>
                 ) : (

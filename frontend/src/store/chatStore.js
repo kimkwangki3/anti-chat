@@ -93,20 +93,37 @@ const useChatStore = create((set, get) => ({
         });
     },
 
-    sendMessage: (content) => {
+    sendMessage: (content, fileData = {}) => {
         const { currentRoom } = get();
-        // localStorage에서 직접 유저 정보를 가져와 보낸이 설정 (authStore와 연계)
         const userStr = localStorage.getItem('user');
         if (!userStr || !currentRoom) return;
 
         const user = JSON.parse(userStr);
+        const { fileUrl, fileType, fileName } = fileData;
 
         socket.emit('send_message', {
             roomId: currentRoom._id,
             senderId: user._id,
             content,
+            fileUrl,
+            fileType,
+            fileName,
             channelId: currentRoom.channelId?._id || currentRoom.channelId
         });
+    },
+
+    uploadFile: async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const response = await axios.post('/chat/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('파일 업로드 실패:', error);
+            throw error;
+        }
     },
 
     addMessage: (message) => {

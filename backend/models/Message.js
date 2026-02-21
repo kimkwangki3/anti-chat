@@ -13,7 +13,21 @@ const messageSchema = new mongoose.Schema({
     },
     content: {
         type: String,
-        required: true
+        required: function () {
+            return !this.fileUrl; // 파일이 없으면 텍스트 필수
+        }
+    },
+    fileUrl: {
+        type: String,
+        required: false
+    },
+    fileType: {
+        type: String,
+        required: false
+    },
+    fileName: {
+        type: String,
+        required: false
     },
     isRead: {
         type: Boolean,

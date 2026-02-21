@@ -74,11 +74,42 @@ const MessageList = () => {
                                             : currentRoom.adminId?.name}
                                     </span>
                                 )}
-                                <div className={`relative px-4 py-3 md:px-6 md:py-4 rounded-2xl md:rounded-[2rem] text-xs md:text-[13px] leading-relaxed shadow-xl transition-all ${isMe
+                                <div className={`relative rounded-2xl md:rounded-[2rem] text-xs md:text-[13px] leading-relaxed shadow-xl transition-all overflow-hidden ${isMe
                                     ? 'bg-[#FF8C69] text-white rounded-tr-none shadow-[#FF8C69]/10'
                                     : 'bg-[#2a2a3a] text-[#e8e8f0] border border-white/5 rounded-tl-none shadow-black/20'
                                     }`}>
-                                    {msg.content}
+                                    {msg.fileUrl && (
+                                        <div className="mb-2">
+                                            {msg.fileType?.startsWith('image/') ? (
+                                                <div className="group/img relative">
+                                                    <img
+                                                        src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${msg.fileUrl}`}
+                                                        alt={msg.fileName}
+                                                        className="max-w-full max-h-[300px] object-cover rounded-xl md:rounded-[1.5rem] cursor-pointer hover:scale-[1.02] transition-transform"
+                                                        onClick={() => window.open(`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${msg.fileUrl}`, '_blank')}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <a
+                                                    href={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${msg.fileUrl}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={`flex items-center gap-3 p-3 rounded-xl border ${isMe ? 'bg-white/10 border-white/10 hover:bg-white/20' : 'bg-black/20 border-white/5 hover:bg-black/30'} transition-all`}
+                                                >
+                                                    <span className="text-2xl">📄</span>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-[11px] font-bold truncate">{msg.fileName || '다운로드'}</span>
+                                                        <span className={`text-[9px] font-mono ${isMe ? 'text-white/50' : 'text-[#444466]'}`}>파일 다운로드</span>
+                                                    </div>
+                                                </a>
+                                            )}
+                                        </div>
+                                    )}
+                                    {msg.content && (
+                                        <div className="px-4 py-3 md:px-6 md:py-4">
+                                            {msg.content}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className={`flex items-center gap-1 mt-1.5 ${isMe ? 'flex-row-reverse' : ''}`}>
                                     {showTime && (
