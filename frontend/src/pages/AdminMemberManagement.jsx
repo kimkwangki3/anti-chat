@@ -111,18 +111,6 @@ const AdminMemberManagement = () => {
                 <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">가입 승인 및 멤버 권한 제어</p>
             </header>
 
-            {/* 검색 섹션 */}
-            <div className="mb-12 max-w-2xl relative group">
-                <div className="absolute -inset-1 orange-gradient rounded-3xl blur opacity-[0.05] group-focus-within:opacity-20 transition duration-500"></div>
-                <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="함께할 멤버를 찾아보세요..."
-                    className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-8 py-5 text-sm text-white focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-2xl placeholder:text-[#3a3a4a]"
-                />
-                <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xl opacity-20">🔍</span>
-            </div>
 
             {/* 가입 신청 섹션 (강조됨) */}
             <section className="mb-16">
@@ -172,6 +160,20 @@ const AdminMemberManagement = () => {
                     </div>
                 )}
             </section>
+
+
+            {/* 검색 섹션 */}
+            <div className="mb-12 max-w-2xl relative group">
+                <div className="absolute -inset-1 orange-gradient rounded-3xl blur opacity-[0.05] group-focus-within:opacity-20 transition duration-500 pointer-events-none"></div>
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="검색할 멤버의 이름을 입력하세요..."
+                    className="w-full bg-[#23232f] border border-white/5 rounded-2xl px-8 py-5 text-sm text-white focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-2xl placeholder:text-[#3a3a4a] relative z-10"
+                />
+                <span className="absolute right-8 top-1/2 -translate-y-1/2 text-xl opacity-20 z-20">🔍</span>
+            </div>
 
             {/* 멤버 목록 섹션 */}
             <section>
