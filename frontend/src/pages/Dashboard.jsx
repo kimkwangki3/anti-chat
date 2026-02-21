@@ -116,7 +116,7 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="h-full bg-[#1a1a24] text-[#e8e8f0] p-6 md:p-10 overflow-y-auto custom-scrollbar">
+        <div className="min-h-full bg-[#1a1a24] text-[#e8e8f0] p-6 md:p-10 pb-24 md:pb-10">
             <header className="flex justify-between items-end mb-12">
                 <div>
                     <div className="flex items-center gap-2 mb-2">

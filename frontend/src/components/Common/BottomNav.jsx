@@ -7,12 +7,20 @@ import useNotificationStore from '../../store/notificationStore';
 const BottomNav = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { currentChannel } = useChannelStore();
+    const { currentChannel, myChannels } = useChannelStore();
+    const { user, logout } = useAuthStore();
     const { unreadCounts } = useNotificationStore();
 
     // [고도화] URL에서 채널 ID 추출 (새로고침 시 메뉴 유지를 위함)
     const params = new URLSearchParams(location.search);
     const urlChannelId = params.get('channelId') || currentChannel?._id;
+
+    // 만약 URL이나 현재 채널 정보가 없다면, 관리자가 소유한 첫 번째 채널을 기본값으로 사용
+    const fallbackChannelId = myChannels.find(m =>
+        (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)
+    )?.channelId?._id;
+
+    const activeChannelId = urlChannelId || fallbackChannelId;
 
     const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
     const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
@@ -26,7 +34,6 @@ const BottomNav = () => {
     ];
 
     const [showSettings, setShowSettings] = useState(false);
-    const { user, logout } = useAuthStore();
 
     const handleItemClick = (item) => {
         navigate(item.path);
@@ -87,18 +94,18 @@ const BottomNav = () => {
                         </div>
 
                         <div className="grid grid-cols-1 gap-3">
-                            {/* 관리자 메뉴 (Admin/SuperAdmin + 채널 선택 시) */}
-                            {(user?.role === 'admin' || user?.role === 'superadmin') && urlChannelId && (
+                            {/* 관리자 메뉴 (Admin/SuperAdmin + 채널 선택 혹은 소유 시) */}
+                            {(user?.role === 'admin' || user?.role === 'superadmin') && activeChannelId && (
                                 <>
                                     <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-1 px-1">Admin Suite</p>
                                     <button
-                                        onClick={() => { navigate(`/admin/members?channelId=${urlChannelId}`); setShowSettings(false); }}
+                                        onClick={() => { navigate(`/admin/members?channelId=${activeChannelId}`); setShowSettings(false); }}
                                         className="w-full py-4 px-6 bg-white/5 text-white rounded-2xl text-sm font-bold flex items-center gap-3 border border-white/5 active:scale-95 transition-all"
                                     >
                                         <span className="text-lg">👥</span> 멤버 관리
                                     </button>
                                     <button
-                                        onClick={() => { navigate(`/admin/edit-channel?channelId=${urlChannelId}`); setShowSettings(false); }}
+                                        onClick={() => { navigate(`/admin/edit-channel?channelId=${activeChannelId}`); setShowSettings(false); }}
                                         className="w-full py-4 px-6 bg-white/5 text-white rounded-2xl text-sm font-bold flex items-center gap-3 border border-white/5 active:scale-95 transition-all mb-4"
                                     >
                                         <span className="text-lg">⚙️</span> 채널 설정
