@@ -158,15 +158,21 @@ const Dashboard = () => {
                             <div className="space-y-3">
                                 {user?.role === 'admin' && totalPending > 0 && (
                                     <div
-                                        onClick={() => navigate(`/admin/members?channelId=${myChannels[0]?.channelId?._id}`)}
-                                        className="flex items-center gap-4 p-5 bg-[#23232f] border border-red-500/20 rounded-3xl cursor-pointer hover:border-red-500/40 transition-all group shadow-xl"
+                                        onClick={() => navigate(`/admin/members?channelId=${myChannels.find(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)?.channelId?._id || myChannels[0]?.channelId?._id}`)}
+                                        className="relative p-8 rounded-[2.5rem] bg-gradient-to-br from-[#FF8C69] to-[#E8735A] shadow-2xl shadow-[#FF8C69]/30 cursor-pointer hover:scale-[1.02] transition-all group overflow-hidden mb-6"
                                     >
-                                        <div className="w-12 h-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-2xl">👥</div>
-                                        <div className="flex-1">
-                                            <p className="text-sm font-bold text-white">미승인 가입 신청</p>
-                                            <p className="text-[11px] text-[#6b6b8a] mt-0.5">총 {totalPending}건의 가입 신청이 승인 대기 중입니다</p>
+                                        <div className="absolute top-0 right-0 p-4 opacity-20 text-7xl group-hover:scale-125 transition-transform">👤</div>
+                                        <div className="relative z-10">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <span className="w-2.5 h-2.5 bg-white rounded-full animate-ping"></span>
+                                                <span className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em]">Quick Management</span>
+                                            </div>
+                                            <h3 className="text-2xl font-black text-white mb-2">신규 가입 신청 {totalPending}건</h3>
+                                            <p className="text-white/80 text-sm font-bold">운영 중인 채널에 새로운 멤버의 가입 신청이 있습니다.<br />지금 바로 승인하고 대화를 시작하세요!</p>
                                         </div>
-                                        <span className="bg-red-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full">{totalPending}</span>
+                                        <div className="mt-6 flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest bg-black/20 w-fit px-4 py-2 rounded-full border border-white/20 group-hover:bg-white group-hover:text-[#FF8C69] transition-colors">
+                                            승인하러 가기 <span className="text-[8px]">▶</span>
+                                        </div>
                                     </div>
                                 )}
                                 {user?.role === 'member' && myChannels.map(membership => {
