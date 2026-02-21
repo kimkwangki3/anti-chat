@@ -52,18 +52,34 @@ router.post('/', protect, async (req, res) => {
     }
 });
 
-// @desc    채널별 투표 목록 조회
+// @desc    채널별 투표 목록 조회 (참여 여부 및 권한에 따른 결과 마스킹)
 // @route   GET /api/polls/channel/:channelId
 router.get('/channel/:channelId', protect, async (req, res) => {
     try {
-        const polls = await Poll.find({ channelId: req.params.channelId })
-            .sort({ createdAt: -1 });
+        const channelId = req.params.channelId;
+        const channel = await Channel.findById(channelId);
+        if (!channel) return res.status(404).json({ message: '채널 없음' });
 
-        // 사용자가 각 투표에 참여했는지 여부 포함
+        // 권한 체크
+        const channelMember = await ChannelMember.findOne({ channelId, userId: req.user._id });
+        const isChannelAdmin = channelMember?.role === 'admin' || channel.ownerId.toString() === req.user._id.toString();
+        const isSuperAdmin = req.user.role === 'superadmin';
+        const isAdmin = isChannelAdmin || isSuperAdmin;
+
+        const polls = await Poll.find({ channelId }).sort({ createdAt: -1 });
+
         const pollsWithUserStatus = await Promise.all(polls.map(async (poll) => {
             const vote = await Vote.findOne({ pollId: poll._id, userId: req.user._id });
+
+            // 일반 멤버는 결과(count)를 볼 수 없어야 함
+            const sanitizedOptions = poll.options.map(opt => ({
+                ...opt.toObject(),
+                count: isAdmin ? opt.count : 0 // 관리자가 아니면 0으로 마스킹
+            }));
+
             return {
                 ...poll.toObject(),
+                options: sanitizedOptions,
                 hasVoted: !!vote,
                 myVote: vote ? vote.selectedOptions : []
             };
@@ -112,18 +128,28 @@ router.post('/:id/vote', protect, async (req, res) => {
     }
 });
 
-// @desc    투표 결과 및 상세 정보 (엑셀용 데이터 포함)
+// @desc    투표 결과 및 상세 정보 (엑셀용 데이터 포함, 관리자 전용)
 // @route   GET /api/polls/:id/details
 router.get('/:id/details', protect, async (req, res) => {
     try {
         const poll = await Poll.findById(req.params.id);
         if (!poll) return res.status(404).json({ message: '투표 없음' });
 
+        // 권한 체크: 채널 관리자인지 확인
+        const channel = await Channel.findById(poll.channelId);
+        const channelMember = await ChannelMember.findOne({ channelId: poll.channelId, userId: req.user._id });
+        const isChannelAdmin = channelMember?.role === 'admin' || channel.ownerId.toString() === req.user._id.toString();
+        const isSuperAdmin = req.user.role === 'superadmin';
+
+        if (!isChannelAdmin && !isSuperAdmin) {
+            return res.status(403).json({ message: '조회 권한이 없습니다.' });
+        }
+
         const votes = await Vote.find({ pollId: req.params.id }).populate('userId', 'name username');
 
         res.json({
             poll,
-            votes: poll.isAnonymous ? [] : votes // 익명이면 투표자 명단 제외
+            votes: poll.isAnonymous ? (isSuperAdmin ? votes : []) : votes // 익명이면 투표자 명단 제외 (슈퍼어드민은 감사용으로 확인 가능할 수도 있으나 기본은 빈 배열)
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

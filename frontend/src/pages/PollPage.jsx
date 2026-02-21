@@ -167,24 +167,26 @@ const PollPage = () => {
                     )}
                 </section>
 
-                {/* 완료된 투표 */}
-                <section>
-                    <div className="flex items-center gap-3 mb-8">
-                        <div className="w-2 h-8 bg-white/10 rounded-full"></div>
-                        <h2 className="text-xl font-bold text-white tracking-tight italic opacity-50">Closed Polls</h2>
-                    </div>
-                    <div className="grid grid-cols-1 gap-6">
-                        {polls.filter(p => p.status === 'closed' || new Date(p.expiresAt) <= new Date()).map(poll => (
-                            <PollCard
-                                key={poll._id}
-                                poll={poll}
-                                isClosed={true}
-                                onExport={() => handleExport(poll._id, poll.title)}
-                                isAdmin={channelRole === 'admin' || user?.role === 'superadmin'}
-                            />
-                        ))}
-                    </div>
-                </section>
+                {/* 완료된 투표 - 관리자만 확인 가능 */}
+                {(channelRole === 'admin' || user?.role === 'superadmin') && (
+                    <section>
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="w-2 h-8 bg-white/10 rounded-full"></div>
+                            <h2 className="text-xl font-bold text-white tracking-tight italic opacity-50">Closed Polls</h2>
+                        </div>
+                        <div className="grid grid-cols-1 gap-6">
+                            {polls.filter(p => p.status === 'closed' || new Date(p.expiresAt) <= new Date()).map(poll => (
+                                <PollCard
+                                    key={poll._id}
+                                    poll={poll}
+                                    isClosed={true}
+                                    onExport={() => handleExport(poll._id, poll.title)}
+                                    isAdmin={true}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                )}
             </div>
 
             {/* 투표 생성 모달 */}
@@ -270,7 +272,7 @@ const PollPage = () => {
 };
 
 const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
-    const [selected, setSelected] = useState([]);
+    const [selected, setSelected] = useState(poll.myVote || []);
     const totalVotes = poll.options.reduce((sum, o) => sum + o.count, 0);
 
     const toggleOption = (text) => {
@@ -289,7 +291,8 @@ const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
                 <div className="flex-1">
                     <h3 className="text-xl font-bold text-white mb-2">{poll.title}</h3>
                     <p className="text-[10px] text-[#444466] font-mono font-bold">
-                        {isClosed ? '투표 종료됨' : `마감일: ${new Date(poll.expiresAt).toLocaleString()}`} • {totalVotes}명 참여
+                        {isClosed ? '투표 종료됨' : `마감일: ${new Date(poll.expiresAt).toLocaleString()}`}
+                        {isAdmin && ` • ${totalVotes}명 참여`}
                     </p>
                 </div>
                 {isAdmin && (
@@ -318,12 +321,13 @@ const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
                                     {opt.text}
                                     {isVoted && poll.myVote.includes(opt.text) && <span className="ml-2 text-[10px] text-[#FF8C69] font-black">✓ MY CHOICE</span>}
                                 </span>
-                                {(isVoted || isClosed) && <span className="text-xs font-mono font-black text-[#6b6b8a]">{percentage}% ({opt.count})</span>}
+                                {(isClosed) && isAdmin && <span className="text-xs font-mono font-black text-[#6b6b8a]">{percentage}% ({opt.count})</span>}
+                                {!isClosed && poll.hasVoted && isAdmin && <span className="text-xs font-mono font-black text-[#6b6b8a]">{percentage}% ({opt.count})</span>}
                             </div>
                             <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full rounded-full transition-all duration-1000 ${selected.includes(opt.text) ? 'bg-[#FF8C69]' : 'bg-[#444466]'} ${isClosed ? 'bg-white/20' : ''}`}
-                                    style={{ width: `${(isVoted || isClosed) ? percentage : (selected.includes(opt.text) ? 100 : 0)}%` }}
+                                    style={{ width: `${(isAdmin && (poll.hasVoted || isClosed)) ? percentage : (selected.includes(opt.text) ? 100 : 0)}%` }}
                                 ></div>
                             </div>
                         </div>
