@@ -9,11 +9,28 @@ const socketHandler = (io) => {
         console.log('소켓 연결됨:', socket.id);
 
         // 사용자 개별 룸 참가 (알림용)
-        socket.on('setup', (userData) => {
+        socket.on('setup', async (userData) => {
             if (userData?._id) {
-                socket.join(userData._id.toString());
-                console.log(`[SOCKET] ${userData.name} joined private room: ${userData._id}`);
-                socket.emit('connected');
+                const userIdStr = userData._id.toString();
+                socket.join(userIdStr);
+                socket.userId = userIdStr;
+                socket.sessionId = userData.sessionId;
+
+                console.log(`[SOCKET] ${userData.name} joined private room: ${userIdStr}`);
+
+                // 데이터베이스의 세션 ID와 비교하여 중복 로그인 체크
+                try {
+                    const latestUser = await User.findById(userData._id);
+                    if (latestUser && latestUser.currentSessionId && latestUser.currentSessionId !== userData.sessionId) {
+                        console.log(`[SOCKET] Session mismatch for ${userData.name}. Enforcing logout.`);
+                        socket.emit('force_logout', { message: '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.' });
+                    } else {
+                        socket.emit('connected');
+                    }
+                } catch (error) {
+                    console.error('[SOCKET] setup 세션 체크 에러:', error);
+                    socket.emit('connected');
+                }
             }
         });
 

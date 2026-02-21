@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['active', 'suspended', 'withdrawn'],
         default: 'active'
+    },
+    currentSessionId: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true

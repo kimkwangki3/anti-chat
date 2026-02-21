@@ -19,6 +19,7 @@ const getSafeUser = () => {
 const useAuthStore = create((set) => ({
     user: getSafeUser(),
     token: localStorage.getItem('token') || null,
+    sessionId: localStorage.getItem('sessionId') || null,
     isLoading: false,
     error: null,
 
@@ -26,11 +27,12 @@ const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await axios.post('/auth/login', { username, password });
-            const { token, ...userData } = response.data;
+            const { token, sessionId, ...userData } = response.data;
 
             localStorage.setItem('token', token);
+            localStorage.setItem('sessionId', sessionId);
             localStorage.setItem('user', JSON.stringify(userData));
-            set({ user: userData, token, isLoading: false });
+            set({ user: userData, token, sessionId, isLoading: false });
             return true;
         } catch (error) {
             set({
@@ -45,11 +47,12 @@ const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await axios.post('/auth/register', { name, username, password, role });
-            const { token, ...userData } = response.data;
+            const { token, sessionId, ...userData } = response.data;
 
             localStorage.setItem('token', token);
+            localStorage.setItem('sessionId', sessionId);
             localStorage.setItem('user', JSON.stringify(userData));
-            set({ user: userData, token, isLoading: false });
+            set({ user: userData, token, sessionId, isLoading: false });
             return true;
         } catch (error) {
             set({
@@ -62,8 +65,9 @@ const useAuthStore = create((set) => ({
 
     logout: () => {
         localStorage.removeItem('token');
+        localStorage.removeItem('sessionId');
         localStorage.removeItem('user');
-        set({ user: null, token: null });
+        set({ user: null, token: null, sessionId: null });
 
         // 모든 스토어 리셋
         useChatStore.getState().reset();

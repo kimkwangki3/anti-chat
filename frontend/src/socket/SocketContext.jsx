@@ -146,12 +146,20 @@ export const SocketProvider = ({ children }) => {
     useEffect(() => {
         if (user) {
             socket.connect();
-            socket.emit('setup', user);
+            socket.emit('setup', { ...user, sessionId: useAuthStore.getState().sessionId });
 
             // 로그인 시 푸시 알림 구독 시도
             subscribeToPush();
 
             socket.on('connected', () => console.log('[SOCKET] Connected'));
+
+            // 중복 로그인 감지 (강제 로그아웃)
+            socket.on('force_logout', (data) => {
+                alert(data.message || '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.');
+                const { logout } = useAuthStore.getState();
+                logout();
+                navigate('/login');
+            });
 
             // 전역 알림 리스너
             socket.on('notice_received', (notice) => {

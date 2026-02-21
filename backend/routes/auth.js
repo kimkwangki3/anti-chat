@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
 const { writeAuthLog } = require('../utils/logService');
+const { v4: uuidv4 } = require('uuid');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -28,11 +29,13 @@ router.post('/register', async (req, res) => {
         const allowedRoles = ['admin', 'member'];
         const userRole = (role && allowedRoles.includes(role)) ? role : 'member';
 
+        const sessionId = uuidv4();
         const user = await User.create({
             name,
             username,
             password,
-            role: userRole
+            role: userRole,
+            currentSessionId: sessionId
         });
 
         if (user) {
@@ -42,6 +45,7 @@ router.post('/register', async (req, res) => {
                 name: user.name,
                 username: user.username,
                 role: user.role,
+                sessionId: user.currentSessionId,
                 token: generateToken(user._id),
             });
         }
@@ -65,11 +69,24 @@ router.post('/login', async (req, res) => {
 
         if (user && (await user.matchPassword(password))) {
             const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+            const sessionId = uuidv4();
 
             user.isOnline = true;
             user.lastLoginIp = clientIp;
             user.lastLoginAt = Date.now();
+            user.currentSessionId = sessionId;
             await user.save();
+
+            // 이전 세션들에게 로그아웃 알림을 보내기 위해 io 인스턴스 사용
+            const io = req.app.get('io');
+            if (io) {
+                // 특정 유저의 프라이빗 룸에 force_logout 이벤트 전송 (자신 제외 로직은 소켓 setup 시 처리하거나 여기서 처리)
+                // 신규 로그인 시점에는 아직 소켓 setup이 안 됐을 것이므로, 기존 소켓들에게만 전달됨
+                io.to(user._id.toString()).emit('force_logout', {
+                    message: '다른 기기에서 로그인이 감지되었습니다.',
+                    newSessionId: sessionId
+                });
+            }
 
             writeAuthLog(`로그인: ${user.username} (IP: ${clientIp})`);
 
@@ -78,6 +95,7 @@ router.post('/login', async (req, res) => {
                 name: user.name,
                 username: user.username,
                 role: user.role,
+                sessionId: user.currentSessionId,
                 token: generateToken(user._id),
             });
         } else {
