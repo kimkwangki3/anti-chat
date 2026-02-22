@@ -3,6 +3,14 @@ apply plugin: 'com.android.application'
 android {
     namespace = "com.peach.chat"
     compileSdk = rootProject.ext.compileSdkVersion
+    signingConfigs {
+        release {
+            storeFile file('keykkk')
+            storePassword 'Ms10011001!'
+            keyAlias 'key0'
+            keyPassword 'rlaehdgo123!@#'
+        }
+    }
     defaultConfig {
         applicationId "com.peach.chat"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -20,6 +28,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }

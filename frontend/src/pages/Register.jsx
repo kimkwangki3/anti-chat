@@ -10,18 +10,23 @@ const Register = () => {
         gender: 'none',
         birthdate: '',
         region: '',
-        recommender: ''
+        recommender: '',
+        agreedToPrivacy: false
     });
     const { register, isLoading, error } = useAuthStore();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.agreedToPrivacy) {
+            alert('개인정보 처리방침에 동의해 주세요.');
+            return;
+        }
         const success = await register(formData);
         if (success) navigate('/');
     };
@@ -152,6 +157,22 @@ const Register = () => {
                                 value={formData.region}
                                 onChange={handleChange}
                             />
+                        </div>
+
+                        {/* 개인정보 동의 체크박스 */}
+                        <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-2xl border border-white/5">
+                            <input
+                                type="checkbox"
+                                name="agreedToPrivacy"
+                                id="agreedToPrivacy"
+                                checked={formData.agreedToPrivacy}
+                                onChange={handleChange}
+                                className="w-5 h-5 accent-[#FF8C69] cursor-pointer"
+                                required
+                            />
+                            <label htmlFor="agreedToPrivacy" className="flex-1 text-[11px] font-bold text-[#6b6b8a] cursor-pointer">
+                                <Link to="/privacy-policy" className="text-[#FF8C69] hover:underline" target="_blank">개인정보 처리방침</Link>에 동의합니다. (필수)
+                            </label>
                         </div>
 
                         <button

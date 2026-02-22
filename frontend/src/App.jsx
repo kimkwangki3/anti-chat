@@ -20,6 +20,7 @@ import SuperAdminChannels from './pages/SuperAdminChannels';
 import SuperAdminChannelDetail from './pages/SuperAdminChannelDetail';
 import SuperAdminChats from './pages/SuperAdminChats';
 import SuperAdminPolls from './pages/SuperAdminPolls';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 
 const ProtectedLayout = ({ children }) => {
   const { token } = useAuthStore();
@@ -147,6 +148,7 @@ function App() {
               <SuperAdminPolls />
             </ProtectedLayout>
           } />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         </Routes>
       </SocketProvider>
     </BrowserRouter>
