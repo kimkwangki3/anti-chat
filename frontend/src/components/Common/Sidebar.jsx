@@ -33,7 +33,7 @@ const Sidebar = () => {
     const urlChannelId = params.get('channelId') || currentChannel?._id;
 
     const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
-    const pendingBadge = pendingCounts[urlChannelId] || 0;
+    const pendingBadge = (pendingCounts && pendingCounts[urlChannelId]) || 0;
     const totalUnreadAll = Object.values(unreadCounts || {}).reduce((acc, c) => acc + (c?.notice || 0) + (c?.post || 0) + (c?.chat || 0), 0);
 
     const menuItems = [
