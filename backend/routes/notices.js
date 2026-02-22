@@ -5,16 +5,11 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 
-// Multer 설정
-const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename(req, file, cb) {
-        cb(null, `${Date.now()}_${file.originalname}`);
-    }
-});
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
 
+// Multer 설정 (메모리 스토리지 사용)
+const storage = multer.memoryStorage();
 const upload = multer({
     storage,
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB 제한
@@ -51,7 +46,7 @@ router.post('/', protect, admin, async (req, res) => {
 });
 
 // @route   POST /api/notices/upload
-// @desc    Upload an image for notice
+// @desc    Upload an image for notice (Cloudinary 이용)
 // @access  Private/Admin
 router.post('/upload', protect, admin, upload.single('image'), (req, res) => {
     try {
@@ -59,10 +54,25 @@ router.post('/upload', protect, admin, upload.single('image'), (req, res) => {
             return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
         }
 
-        // 로컬 저장 시 상대 경로 반환 (/uploads/파일명)
-        // 프론트엔드 getFileUrl에서 절대 경로로 변환함
-        const imageUrl = `/uploads/${req.file.filename}`;
-        res.json({ imageUrl });
+        // Cloudinary 업로드 스트림 생성
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'notices',
+                resource_type: 'auto'
+            },
+            (error, result) => {
+                if (error) {
+                    console.error('Cloudinary 업로드 에러:', error);
+                    return res.status(500).json({ message: 'Cloudinary 업로드 중 오류가 발생했습니다.' });
+                }
+
+                // 업로드 성공 시 안전한 URL 반환
+                res.json({ imageUrl: result.secure_url });
+            }
+        );
+
+        // 버퍼를 스트림으로 변환하여 업로드
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
 
     } catch (error) {
         console.error('파일 업로드 에러:', error);
