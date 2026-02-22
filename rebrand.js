@@ -2,18 +2,18 @@ const fs = require('fs');
 const path = require('path');
 
 const replacements = [
-    [/peach-chat/g, 'peach-chat'],
-    [/PeachChat/g, 'PeachChat'],
-    [/Peach Chat/g, 'Peach Chat'],
-    [/peach chat/g, 'peach chat'],
+    [/peach-chat/gi, 'peach-chat'],
+    [/PeachChat/gi, 'PeachChat'],
+    [/Peach Chat/gi, 'Peach Chat'],
+    [/Peach Chat/gi, 'peach chat'],
     [/PEACH/g, 'PEACH'],
-    [/"peach"/g, '"peach"'],
+    [/com\.peach\.chat/g, 'com.scpeach.chat'],
     // Color replacements
     [/#FF8C69/g, '#FF8C69'],
     [/#FFB5A0/g, '#FFB5A0'],
-    [/#E8735A/g, '#E8735A'],
     [/#E8735A/g, '#E8735A']
 ];
+
 
 function walk(dir) {
     const files = fs.readdirSync(dir);
