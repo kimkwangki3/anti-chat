@@ -48,8 +48,9 @@ router.post('/', protect, admin, async (req, res) => {
 // @route   POST /api/notices/upload
 // @desc    Upload an image for notice (Cloudinary 이용)
 // @access  Private
-router.post('/upload', protect, upload.single('image'), (req, res) => {
+router.post('/upload', protect, upload.single('file'), (req, res) => {
     try {
+        console.log('[Notice Upload] Request received. Body:', req.body);
         console.log('[Notice Upload] File received:', req.file ? req.file.originalname : 'NONE');
         if (!req.file) {
             return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });

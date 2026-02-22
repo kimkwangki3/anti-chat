@@ -34,9 +34,7 @@ const useNoticeStore = create((set, get) => ({
 
     uploadImage: async (formData) => {
         try {
-            const response = await axios.post('/notices/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await axios.post('/notices/upload', formData);
             return response.data.imageUrl;
         } catch (error) {
             console.error('이미지 업로드 실패:', error);
