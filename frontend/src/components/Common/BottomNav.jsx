@@ -67,7 +67,7 @@ const BottomNav = () => {
 
     const activeChannelId = urlChannelId || fallbackChannelId;
     const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
-    const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
+    const totalUnreadAll = Object.values(unreadCounts || {}).reduce((acc, c) => acc + (c?.notice || 0) + (c?.post || 0) + (c?.chat || 0), 0);
 
     const navItems = [
         { icon: 'home', label: '홈', path: '/', badge: totalUnreadAll },

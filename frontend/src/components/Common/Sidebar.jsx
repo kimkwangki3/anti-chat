@@ -34,7 +34,7 @@ const Sidebar = () => {
 
     const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
     const pendingBadge = pendingCounts[urlChannelId] || 0;
-    const totalUnreadAll = Object.values(unreadCounts).reduce((acc, c) => acc + (c.notice || 0) + (c.post || 0) + (c.chat || 0), 0);
+    const totalUnreadAll = Object.values(unreadCounts || {}).reduce((acc, c) => acc + (c?.notice || 0) + (c?.post || 0) + (c?.chat || 0), 0);
 
     const menuItems = [
         { id: 'dashboard', label: '홈', icon: 'home', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
@@ -65,8 +65,8 @@ const Sidebar = () => {
             <button
                 onClick={() => navigate(item.path)}
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all group ${active
-                        ? 'bg-white/8 text-white'
-                        : 'text-[#a1a1aa] hover:bg-white/5 hover:text-white'
+                    ? 'bg-white/8 text-white'
+                    : 'text-[#a1a1aa] hover:bg-white/5 hover:text-white'
                     }`}
             >
                 <div className="flex items-center gap-3">

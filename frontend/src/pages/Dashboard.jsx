@@ -16,7 +16,7 @@ const Dashboard = () => {
     const [stats, setStats] = useState(null);
     const [isStatsLoading, setIsStatsLoading] = useState(false);
 
-    const totalPending = Object.values(pendingCounts).reduce((s, n) => s + n, 0);
+    const totalPending = Object.values(pendingCounts || {}).reduce((s, n) => s + n, 0);
     const totalUnread = Object.values(unreadCounts || {}).reduce((acc, counts) => {
         if (!counts) return acc;
         return acc + (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0);
