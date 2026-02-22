@@ -24,7 +24,8 @@ const NoticePage = () => {
     const queryParams = new URLSearchParams(location.search);
     const channelId = queryParams.get('channelId');
 
-    const isAdmin = user?.role === 'admin' && currentChannel?.ownerId?._id === user?._id;
+    const isAdmin = user?.role === 'superadmin' ||
+        (user?.role === 'admin' && (currentChannel?.ownerId?._id === user?._id || currentChannel?.ownerId === user?._id));
 
     useEffect(() => {
         if (channelId) {
