@@ -142,7 +142,7 @@ const NoticePage = () => {
                                 {isAdmin && (
                                     <button
                                         onClick={() => { if (window.confirm('공지를 삭제하시겠습니까?')) deleteNotice(notice._id); }}
-                                        className="absolute -right-12 top-0 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-red-500/50 hover:text-red-500 text-[9px] font-bold uppercase"
+                                        className="absolute -top-1 -right-1 sm:-right-12 sm:top-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-2 text-red-500/50 hover:text-red-500 text-[10px] font-bold uppercase"
                                     >
                                         [ 삭제 ]
                                     </button>
