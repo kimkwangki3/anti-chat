@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useChatStore from '../../store/chatStore';
 import useAuthStore from '../../store/authStore';
+import { getFileUrl } from '../../utils/fileUtils';
 
 const MessageList = () => {
     const { messages, currentRoom } = useChatStore();
@@ -9,12 +10,6 @@ const MessageList = () => {
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
-
-    const getFileUrl = (url) => {
-        if (!url) return '';
-        if (url.startsWith('http')) return url;
-        return `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${url}`;
     };
 
     useEffect(() => {

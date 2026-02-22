@@ -5,17 +5,15 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 
-// Multer 설정
-const storage = multer.diskStorage({
-    destination(req, file, cb) {
-        cb(null, 'uploads/');
-    },
-    filename(req, file, cb) {
-        cb(null, `${Date.now()}_${file.originalname}`);
-    }
-});
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
 
-const upload = multer({ storage });
+// Multer Storage 설정 (메모리 스토리지 사용)
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB 제한
+});
 
 // @route   POST /api/notices
 // @desc    공지사항 생성 (관리자 전용)
@@ -51,11 +49,35 @@ router.post('/', protect, admin, async (req, res) => {
 // @desc    Upload an image for notice
 // @access  Private/Admin
 router.post('/upload', protect, admin, upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
+        }
+
+        // Cloudinary 업로드 스트림 생성
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'notices',
+                resource_type: 'auto'
+            },
+            (error, result) => {
+                if (error) {
+                    console.error('Cloudinary 업로드 에러:', error);
+                    return res.status(500).json({ message: 'Cloudinary 업로드 중 오류가 발생했습니다.' });
+                }
+
+                // 업로드 성공 시 안전한 URL 반환
+                res.json({ imageUrl: result.secure_url });
+            }
+        );
+
+        // 버퍼를 스트림으로 변환하여 업로드
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+
+    } catch (error) {
+        console.error('파일 업로드 에러:', error);
+        res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.' });
     }
-    const imageUrl = `/uploads/${req.file.filename}`;
-    res.json({ imageUrl });
 });
 
 // @route   GET /api/notices/channel/:channelId

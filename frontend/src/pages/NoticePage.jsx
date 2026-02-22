@@ -5,6 +5,7 @@ import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import { useSocket } from '../socket/SocketContext';
 import useNotificationStore from '../store/notificationStore';
+import { getFileUrl } from '../utils/fileUtils';
 
 const NoticePage = () => {
     const { notices, fetchNotices, createNotice, deleteNotice, uploadImage, markAsRead, isLoading } = useNoticeStore();
@@ -129,10 +130,10 @@ const NoticePage = () => {
                                 {notice.imageUrl && (
                                     <div className="mb-4 rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-inner group-hover:border-[#FF8C69]/30 transition-all">
                                         <img
-                                            src={`http://localhost:5000${notice.imageUrl}`}
+                                            src={getFileUrl(notice.imageUrl)}
                                             alt="공지 이미지"
                                             className="w-full h-auto max-h-[500px] object-contain hover:scale-105 transition-transform duration-700 pointer-events-auto cursor-zoom-in"
-                                            onClick={() => window.open(`http://localhost:5000${notice.imageUrl}`, '_blank')}
+                                            onClick={() => window.open(getFileUrl(notice.imageUrl), '_blank')}
                                         />
                                     </div>
                                 )}
