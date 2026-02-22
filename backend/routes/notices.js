@@ -63,7 +63,10 @@ router.post('/upload', protect, admin, upload.single('image'), (req, res) => {
             (error, result) => {
                 if (error) {
                     console.error('Cloudinary 업로드 에러:', error);
-                    return res.status(500).json({ message: 'Cloudinary 업로드 중 오류가 발생했습니다.' });
+                    return res.status(500).json({
+                        message: 'Cloudinary 업로드 중 오류가 발생했습니다.',
+                        error: error.message
+                    });
                 }
 
                 // 업로드 성공 시 안전한 URL 반환
