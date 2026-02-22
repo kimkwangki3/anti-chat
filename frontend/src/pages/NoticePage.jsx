@@ -57,8 +57,14 @@ const NoticePage = () => {
 
         if (selectedImage) {
             const formData = new FormData();
-            formData.append('image', selectedImage);
+            formData.append('file', selectedImage);
             imageUrl = await uploadImage(formData);
+
+            if (!imageUrl) {
+                alert('이미지 업로드에 실패했습니다. (서버/Cloudinary 설정 확인 필요)');
+                setIsUploading(false);
+                return;
+            }
         }
 
         const success = await createNotice(channelId, '공지', content, imageUrl);
