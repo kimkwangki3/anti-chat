@@ -15,7 +15,7 @@ const SettingsPage = () => {
     const ownedChannelId = myChannels.find(m =>
         (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)
     )?.channelId?._id;
-    const [pushStatus, setPushStatus] = useState(Notification.permission);
+    const [pushStatus, setPushStatus] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
     const [isSubscribing, setIsSubscribing] = useState(false);
 
     const [isEditingName, setIsEditingName] = useState(false);
@@ -38,6 +38,11 @@ const SettingsPage = () => {
     const handleSubscribe = async () => {
         setIsSubscribing(true);
         try {
+            if (typeof Notification === 'undefined') {
+                alert('이 브라우저는 웹 푸시 알림을 지원하지 않습니다. iOS라면 홈 화면에 추가 후 다시 시도해 주세요.');
+                setIsSubscribing(false);
+                return;
+            }
             const permission = await Notification.requestPermission();
             setPushStatus(permission);
             if (permission === 'granted') {

@@ -6,7 +6,7 @@ const useSettingsStore = create(
         (set) => ({
             soundType: 'peach',
             volume: 0.5,
-            notificationPermission: Notification.permission,
+            notificationPermission: typeof Notification !== 'undefined' ? Notification.permission : 'default',
 
             sounds: {
                 peach: 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3',
