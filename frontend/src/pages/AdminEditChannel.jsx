@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useChannelStore from '../store/channelStore';
 import useAuthStore from '../store/authStore';
+import axios from '../api/axios';
 
 const AdminEditChannel = () => {
     const navigate = useNavigate();
