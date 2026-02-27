@@ -83,6 +83,21 @@ const usePostStore = create((set, get) => ({
         }
     },
 
+    deletePost: async (postId) => {
+        set({ isLoading: true, error: null });
+        try {
+            await axios.delete(`/posts/${postId}`);
+            set((state) => ({
+                posts: state.posts.filter(p => p._id !== postId),
+                isLoading: false
+            }));
+            return true;
+        } catch (error) {
+            set({ error: '게시글 삭제에 실패했습니다.', isLoading: false });
+            return false;
+        }
+    },
+
     reset: () => set({ posts: [], currentPost: null, isLoading: false, error: null })
 }));
 
