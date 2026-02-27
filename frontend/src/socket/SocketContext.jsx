@@ -32,19 +32,26 @@ export const useSocket = () => useContext(SocketContext);
 export const SocketProvider = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { user } = useAuthStore();
+    const { user, token, sessionId: storeSessionId } = useAuthStore();
     const { currentChannel } = useChannelStore();
     const { addNotification, incrementUnreadCount, removeNotification, notifications, incrementPendingCount } = useNotificationStore();
     const { soundType, volume, sounds } = useSettingsStore();
     const { markMessagesRead } = useChatStore();
     const [onlineCount, setOnlineCount] = useState(0);
 
-    // [고도화] 알림 억제 여부 판단 함수
+    // [고도화] 리스너 호출 시 최신 상태 참조를 위한 Ref 사용
+    const locationRef = useRef(location);
+    const channelRef = useRef(currentChannel);
+
+    useEffect(() => { locationRef.current = location; }, [location]);
+    useEffect(() => { channelRef.current = currentChannel; }, [currentChannel]);
+
+    // [고도화] 알림 억제 여부 판단 함수 (Ref 사용으로 안정화)
     const shouldSuppressNotification = (targetType, targetChannelId, targetRoomId) => {
-        const params = new URLSearchParams(location.search);
+        const params = new URLSearchParams(locationRef.current.search);
         const currentChannelId = params.get('channelId');
         const currentRoomId = params.get('roomId');
-        const pathname = location.pathname;
+        const pathname = locationRef.current.pathname;
 
         // 1. 공지사항: 해당 채널의 공지사항 페이지에 있는 경우
         if (targetType === 'notice' && pathname === '/notices' && currentChannelId === targetChannelId) {
@@ -152,10 +159,13 @@ export const SocketProvider = ({ children }) => {
 
         // 연결 시도
         if (!socket.connected) {
-            const sid = useAuthStore.getState().sessionId;
-            socket.auth = { token }; // authStore에서 직접 가져올 수도 있음
+            const sid = storeSessionId || useAuthStore.getState().sessionId;
+            socket.auth = { token };
             socket.connect();
             socket.emit('setup', { ...user, sessionId: sid });
+
+            // 연결 시 푸시 구독 시도
+            subscribeToPush();
         }
 
         socket.on('connected', () => console.log('[SOCKET] Connected'));
@@ -175,7 +185,7 @@ export const SocketProvider = ({ children }) => {
             // 여기서 disconnect를 바로 부르면 소극적 flapping이 생길 수 있으나, 
             // user가 완전히 null이 된 경우에만 처리하도록 위에서 분기함.
         };
-    }, [user?._id, navigate]); // user._id만 의존성으로 가져가서 객체 참조 변경에 따른 flapping 방지
+    }, [user?._id, token, navigate]); // token 추가하여 인증 정보 변경 시 재연결 보장
 
     // 2. 알림 및 전역 이벤트 리스너 (한 번만 등록)
     useEffect(() => {
