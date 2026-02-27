@@ -142,9 +142,12 @@ router.put('/:id', protect, async (req, res) => {
 // @access  Private
 router.post('/upload', protect, upload.single('file'), (req, res) => {
     try {
+        console.log('[Channel Upload] Request received.');
         if (!req.file) {
+            console.warn('[Channel Upload] No file received in request.');
             return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
         }
+        console.log('[Channel Upload] File received:', req.file.originalname, 'Size:', req.file.size);
 
         const uploadStream = cloudinary.uploader.upload_stream(
             {
@@ -153,19 +156,20 @@ router.post('/upload', protect, upload.single('file'), (req, res) => {
             },
             (error, result) => {
                 if (error) {
-                    console.error('Cloudinary 업로드 에러:', error);
+                    console.error('[Channel Upload] Cloudinary upload error:', error);
                     return res.status(500).json({
                         message: 'Cloudinary 업로드 중 오류가 발생했습니다.',
                         error: error.message
                     });
                 }
+                console.log('[Channel Upload] Cloudinary upload success:', result.secure_url);
                 res.json({ imageUrl: result.secure_url });
             }
         );
 
         streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
     } catch (error) {
-        console.error('파일 업로드 에러:', error);
+        console.error('[Channel Upload] Global exception:', error);
         res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.' });
     }
 });
