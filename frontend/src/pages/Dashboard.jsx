@@ -158,28 +158,57 @@ const Dashboard = () => {
                             </h2>
                             <div className="space-y-3">
                                 {user?.role === 'admin' && (
-                                    <div
-                                        onClick={() => navigate(`/admin/members?channelId=${myChannels.find(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)?.channelId?._id || myChannels[0]?.channelId?._id}`)}
-                                        className="relative p-8 rounded-[2.5rem] bg-gradient-to-br from-[#FF8C69] to-[#E8735A] shadow-2xl shadow-[#FF8C69]/30 cursor-pointer hover:scale-[1.02] transition-all group overflow-hidden mb-8"
-                                    >
-                                        <div className="absolute top-0 right-0 p-4 opacity-20 text-7xl group-hover:scale-125 transition-transform">👑</div>
-                                        <div className="relative z-10">
-                                            <div className="flex items-center gap-2 mb-4">
-                                                <span className={`w-2.5 h-2.5 bg-white rounded-full ${totalPending > 0 ? 'animate-ping' : ''}`}></span>
-                                                <span className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em]">채널 운영 센터</span>
+                                    <div className="space-y-4">
+                                        <div
+                                            onClick={() => {
+                                                const adminChannel = myChannels.find(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id);
+                                                navigate(`/admin/members?channelId=${adminChannel?.channelId?._id || myChannels[0]?.channelId?._id}`);
+                                            }}
+                                            className="relative p-8 rounded-[2.5rem] bg-gradient-to-br from-[#FF8C69] to-[#E8735A] shadow-2xl shadow-[#FF8C69]/30 cursor-pointer hover:scale-[1.02] transition-all group overflow-hidden"
+                                        >
+                                            <div className="absolute top-0 right-0 p-4 opacity-20 text-7xl group-hover:scale-125 transition-transform">👑</div>
+                                            <div className="relative z-10">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <span className={`w-2.5 h-2.5 bg-white rounded-full ${totalPending > 0 ? 'animate-ping' : ''}`}></span>
+                                                    <span className="text-[10px] font-black text-white/80 uppercase tracking-[0.3em]">채널 운영 센터</span>
+                                                </div>
+                                                <h3 className="text-2xl font-black text-white mb-2">
+                                                    {totalPending > 0 ? `신규 가입 신청 ${totalPending}건` : '채널 멤버 관리'}
+                                                </h3>
+                                                <p className="text-white/80 text-sm font-bold">
+                                                    {totalPending > 0
+                                                        ? '운영 중인 채널에 새로운 멤버의 가입 신청이 있습니다. 지금 바로 승인하세요!'
+                                                        : '내 채널에 가입한 멤버들을 관리하고 권한을 설정할 수 있습니다.'}
+                                                </p>
                                             </div>
-                                            <h3 className="text-2xl font-black text-white mb-2">
-                                                {totalPending > 0 ? `신규 가입 신청 ${totalPending}건` : '채널 멤버 관리'}
-                                            </h3>
-                                            <p className="text-white/80 text-sm font-bold">
-                                                {totalPending > 0
-                                                    ? '운영 중인 채널에 새로운 멤버의 가입 신청이 있습니다. 지금 바로 승인하세요!'
-                                                    : '내 채널에 가입한 멤버들을 관리하고 권한을 설정할 수 있습니다.'}
-                                            </p>
+                                            <div className="mt-6 flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest bg-black/20 w-fit px-4 py-2 rounded-full border border-white/20 group-hover:bg-white group-hover:text-[#FF8C69] transition-colors">
+                                                매니지먼트 접속 <span className="text-[8px]">▶</span>
+                                            </div>
                                         </div>
-                                        <div className="mt-6 flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest bg-black/20 w-fit px-4 py-2 rounded-full border border-white/20 group-hover:bg-white group-hover:text-[#FF8C69] transition-colors">
-                                            매니지먼트 접속 <span className="text-[8px]">▶</span>
-                                        </div>
+
+                                        {/* 관리자용 채팅 알림 추가 */}
+                                        {myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
+                                            const chId = membership.channelId?._id;
+                                            const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0 };
+                                            if (counts.chat === 0) return null;
+                                            return (
+                                                <div
+                                                    key={`admin-chat-noti-${chId}`}
+                                                    onClick={() => {
+                                                        setCurrentChannel(membership.channelId);
+                                                        navigate(`/chat?channelId=${chId}`);
+                                                    }}
+                                                    className="flex items-center gap-4 p-6 bg-[#23232f] border border-[#FF8C69]/30 rounded-[2rem] cursor-pointer hover:bg-[#2a2a3a] transition-all group shadow-2xl animate-pulse"
+                                                >
+                                                    <div className="w-14 h-14 rounded-2xl bg-[#FF8C69]/10 flex items-center justify-center text-3xl shadow-inner">💬</div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[10px] font-black text-[#FF8C69] uppercase tracking-widest mb-1">새로운 대화 요청</p>
+                                                        <p className="text-sm font-bold text-white truncate">{membership.channelId?.name} 채널에 {counts.chat}개의 읽지 않은 대화가 있습니다.</p>
+                                                    </div>
+                                                    <span className="bg-[#FF8C69] text-white text-xs font-black px-4 py-2 rounded-full shadow-lg shadow-[#FF8C69]/20">접속하기</span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 )}
                                 {user?.role === 'member' && myChannels.map(membership => {
@@ -343,16 +372,59 @@ const Dashboard = () => {
                         <section className="mt-20 mb-32">
                             <div className="flex items-center justify-between mb-8">
                                 <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 활발한 대화 목록
+                                    <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 채널 대화 스테이션
                                 </h2>
                                 <button
                                     onClick={() => navigate('/chat')}
                                     className="text-[11px] font-bold text-[#FF8C69] hover:underline uppercase tracking-widest"
                                 >
-                                    전체 보기
+                                    전체 대화방 보기
                                 </button>
                             </div>
-                            <ActiveChatList channelId={myChannels.find(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)?.channelId?._id} />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
+                                    const chId = membership.channelId?._id;
+                                    const themeColor = membership.channelId?.cardColor || '#FF8C69';
+                                    const chatCount = unreadCounts[chId]?.chat || 0;
+
+                                    return (
+                                        <div
+                                            key={`chat-card-${chId}`}
+                                            onClick={() => {
+                                                setCurrentChannel(membership.channelId);
+                                                navigate(`/chat?channelId=${chId}`);
+                                            }}
+                                            className="relative bg-[#23232f] p-8 rounded-[2.5rem] border border-white/5 hover:border-[#FF8C69]/40 transition-all group cursor-pointer overflow-hidden shadow-2xl"
+                                        >
+                                            <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-8xl group-hover:scale-125 transition-transform" style={{ color: themeColor }}>💬</div>
+                                            <div className="relative z-10">
+                                                <div className="flex items-center justify-between mb-6">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-3xl shadow-inner group-hover:scale-110 transition-transform">🏘️</div>
+                                                        <div>
+                                                            <h3 className="text-xl font-bold text-white tracking-tight">{membership.channelId?.name}</h3>
+                                                            <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest mt-1">대화방 즉시 입장</p>
+                                                        </div>
+                                                    </div>
+                                                    {chatCount > 0 && (
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            <span className="px-3 py-1 bg-red-500 text-white text-[10px] font-black rounded-full animate-bounce shadow-lg shadow-red-500/20">NEW MESSAGE</span>
+                                                            <span className="text-[9px] font-bold text-red-500 uppercase tracking-tighter">{chatCount}개의 읽지 않은 대화</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
+                                                    <span className="text-[10px] font-black text-[#444466] uppercase tracking-[0.2em]">Channel Communication Hub</span>
+                                                    <div className="flex items-center gap-2 text-[10px] font-black text-[#FF8C69] uppercase tracking-widest group-hover:translate-x-2 transition-transform">
+                                                        접속하기 <span>▶</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </section>
                     )}
                 </>
