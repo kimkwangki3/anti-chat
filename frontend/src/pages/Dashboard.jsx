@@ -268,25 +268,66 @@ const Dashboard = () => {
                                     <div
                                         key={membership.channelId?._id}
                                         onClick={() => handleChannelClick(membership.channelId)}
-                                        className="group relative bg-[#23232f] p-8 rounded-[2.5rem] border border-white/5 hover:border-[#FF8C69]/30 transition-all cursor-pointer overflow-hidden flex flex-col h-full shadow-xl hover:shadow-[#FF8C69]/5"
+                                        className="group relative bg-[#23232f] p-8 rounded-[2.5rem] border transition-all cursor-pointer overflow-hidden flex flex-col h-full shadow-xl"
+                                        style={{
+                                            borderColor: `${membership.channelId?.cardColor || '#FF8C69'}1A`,
+                                            boxShadow: `0 20px 25px -5px ${membership.channelId?.cardColor || '#FF8C69'}10`
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.borderColor = `${membership.channelId?.cardColor || '#FF8C69'}4D`;
+                                            e.currentTarget.style.boxShadow = `0 20px 25px -5px ${membership.channelId?.cardColor || '#FF8C69'}20`;
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.borderColor = `${membership.channelId?.cardColor || '#FF8C69'}1A`;
+                                            e.currentTarget.style.boxShadow = `0 20px 25px -5px ${membership.channelId?.cardColor || '#FF8C69'}10`;
+                                        }}
                                     >
-                                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#FF8C69] opacity-[0.03] rounded-full group-hover:scale-150 transition-transform duration-700"></div>
+                                        <div
+                                            className="absolute -top-10 -right-10 w-32 h-32 opacity-[0.05] rounded-full group-hover:scale-150 transition-transform duration-700"
+                                            style={{ backgroundColor: membership.channelId?.cardColor || '#FF8C69' }}
+                                        ></div>
                                         <div className="flex justify-between items-start mb-6">
-                                            <div className="w-12 h-12 bg-[#FF8C69]/10 text-[#FF8C69] rounded-2xl flex items-center justify-center text-xl shadow-inner">🏘️</div>
+                                            {membership.channelId?.profileImage ? (
+                                                <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-inner flex-shrink-0">
+                                                    <img src={membership.channelId.profileImage} alt="" className="w-full h-full object-cover" />
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner flex-shrink-0"
+                                                    style={{
+                                                        backgroundColor: `${membership.channelId?.cardColor || '#FF8C69'}1A`,
+                                                        color: membership.channelId?.cardColor || '#FF8C69'
+                                                    }}
+                                                >🏘️</div>
+                                            )}
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm ${membership.status === 'approved' ? 'bg-[#06d6a0]/10 text-[#06d6a0] border border-[#06d6a0]/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'}`}>
+                                                <span
+                                                    className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm border`}
+                                                    style={{
+                                                        backgroundColor: membership.status === 'approved' ? '#06d6a01A' : '#eab3081A',
+                                                        color: membership.status === 'approved' ? '#06d6a0' : '#eab308',
+                                                        borderColor: membership.status === 'approved' ? '#06d6a033' : '#eab30833'
+                                                    }}
+                                                >
                                                     {membership.status === 'approved' ? '참여 중' : '대기 중'}
                                                 </span>
                                             </div>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-[#FF8C69] transition-colors truncate tracking-tight">{membership.channelId?.name}</h3>
+                                        <h3
+                                            className="text-2xl font-bold text-white mb-2 transition-colors truncate tracking-tight"
+                                            onMouseEnter={(e) => e.currentTarget.style.color = membership.channelId?.cardColor || '#FF8C69'}
+                                            onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
+                                        >{membership.channelId?.name}</h3>
                                         <p className="text-[#6b6b8a] text-xs line-clamp-2 mb-8 h-10 leading-relaxed font-medium">{membership.channelId?.description}</p>
                                         <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                                             <div className="flex border-t-0 p-0 items-center gap-2">
                                                 <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-[#06d6a0]' : 'bg-gray-600'}`}></div>
                                                 <span className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-widest font-mono">운영자 {membership.channelId?.ownerId?.isOnline ? '접속 중' : '미접속'}</span>
                                             </div>
-                                            <div className="text-[#FF8C69] opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 font-bold text-xs uppercase tracking-tighter flex items-center gap-1">
+                                            <div
+                                                className="opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 font-bold text-xs uppercase tracking-tighter flex items-center gap-1"
+                                                style={{ color: membership.channelId?.cardColor || '#FF8C69' }}
+                                            >
                                                 입장 <span className="text-[8px]">▶</span>
                                             </div>
                                         </div>
