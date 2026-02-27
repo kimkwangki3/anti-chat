@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import ChatSidebar from '../components/Chat/ChatSidebar';
 import MessageList from '../components/Chat/MessageList';
 import useChatStore from '../store/chatStore';
+import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
 import useAuthStore from '../store/authStore';
 import socket from '../socket/socket';
@@ -12,6 +13,7 @@ const ChatPage = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const { currentRoom, setCurrentRoom, sendMessage, addMessage, fetchRooms, rooms, uploadFile } = useChatStore();
+    const { currentChannel } = useChannelStore();
     const { resetUnreadCount } = useNotificationStore();
     const { user, token } = useAuthStore();
     const location = useLocation();
