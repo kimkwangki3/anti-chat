@@ -123,7 +123,10 @@ const ChannelSearchPage = () => {
 
                                 <p className="text-[#6b6b8a] text-xs leading-relaxed mb-10 flex-1 font-medium italic">{channel.description}</p>
 
-                                <div className="flex items-center justify-between mt-auto border-t border-white/5 pt-6 relative z-10">
+                                <div
+                                    className="flex items-center justify-between mt-auto border-t pt-6 relative z-10"
+                                    style={{ borderColor: `${channel.cardColor || '#4f6ef7'}1A` }}
+                                >
                                     <div className="flex items-center gap-3">
                                         <div
                                             className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border"

@@ -319,7 +319,10 @@ const Dashboard = () => {
                                             onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
                                         >{membership.channelId?.name}</h3>
                                         <p className="text-[#6b6b8a] text-xs line-clamp-2 mb-8 h-10 leading-relaxed font-medium">{membership.channelId?.description}</p>
-                                        <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
+                                        <div
+                                            className="mt-auto pt-6 border-t flex items-center justify-between"
+                                            style={{ borderColor: `${membership.channelId?.cardColor || '#FF8C69'}1A` }}
+                                        >
                                             <div className="flex border-t-0 p-0 items-center gap-2">
                                                 <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-[#06d6a0]' : 'bg-gray-600'}`}></div>
                                                 <span className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-widest font-mono">운영자 {membership.channelId?.ownerId?.isOnline ? '접속 중' : '미접속'}</span>
