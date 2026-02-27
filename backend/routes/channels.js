@@ -22,9 +22,9 @@ router.post('/', protect, admin, async (req, res) => {
     const { name, description } = req.body;
 
     try {
-        const alreadyOwner = await Channel.findOne({ ownerId: req.user._id });
-        if (alreadyOwner) {
-            return res.status(400).json({ message: '관리자는 한 개의 채널만 개설할 수 있습니다.' });
+        const ownedChannelsCount = await Channel.countDocuments({ ownerId: req.user._id });
+        if (ownedChannelsCount >= 4) {
+            return res.status(400).json({ message: '관리자는 최대 4개의 채널까지 개설할 수 있습니다.' });
         }
 
         const channelExists = await Channel.findOne({ name });
