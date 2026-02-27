@@ -97,12 +97,23 @@ const useAuthStore = create((set) => ({
 
         try {
             const response = await axios.get('/auth/me');
-            localStorage.setItem('user', JSON.stringify(response.data));
-            set({ user: response.data });
+            const userData = response.data;
+
+            // 유저 정보 저장
+            localStorage.setItem('user', JSON.stringify(userData));
+
+            // 만약 서버에서 준 유저 정보에 sessionId가 있다면 동기화 (세션 불일치 방지)
+            if (userData.currentSessionId) {
+                localStorage.setItem('sessionId', userData.currentSessionId);
+                set({ user: userData, sessionId: userData.currentSessionId });
+            } else {
+                set({ user: userData });
+            }
         } catch (error) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            set({ user: null, token: null });
+            localStorage.removeItem('sessionId');
+            set({ user: null, token: null, sessionId: null });
         }
     }
 }));

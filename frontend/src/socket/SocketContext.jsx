@@ -143,182 +143,191 @@ export const SocketProvider = ({ children }) => {
         }, 5000);
     };
 
+    // 1. 소켓 연결 및 기본 설정 (user 변경 시에만 실행)
     useEffect(() => {
-        if (user) {
+        if (!user) {
+            if (socket.connected) socket.disconnect();
+            return;
+        }
+
+        // 연결 시도
+        if (!socket.connected) {
+            const sid = useAuthStore.getState().sessionId;
+            socket.auth = { token }; // authStore에서 직접 가져올 수도 있음
             socket.connect();
-            socket.emit('setup', { ...user, sessionId: useAuthStore.getState().sessionId });
+            socket.emit('setup', { ...user, sessionId: sid });
+        }
 
-            // 로그인 시 푸시 알림 구독 시도
-            subscribeToPush();
+        socket.on('connected', () => console.log('[SOCKET] Connected'));
 
-            socket.on('connected', () => console.log('[SOCKET] Connected'));
+        // 중복 로그인 감지 (강제 로그아웃)
+        socket.on('force_logout', (data) => {
+            console.log('[SOCKET] Force logout event received:', data);
+            alert(data.message || '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.');
+            const { logout } = useAuthStore.getState();
+            logout();
+            navigate('/login');
+        });
 
-            // 중복 로그인 감지 (강제 로그아웃)
-            socket.on('force_logout', (data) => {
-                alert(data.message || '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.');
-                const { logout } = useAuthStore.getState();
-                logout();
-                navigate('/login');
+        return () => {
+            socket.off('connected');
+            socket.off('force_logout');
+            // 여기서 disconnect를 바로 부르면 소극적 flapping이 생길 수 있으나, 
+            // user가 완전히 null이 된 경우에만 처리하도록 위에서 분기함.
+        };
+    }, [user?._id, navigate]); // user._id만 의존성으로 가져가서 객체 참조 변경에 따른 flapping 방지
+
+    // 2. 알림 및 전역 이벤트 리스너 (한 번만 등록)
+    useEffect(() => {
+        if (!user) return;
+
+        console.log('[SOCKET] Registering global listeners');
+
+        const onNotice = (notice) => {
+            const channelId = notice.channelId?._id || notice.channelId;
+            if (!shouldSuppressNotification('notice', channelId)) {
+                addNotificationWithTimer({
+                    id: Date.now() + Math.random(),
+                    type: 'notice',
+                    title: '새 공지사항',
+                    message: notice.title,
+                    channelId,
+                    path: `/notices?channelId=${channelId}`
+                });
+                playNotificationSound();
+            }
+            incrementUnreadCount(channelId, 'notice');
+        };
+
+        const onPost = (post) => {
+            const channelId = post.channelId?._id || post.channelId;
+            if (!shouldSuppressNotification('post', channelId)) {
+                addNotificationWithTimer({
+                    id: Date.now() + Math.random(),
+                    type: 'post',
+                    title: '새 게시글',
+                    message: post.title,
+                    channelId,
+                    path: `/board?channelId=${channelId}`
+                });
+                playNotificationSound();
+            }
+            incrementUnreadCount(channelId, 'post');
+        };
+
+        const onChat = (data) => {
+            const channelId = data.channelId?._id || data.channelId;
+            const roomId = data.roomId;
+            if (!shouldSuppressNotification('chat', channelId, roomId)) {
+                addNotificationWithTimer({
+                    id: Date.now() + Math.random(),
+                    type: 'chat',
+                    title: '새 메시지',
+                    message: `${data.senderName}: ${data.content}`,
+                    channelId,
+                    path: `/chat?channelId=${channelId}&roomId=${roomId}`
+                });
+                playNotificationSound();
+            }
+            incrementUnreadCount(channelId, 'chat');
+        };
+
+        const onMessagesRead = ({ roomId, readerId }) => {
+            markMessagesRead(roomId, readerId);
+        };
+
+        const onMessagesCleared = ({ roomId, updatedRoom }) => {
+            const { currentRoom, updateRoomInList } = useChatStore.getState();
+            if (currentRoom?._id === roomId) {
+                useChatStore.setState({ messages: [] });
+            }
+            updateRoomInList(updatedRoom);
+        };
+
+        const onNewMemberRequest = (data) => {
+            incrementPendingCount(data.channelId);
+            addNotificationWithTimer({
+                id: Date.now() + Math.random(),
+                type: 'member',
+                title: '새 가입 신청',
+                message: `${data.userName}님이 ${data.channelName} 채널에 가입 신청했습니다.`,
+                channelId: data.channelId,
+                path: `/admin/members?channelId=${data.channelId}`
             });
+            playNotificationSound();
+        };
 
-            // 전역 알림 리스너
-            socket.on('notice_received', (notice) => {
-                const channelId = notice.channelId?._id || notice.channelId;
-                console.log('[SOCKET] Notice received:', notice);
-
-                // 현재 해당 페이지에 있다면 팝업/소리 억제
-                if (!shouldSuppressNotification('notice', channelId)) {
-                    addNotificationWithTimer({
-                        id: Date.now() + Math.random(),
-                        type: 'notice',
-                        title: '새 공지사항',
-                        message: notice.title,
-                        channelId,
-                        path: `/notices?channelId=${channelId}`
-                    });
-                    playNotificationSound();
-                }
-                incrementUnreadCount(channelId, 'notice');
-            });
-
-            socket.on('post_received', (post) => {
-                const channelId = post.channelId?._id || post.channelId;
-                console.log('[SOCKET] Post received:', post);
-
-                // 현재 해당 페이지에 있다면 팝업/소리 억제
-                if (!shouldSuppressNotification('post', channelId)) {
-                    addNotificationWithTimer({
-                        id: Date.now() + Math.random(),
-                        type: 'post',
-                        title: '새 게시글',
-                        message: post.title,
-                        channelId,
-                        path: `/board?channelId=${channelId}`
-                    });
-                    playNotificationSound();
-                }
-                incrementUnreadCount(channelId, 'post');
-            });
-
-            socket.on('chat_notification', (data) => {
-                const channelId = data.channelId?._id || data.channelId;
-                const roomId = data.roomId;
-                console.log('[SOCKET] Chat notification received:', data);
-
-                // 현재 해당 채팅방에 있다면 팝업/소리 억제
-                if (!shouldSuppressNotification('chat', channelId, roomId)) {
-                    addNotificationWithTimer({
-                        id: Date.now() + Math.random(),
-                        type: 'chat',
-                        title: '새 메시지',
-                        message: `${data.senderName}: ${data.content}`,
-                        channelId,
-                        path: `/chat?channelId=${channelId}&roomId=${roomId}`
-                    });
-                    playNotificationSound();
-                }
-                incrementUnreadCount(channelId, 'chat');
-            });
-
-            // 읽음 처리 이벤트
-            socket.on('messages_read', ({ roomId, readerId }) => {
-                markMessagesRead(roomId, readerId);
-            });
-
-            // 대화내용 삭제 (동기화)
-            socket.on('messages_cleared', ({ roomId, updatedRoom }) => {
-                const { currentRoom, updateRoomInList } = useChatStore.getState();
-                if (currentRoom?._id === roomId) {
-                    useChatStore.setState({ messages: [] });
-                }
-                updateRoomInList(updatedRoom);
-            });
-
-            // 신규 가입 신청 (관리자만 수신)
-            socket.on('new_member_request', (data) => {
-                console.log('[SOCKET] New member request:', data);
-                incrementPendingCount(data.channelId);
+        const onMemberStatusUpdated = (data) => {
+            const { fetchMyChannels } = useChannelStore.getState();
+            if (data.status === 'approved') {
                 addNotificationWithTimer({
                     id: Date.now() + Math.random(),
                     type: 'member',
-                    title: '새 가입 신청',
-                    message: `${data.userName}님이 ${data.channelName} 채널에 가입 신청했습니다.`,
+                    title: '✅ 채널 가입 승인',
+                    message: `${data.channelName} 채널 가입이 승인되었습니다!`,
                     channelId: data.channelId,
-                    path: `/admin/members?channelId=${data.channelId}`
+                    path: '/'
                 });
-                playNotificationSound();
-            });
-
-            // 가입 승인 / 거절 알림 (일반 회원 수신)
-            socket.on('member_status_updated', (data) => {
-                console.log('[SOCKET] Member status updated:', data);
-                const { fetchMyChannels } = useChannelStore.getState();
-
-                if (data.status === 'approved') {
-                    addNotificationWithTimer({
-                        id: Date.now() + Math.random(),
-                        type: 'member',
-                        title: '✅ 채널 가입 승인',
-                        message: `${data.channelName} 채널 가입이 승인되었습니다!`,
-                        channelId: data.channelId,
-                        path: '/'
-                    });
-                } else if (data.status === 'rejected') {
-                    addNotificationWithTimer({
-                        id: Date.now() + Math.random(),
-                        type: 'member',
-                        title: '❌ 채널 가입 거절',
-                        message: `${data.channelName} 채널 가입이 거절되었습니다.`,
-                        channelId: data.channelId,
-                        path: '/search-channels'
-                    });
-                }
-
-                // 채널 목록 자동 새로고침
-                fetchMyChannels();
-                playNotificationSound();
-            });
-
-            socket.on('new_poll_created', (data) => {
-                console.log('[SOCKET] New poll created:', data);
+            } else if (data.status === 'rejected') {
                 addNotificationWithTimer({
                     id: Date.now() + Math.random(),
-                    type: 'poll',
-                    title: '새 투표 개최 🗳️',
-                    message: data.title,
+                    type: 'member',
+                    title: '❌ 채널 가입 거절',
+                    message: `${data.channelName} 채널 가입이 거절되었습니다.`,
                     channelId: data.channelId,
-                    path: `/polls?channelId=${data.channelId}`
+                    path: '/search-channels'
                 });
-                playNotificationSound();
-            });
+            }
+            fetchMyChannels();
+            playNotificationSound();
+        };
 
-            // 투표 리마인더 (미참여회원)
-            socket.on('poll_reminder', (data) => {
-                console.log('[SOCKET] Poll reminder received:', data);
-                addNotificationWithTimer({
-                    id: Date.now() + Math.random(),
-                    type: 'poll',
-                    title: data.title,
-                    message: data.message,
-                    channelId: data.channelId,
-                    path: `/polls?channelId=${data.channelId}`
-                });
-                playNotificationSound();
+        const onNewPollCreated = (data) => {
+            addNotificationWithTimer({
+                id: Date.now() + Math.random(),
+                type: 'poll',
+                title: '새 투표 개최 🗳️',
+                message: data.title,
+                channelId: data.channelId,
+                path: `/polls?channelId=${data.channelId}`
             });
+            playNotificationSound();
+        };
 
-            return () => {
-                socket.off('notice_received');
-                socket.off('post_received');
-                socket.off('chat_notification');
-                socket.off('messages_read');
-                socket.off('new_member_request');
-                socket.off('member_status_updated');
-                socket.off('new_poll_created');
-                socket.off('poll_reminder');
-                socket.disconnect();
-            };
-        }
-    }, [user, addNotification, incrementUnreadCount, markMessagesRead, incrementPendingCount]);
+        const onPollReminder = (data) => {
+            addNotificationWithTimer({
+                id: Date.now() + Math.random(),
+                type: 'poll',
+                title: data.title,
+                message: data.message,
+                channelId: data.channelId,
+                path: `/polls?channelId=${data.channelId}`
+            });
+            playNotificationSound();
+        };
+
+        socket.on('notice_received', onNotice);
+        socket.on('post_received', onPost);
+        socket.on('chat_notification', onChat);
+        socket.on('messages_read', onMessagesRead);
+        socket.on('messages_cleared', onMessagesCleared);
+        socket.on('new_member_request', onNewMemberRequest);
+        socket.on('member_status_updated', onMemberStatusUpdated);
+        socket.on('new_poll_created', onNewPollCreated);
+        socket.on('poll_reminder', onPollReminder);
+
+        return () => {
+            socket.off('notice_received', onNotice);
+            socket.off('post_received', onPost);
+            socket.off('chat_notification', onChat);
+            socket.off('messages_read', onMessagesRead);
+            socket.off('messages_cleared', onMessagesCleared);
+            socket.off('new_member_request', onNewMemberRequest);
+            socket.off('member_status_updated', onMemberStatusUpdated);
+            socket.off('new_poll_created', onNewPollCreated);
+            socket.off('poll_reminder', onPollReminder);
+        };
+    }, [user?._id]); // user 정보가 바뀌어 로그아웃/로그인 될 때만 리스너 재설정
 
     useEffect(() => {
         if (currentChannel?._id && socket.connected) {
