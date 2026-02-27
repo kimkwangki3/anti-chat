@@ -33,7 +33,7 @@ const PostDetailPage = () => {
     if (!currentPost) return (
         <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center text-[#6b6b8a]">
             <p className="mb-4">게시글을 찾을 수 없습니다.</p>
-            <button onClick={() => navigate('/board')} className="text-[#4f6ef7] hover:underline uppercase text-xs font-bold tracking-widest">목록으로 돌아가기</button>
+            <button onClick={() => navigate('/')} className="text-[#4f6ef7] hover:underline uppercase text-xs font-bold tracking-widest">대시보드로 돌아가기</button>
         </div>
     );
 
@@ -41,7 +41,10 @@ const PostDetailPage = () => {
         <div className="min-h-screen bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto">
             <div className="max-w-4xl mx-auto">
                 <button
-                    onClick={() => navigate('/board')}
+                    onClick={() => {
+                        const channelId = currentPost.channelId?._id || currentPost.channelId;
+                        navigate(`/board?channelId=${channelId}`);
+                    }}
                     className="mb-12 group flex items-center gap-3 text-[10px] font-bold font-mono text-[#444466] hover:text-[#4f6ef7] transition-all uppercase tracking-[0.2em]"
                 >
                     <span className="group-hover:-translate-x-1 transition-transform">←</span> COMMUNITY
