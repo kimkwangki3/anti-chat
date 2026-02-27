@@ -179,6 +179,7 @@ const PollPage = () => {
                                         onVote={handleVote}
                                         onExport={() => handleExport(poll._id, poll.title)}
                                         isAdmin={channelRole === 'admin' || user?.role === 'superadmin'}
+                                        themeColor={themeColor}
                                     />
                                 ))}
                             </div>
@@ -200,6 +201,7 @@ const PollPage = () => {
                                         isClosed={true}
                                         onExport={() => handleExport(poll._id, poll.title)}
                                         isAdmin={true}
+                                        themeColor={themeColor}
                                     />
                                 ))}
                             </div>
@@ -293,7 +295,7 @@ const PollPage = () => {
     );
 };
 
-const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
+const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin, themeColor }) => {
     const [selected, setSelected] = useState(poll.myVote || []);
     const totalVotes = poll.options.reduce((sum, o) => sum + o.count, 0);
 
@@ -342,7 +344,7 @@ const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
                             <div className="flex justify-between items-center mb-2 px-1">
                                 <span className="text-sm font-bold transition-colors text-white">
                                     {opt.text}
-                                    {isVoted && poll.myVote.includes(opt.text) && (
+                                    {isVoted && poll.myVote?.includes(opt.text) && (
                                         <span className="ml-2 text-[10px] font-black" style={{ color: themeColor }}>✓ MY CHOICE</span>
                                     )}
                                 </span>
