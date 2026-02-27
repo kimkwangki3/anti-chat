@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
+import useChannelStore from '../store/channelStore';
 import * as XLSX from 'xlsx';
 
 const PollPage = () => {
     const { user } = useAuthStore();
+    const { currentChannel } = useChannelStore();
     const location = useLocation();
     const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
@@ -120,19 +122,35 @@ const PollPage = () => {
         </div>
     );
 
+    const themeColor = currentChannel?.cardColor || '#FF8C69';
+
     return (
-        <div className="flex flex-col h-full bg-[#1a1a24]">
-            <header className="unified-header">
+        <div className="flex flex-col h-full bg-[#1a1a24] text-[#e8e8f0]">
+            <header className="p-6 md:p-10 flex justify-between items-end border-b border-white/5 bg-[#1a1a24]/80 backdrop-blur-md sticky top-0 z-20">
                 <div>
-                    <h1 className="text-xl font-bold italic text-white flex items-center gap-2">
-                        실시간 <span className="text-[#FF8C69]">투표</span>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span
+                            className="p-1 px-2 text-[10px] font-bold rounded-md border font-mono italic"
+                            style={{ backgroundColor: `${themeColor}1A`, color: themeColor, borderColor: `${themeColor}33` }}
+                        >
+                            INTERACTIVE
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full animate-pulse shadow-[0_0_8px_rgba(6,214,160,0.5)]"></span>
+                            <span className="text-[9px] font-bold text-[#06d6a0] font-mono uppercase tracking-[0.2em]">
+                                활발한 참여 중
+                            </span>
+                        </div>
+                    </div>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">
+                        {currentChannel?.name || '채널'} <span style={{ color: themeColor }}>투표</span>
                     </h1>
-                    <p className="text-[9px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1 mt-0.5">채널의 소중한 의견을 모아주세요</p>
                 </div>
                 {(channelRole === 'admin' || user?.role === 'superadmin') && (
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="px-6 py-2.5 bg-[#FF8C69] text-white text-[11px] font-black rounded-xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest"
+                        className="p-4 rounded-2xl flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all text-white font-bold"
+                        style={{ backgroundColor: themeColor, boxShadow: `0 10px 20px ${themeColor}40` }}
                     >
                         + 신규 투표 생성
                     </button>
@@ -141,10 +159,9 @@ const PollPage = () => {
 
             <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 pb-32">
                 <div className="space-y-12">
-                    {/* 진행 중인 투표 */}
                     <section>
-                        <div className="flex items-center gap-3 mb-8">
-                            <div className="w-2 h-8 bg-[#06d6a0] rounded-full"></div>
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-2 h-8 rounded-full" style={{ backgroundColor: themeColor }}></div>
                             <h2 className="text-xl font-bold text-white tracking-tight italic">진행 중인 투표</h2>
                         </div>
                         {isLoading && polls.length === 0 ? (
@@ -261,7 +278,10 @@ const PollPage = () => {
                                     />
                                 </div>
 
-                                <button className="w-full py-5 orange-gradient text-white font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-105 transition-transform uppercase tracking-widest text-xs mt-4">
+                                <button
+                                    className="w-full py-5 text-white font-black rounded-2xl shadow-xl hover:scale-105 transition-transform uppercase tracking-widest text-xs mt-4"
+                                    style={{ backgroundColor: themeColor, boxShadow: `0 10px 15px ${themeColor}40` }}
+                                >
                                     투표 개최하기
                                 </button>
                             </form>
@@ -300,7 +320,8 @@ const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
                 {isAdmin && (
                     <button
                         onClick={onExport}
-                        className="hidden md:block text-[10px] font-bold text-[#FF8C69] hover:underline uppercase tracking-widest"
+                        className="hidden md:block text-[10px] font-bold hover:underline uppercase tracking-widest"
+                        style={{ color: themeColor }}
                     >
                         Export Excel
                     </button>
@@ -319,17 +340,22 @@ const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
                             className={`relative group cursor-pointer ${isVoted || isClosed ? 'cursor-default' : ''}`}
                         >
                             <div className="flex justify-between items-center mb-2 px-1">
-                                <span className={`text-sm font-bold transition-colors ${selected.includes(opt.text) ? 'text-[#FF8C69]' : 'text-white'}`}>
+                                <span className="text-sm font-bold transition-colors text-white">
                                     {opt.text}
-                                    {isVoted && poll.myVote.includes(opt.text) && <span className="ml-2 text-[10px] text-[#FF8C69] font-black">✓ MY CHOICE</span>}
+                                    {isVoted && poll.myVote.includes(opt.text) && (
+                                        <span className="ml-2 text-[10px] font-black" style={{ color: themeColor }}>✓ MY CHOICE</span>
+                                    )}
                                 </span>
                                 {(isClosed) && isAdmin && <span className="text-xs font-mono font-black text-[#6b6b8a]">{percentage}% ({opt.count})</span>}
                                 {!isClosed && poll.hasVoted && isAdmin && <span className="text-xs font-mono font-black text-[#6b6b8a]">{percentage}% ({opt.count})</span>}
                             </div>
                             <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                                 <div
-                                    className={`h-full rounded-full transition-all duration-1000 ${selected.includes(opt.text) ? 'bg-[#FF8C69]' : 'bg-[#444466]'} ${isClosed ? 'bg-white/20' : ''}`}
-                                    style={{ width: `${(isAdmin && (poll.hasVoted || isClosed)) ? percentage : (selected.includes(opt.text) ? 100 : 0)}%` }}
+                                    className={`h-full rounded-full transition-all duration-1000 ${isClosed ? 'bg-white/20' : ''}`}
+                                    style={{
+                                        width: `${(isAdmin && (poll.hasVoted || isClosed)) ? percentage : (selected.includes(opt.text) ? 100 : 0)}%`,
+                                        backgroundColor: selected.includes(opt.text) ? themeColor : '#444466'
+                                    }}
                                 ></div>
                             </div>
                         </div>
@@ -341,7 +367,8 @@ const PollCard = ({ poll, onVote, onExport, isClosed, isAdmin }) => {
                 <button
                     onClick={() => onVote(poll._id, selected)}
                     disabled={selected.length === 0}
-                    className={`w-full py-4 rounded-2xl text-[11px] font-black transition-all uppercase tracking-widest ${selected.length > 0 ? 'bg-[#FF8C69] text-white shadow-lg shadow-[#FF8C69]/20' : 'bg-white/5 text-[#3a3a4a] cursor-not-allowed'}`}
+                    className={`w-full py-4 rounded-2xl text-[11px] font-black transition-all uppercase tracking-widest ${selected.length > 0 ? 'text-white' : 'bg-white/5 text-[#3a3a4a] cursor-not-allowed'}`}
+                    style={selected.length > 0 ? { backgroundColor: themeColor, boxShadow: `0 10px 15px ${themeColor}40` } : {}}
                 >
                     투표 완료하기
                 </button>
