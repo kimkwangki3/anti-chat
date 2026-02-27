@@ -76,9 +76,18 @@ const ChannelSearchPage = () => {
                         return (
                             <div
                                 key={channel._id}
-                                className="bg-[#12121a] p-8 border border-white/5 rounded-[2.5rem] hover:border-[#4f6ef7]/40 transition-all group relative overflow-hidden flex flex-col h-full shadow-2xl"
+                                className="bg-[#12121a] p-8 border rounded-[2.5rem] transition-all group relative overflow-hidden flex flex-col h-full shadow-2xl"
+                                style={{
+                                    borderColor: `${channel.cardColor || '#4f6ef7'}1A`,
+                                    boxShadow: `0 25px 50px -12px ${channel.cardColor || '#4f6ef7'}10`
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#4f6ef7'}66`}
+                                onMouseLeave={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#4f6ef7'}1A`}
                             >
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#4f6ef7]/5 rounded-bl-[5rem] pointer-events-none transition-all group-hover:bg-[#4f6ef7]/10"></div>
+                                <div
+                                    className="absolute top-0 right-0 w-32 h-32 rounded-bl-[5rem] pointer-events-none transition-all"
+                                    style={{ backgroundColor: `${channel.cardColor || '#4f6ef7'}10` }}
+                                ></div>
                                 <div className="flex justify-between items-start mb-6 relative z-10">
                                     <span className="text-[9px] font-black text-[#444466] uppercase tracking-[0.2em]">
                                         {isOwner ? '관리 중인 채널' : '참가 가능한 채널'}
@@ -91,12 +100,39 @@ const ChannelSearchPage = () => {
                                     </div>
                                 </div>
 
-                                <h3 className="text-2xl font-black mb-3 text-white group-hover:text-[#4f6ef7] transition-colors leading-tight">{channel.name}</h3>
+                                <div className="flex items-center gap-4 mb-3">
+                                    {channel.profileImage ? (
+                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/5 shadow-inner flex-shrink-0">
+                                            <img src={channel.profileImage} alt={channel.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner flex-shrink-0"
+                                            style={{ backgroundColor: `${channel.cardColor || '#4f6ef7'}20` }}
+                                        >
+                                            📡
+                                        </div>
+                                    )}
+                                    <h3
+                                        className="text-2xl font-black text-white group-hover:text-[#4f6ef7] transition-colors leading-tight"
+                                        style={{ '--tw-text-opacity': '1', color: 'white' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = channel.cardColor || '#4f6ef7'}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
+                                    >{channel.name}</h3>
+                                </div>
+
                                 <p className="text-[#6b6b8a] text-xs leading-relaxed mb-10 flex-1 font-medium italic">{channel.description}</p>
 
                                 <div className="flex items-center justify-between mt-auto border-t border-white/5 pt-6 relative z-10">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-[#4f6ef7]/10 flex items-center justify-center text-xs font-black text-[#4f6ef7] border border-[#4f6ef7]/10">
+                                        <div
+                                            className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border"
+                                            style={{
+                                                backgroundColor: `${channel.cardColor || '#4f6ef7'}1A`,
+                                                color: channel.cardColor || '#4f6ef7',
+                                                borderColor: `${channel.cardColor || '#4f6ef7'}20`
+                                            }}
+                                        >
                                             {channel.ownerId?.name?.[0]}
                                         </div>
                                         <div>
@@ -117,14 +153,25 @@ const ChannelSearchPage = () => {
                                         ) : (
                                             <button
                                                 onClick={() => handleJoinRequest(channel._id)}
-                                                className="px-5 py-2.5 bg-[#4f6ef7] text-white text-[10px] font-black rounded-xl hover:bg-[#5f7ef7] transition-all shadow-xl shadow-[#4f6ef7]/20 uppercase tracking-widest active:scale-95"
+                                                className="px-5 py-2.5 text-white text-[10px] font-black rounded-xl transition-all shadow-xl uppercase tracking-widest active:scale-95"
+                                                style={{
+                                                    backgroundColor: channel.cardColor || '#4f6ef7',
+                                                    boxShadow: `0 10px 15px -3px ${channel.cardColor || '#4f6ef7'}40`
+                                                }}
                                             >
                                                 가입 신청
                                             </button>
                                         )
                                     )}
                                     {isOwner && (
-                                        <span className="px-5 py-2.5 bg-[#4f6ef7]/10 text-[#4f6ef7] border border-[#4f6ef7]/10 text-[10px] font-black rounded-xl uppercase tracking-widest">
+                                        <span
+                                            className="px-5 py-2.5 border text-[10px] font-black rounded-xl uppercase tracking-widest"
+                                            style={{
+                                                backgroundColor: `${channel.cardColor || '#4f6ef7'}1A`,
+                                                color: channel.cardColor || '#4f6ef7',
+                                                borderColor: `${channel.cardColor || '#4f6ef7'}20`
+                                            }}
+                                        >
                                             내 채널
                                         </span>
                                     )}

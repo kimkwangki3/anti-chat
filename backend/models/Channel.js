@@ -24,6 +24,10 @@ const channelSchema = new mongoose.Schema({
         type: String,
         enum: ['active', 'suspended', 'deleted'],
         default: 'active'
+    },
+    cardColor: {
+        type: String,
+        default: '#4f6ef7'
     }
 }, {
     timestamps: true

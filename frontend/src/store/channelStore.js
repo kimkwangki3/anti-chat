@@ -31,10 +31,10 @@ const useChannelStore = create((set, get) => ({
         }
     },
 
-    updateChannel: async (id, name, description) => {
+    updateChannel: async (id, name, description, profileImage, cardColor) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.put(`/channels/${id}`, { name, description });
+            const response = await axios.put(`/channels/${id}`, { name, description, profileImage, cardColor });
             set((state) => ({
                 myChannels: state.myChannels.map(m =>
                     m.channelId?._id === id ? { ...m, channelId: response.data } : m

@@ -4,6 +4,16 @@ const Channel = require('../models/Channel');
 const ChannelMember = require('../models/ChannelMember');
 const User = require('../models/User');
 const { protect, admin } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
+
+// Multer 설정 (메모리 스토리지)
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB 제한
+});
 
 // @route   POST /api/channels
 // @desc    채널 생성 (관리자 전용)
@@ -104,7 +114,7 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    채널 정보 수정 (소유자 전용)
 // @access  Private
 router.put('/:id', protect, async (req, res) => {
-    const { name, description } = req.body;
+    const { name, description, profileImage, cardColor } = req.body;
 
     try {
         const channel = await Channel.findById(req.params.id);
@@ -117,11 +127,46 @@ router.put('/:id', protect, async (req, res) => {
 
         channel.name = name || channel.name;
         channel.description = description || channel.description;
+        channel.profileImage = profileImage !== undefined ? profileImage : channel.profileImage;
+        channel.cardColor = cardColor || channel.cardColor;
 
         const updatedChannel = await channel.save();
         res.json(updatedChannel);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/channels/upload
+// @desc    채널 아이콘 업로드 (Cloudinary)
+// @access  Private
+router.post('/upload', protect, upload.single('file'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
+        }
+
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'channel_icons',
+                resource_type: 'auto'
+            },
+            (error, result) => {
+                if (error) {
+                    console.error('Cloudinary 업로드 에러:', error);
+                    return res.status(500).json({
+                        message: 'Cloudinary 업로드 중 오류가 발생했습니다.',
+                        error: error.message
+                    });
+                }
+                res.json({ imageUrl: result.secure_url });
+            }
+        );
+
+        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+    } catch (error) {
+        console.error('파일 업로드 에러:', error);
+        res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.' });
     }
 });
 
