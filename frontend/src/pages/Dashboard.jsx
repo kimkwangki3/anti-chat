@@ -129,9 +129,14 @@ const Dashboard = () => {
                             {user?.role === 'superadmin' ? '시스템 제어 터미널' : '엔터프라이즈 커넥트'}
                         </h2>
                     </div>
-                    <h1 className="text-3xl font-bold text-white tracking-tight">
-                        {user?.role === 'superadmin' ? '관리자님, 현재 가동 중입니다' : `반가워요, ${user?.name}님`} <span className="text-[#FF8C69]">{user?.role === 'superadmin' ? '👑' : '🍑'}</span>
-                    </h1>
+                    <h2 className="text-2xl font-black text-white/90">
+                        반가워요, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{user?.role === 'superadmin' ? '최고관리자' : (user?.name || user?.username)}</span>님 🍑
+                    </h2>
+                    {/* TEMP DEBUG LOG */}
+                    <div className="bg-red-500/20 text-red-100 p-2 my-4 rounded text-xs overflow-x-auto">
+                        [DEBUG] unreadCounts: {JSON.stringify(unreadCounts)} <br />
+                        [DEBUG] totalUnread: {totalUnread}
+                    </div>
                 </div>
                 {user?.role === 'admin' && (
                     <button
