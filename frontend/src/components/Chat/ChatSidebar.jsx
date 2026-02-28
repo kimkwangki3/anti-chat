@@ -4,6 +4,7 @@ import useChatStore from '../../store/chatStore';
 import useAuthStore from '../../store/authStore';
 import axios from '../../api/axios';
 import socket from '../../socket/socket';
+import UserAvatar from '../Common/UserAvatar';
 
 const ChatSidebar = () => {
     const {
@@ -124,9 +125,12 @@ const ChatSidebar = () => {
                                 className="p-6 border-b border-white/5 hover:bg-white/5 cursor-pointer flex items-center gap-5 transition-all group"
                             >
                                 <div className="relative">
-                                    <div className="w-12 h-12 rounded-2xl bg-[#23232f] text-[#6b6b8a] flex items-center justify-center text-sm font-bold border border-white/5 group-hover:border-[#FF8C69]/30 transition-all">
-                                        {u.name?.[0]}
-                                    </div>
+                                    <UserAvatar
+                                        profileImage={u.profileImage}
+                                        name={u.name}
+                                        size="w-12 h-12"
+                                        radiusClass="rounded-2xl"
+                                    />
                                     {u.isOnline && <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#06d6a0] border-[3px] border-[#12121a] rounded-full"></span>}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -171,10 +175,13 @@ const ChatSidebar = () => {
                                 style={isActive ? { backgroundColor: channelColor, borderColor: channelColor, boxShadow: `0 20px 40px ${channelColor}40` } : {}}
                             >
                                 <div className="relative flex-shrink-0">
-                                    <div className={`w-14 h-14 rounded-[1.25rem] flex items-center justify-center text-xl font-black shadow-2xl transition-all ${isActive ? 'bg-white' : 'bg-[#23232f] text-[#6b6b8a] border border-white/5'}`}
-                                        style={isActive ? { color: channelColor } : {}}>
-                                        {otherUser?.name?.[0] || '?'}
-                                    </div>
+                                    <UserAvatar
+                                        profileImage={otherUser?.profileImage}
+                                        name={otherUser?.name}
+                                        size="w-14 h-14"
+                                        radiusClass="rounded-[1.25rem]"
+                                        className={isActive ? 'ring-2 ring-white/30' : ''}
+                                    />
                                     {isOnline && <span className={`absolute -bottom-1 -right-1 w-5 h-5 bg-[#06d6a0] border-[4px] rounded-full animate-pulse ${isActive ? 'border-transparent' : 'border-[#1a1a24]'}`} style={isActive ? { borderColor: channelColor } : {}}></span>}
 
                                     {/* 채널 아이콘 배지 */}

@@ -4,6 +4,7 @@ import useAuthStore from '../../store/authStore';
 import useChannelStore from '../../store/channelStore';
 import useNotificationStore from '../../store/notificationStore';
 import useDevice from '../../hooks/useDevice';
+import UserAvatar from './UserAvatar';
 
 // SF Symbol 스타일 SVG 아이콘 컴포넌트
 const Icon = ({ name, active }) => {
@@ -149,9 +150,12 @@ const BottomNav = () => {
                         <div className="px-6 pb-10 pt-4">
                             {/* 유저 프로필 */}
                             <div className="flex items-center gap-4 mb-8 p-4 bg-white/5 rounded-2xl border border-white/5">
-                                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF8C69] to-[#E8735A] flex items-center justify-center text-2xl font-bold text-white shadow-xl">
-                                    {user?.name?.[0]}
-                                </div>
+                                <UserAvatar
+                                    profileImage={user?.profileImage}
+                                    name={user?.name}
+                                    size="w-14 h-14"
+                                    radiusClass="rounded-2xl"
+                                />
                                 <div>
                                     <h3 className="text-base font-semibold text-white">{user?.name}</h3>
                                     <p className="text-xs text-[#8e8e93]">{user?.role === 'admin' ? '운영자' : user?.role === 'superadmin' ? '최고운영자' : '멤버'}</p>
