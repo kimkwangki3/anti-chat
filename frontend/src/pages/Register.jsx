@@ -6,10 +6,11 @@ const Register = () => {
     const [formData, setFormData] = useState({
         username: '',
         password: '',
+        name: '',
         nickname: '',
-        gender: 'none',
         birthdate: '',
-        region: '',
+        phone: '',
+        gender: 'none',
         recommender: '',
         agreedToPrivacy: false
     });
@@ -55,68 +56,95 @@ const Register = () => {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* 아이디 */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+
+                        {/* 아이디 / 비밀번호 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">Identity (ID)</label>
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">아이디 *</label>
                                 <input
                                     type="text"
                                     name="username"
                                     required
                                     placeholder="아이디를 입력하세요"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
                                     value={formData.username}
                                     onChange={handleChange}
                                 />
                             </div>
-
-                            {/* 비밀번호 */}
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">Security (Pass)</label>
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">비밀번호 *</label>
                                 <input
                                     type="password"
                                     name="password"
                                     required
-                                    placeholder="패스워드를 설정하세요"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    placeholder="비밀번호를 설정하세요"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
                                     value={formData.password}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            {/* 닉네임 */}
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">Nickname</label>
-                                <input
-                                    type="text"
-                                    name="nickname"
-                                    required
-                                    placeholder="사용하실 닉네임을 입력하세요"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
-                                    value={formData.nickname}
-                                    onChange={handleChange}
-                                />
-                            </div>
-
-                            {/* 생년월일 */}
-                            <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">Date of Birth</label>
-                                <input
-                                    type="date"
-                                    name="birthdate"
-                                    required
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium appearance-none"
-                                    value={formData.birthdate}
                                     onChange={handleChange}
                                 />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* 성별 */}
-                            <div className="space-y-4">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">Gender</label>
+                        {/* 이름 / 닉네임 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">이름 *</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    required
+                                    placeholder="실명을 입력하세요"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">닉네임 *</label>
+                                <input
+                                    type="text"
+                                    name="nickname"
+                                    required
+                                    placeholder="사용할 닉네임을 입력하세요"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    value={formData.nickname}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+
+                        {/* 생년월일 / 연락처 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">생년월일 *</label>
+                                <input
+                                    type="date"
+                                    name="birthdate"
+                                    required
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium appearance-none"
+                                    value={formData.birthdate}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">연락처 *</label>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    required
+                                    placeholder="010-0000-0000"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+
+                        {/* 성별 / 추천인 */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">성별</label>
                                 <div className="flex gap-3">
                                     {['male', 'female'].map(g => (
                                         <button
@@ -130,36 +158,20 @@ const Register = () => {
                                     ))}
                                 </div>
                             </div>
-
-                            {/* 추천인 */}
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">Recommender (Optional)</label>
+                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">추천인 아이디 (선택)</label>
                                 <input
                                     type="text"
                                     name="recommender"
-                                    placeholder="추천인 아이디"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    placeholder="추천인 아이디 (선택사항)"
+                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
                                     value={formData.recommender}
                                     onChange={handleChange}
                                 />
                             </div>
                         </div>
 
-                        {/* 지역 */}
-                        <div className="space-y-2">
-                            <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">Region</label>
-                            <input
-                                type="text"
-                                name="region"
-                                required
-                                placeholder="사는 지역을 입력하세요 (예: 서울 강남구)"
-                                className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-6 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
-                                value={formData.region}
-                                onChange={handleChange}
-                            />
-                        </div>
-
-                        {/* 개인정보 동의 체크박스 */}
+                        {/* 개인정보 동의 */}
                         <div className="flex items-center gap-3 px-4 py-3 bg-white/5 rounded-2xl border border-white/5">
                             <input
                                 type="checkbox"
@@ -178,7 +190,7 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-16 orange-gradient hover:scale-[1.02] active:scale-95 text-white font-black py-4 rounded-3xl shadow-2xl shadow-[#FF8C69]/20 transition-all text-sm tracking-[0.3em] uppercase mt-8 flex items-center justify-center font-mono"
+                            className="w-full h-16 orange-gradient hover:scale-[1.02] active:scale-95 text-white font-black py-4 rounded-3xl shadow-2xl shadow-[#FF8C69]/20 transition-all text-sm tracking-[0.3em] uppercase mt-4 flex items-center justify-center font-mono"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

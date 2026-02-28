@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     birthdate: {
         type: String // YYYY-MM-DD format
     },
-    region: {
+    phone: {
         type: String,
         trim: true
     },

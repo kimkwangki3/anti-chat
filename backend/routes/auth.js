@@ -34,7 +34,7 @@ const upload = multer({
 // @desc    회원가입
 // @access  Public
 router.post('/register', async (req, res) => {
-    const { username, password, nickname, gender, birthdate, region, recommender } = req.body;
+    const { username, password, name, nickname, gender, birthdate, phone, recommender } = req.body;
 
     try {
         const userExists = await User.findOne({ username });
@@ -47,13 +47,13 @@ router.post('/register', async (req, res) => {
         const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
         const user = await User.create({
-            name: nickname || username,
+            name: name || nickname || username,
             username,
             password,
             nickname,
             gender: gender || 'none',
             birthdate,
-            region,
+            phone,
             recommender,
             registrationIp: clientIp,
             role: 'member',
