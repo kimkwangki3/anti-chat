@@ -53,6 +53,6 @@ const chatRoomSchema = new mongoose.Schema({
 });
 
 // Ensure only one room exists between an admin and a member
-chatRoomSchema.index({ adminId: 1, memberId: 1 }, { unique: true });
+chatRoomSchema.index({ adminId: 1, memberId: 1, channelId: 1 }, { unique: true });
 
 module.exports = mongoose.model('ChatRoom', chatRoomSchema);
