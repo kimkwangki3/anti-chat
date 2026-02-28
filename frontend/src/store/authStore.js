@@ -96,16 +96,25 @@ const useAuthStore = create((set) => ({
             const response = await axios.post('/auth/profile/image', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
-            const { user: updatedUser } = response.data;
 
-            localStorage.setItem('user', JSON.stringify(updatedUser));
-            set({ user: updatedUser });
-            return { success: true, profileImage: response.data.profileImage };
+            // 응답 구조: { profileImage: url, user: updatedUser }
+            const profileImageUrl = response.data.profileImage;
+            const updatedUser = response.data.user;
+
+            // user 객체 갱신 (spread로 기존 필드 유지 + profileImage 교체)
+            set((state) => {
+                const newUser = updatedUser || { ...state.user, profileImage: profileImageUrl };
+                localStorage.setItem('user', JSON.stringify(newUser));
+                return { user: newUser };
+            });
+
+            return { success: true, profileImage: profileImageUrl };
         } catch (error) {
             console.error('프로필 이미지 업로드 에러:', error);
             return { success: false };
         }
     },
+
 
 
     checkAuth: async () => {
