@@ -87,10 +87,30 @@ const useChatStore = create((set, get) => ({
 
     updateRoomInList: (updatedRoom) => {
         set(state => {
-            // 현재 열람 중인 방이면 unreadCount를 항상 0으로 고정
-            const processedRoom = state.currentRoom?._id === updatedRoom._id
-                ? { ...updatedRoom, unreadCountAdmin: 0, unreadCountMember: 0 }
+            // socket에서 오는 updatedRoom은 populate 없이 ID만 포함 → 기존 rooms 데이터를 base로 merge
+            const existingRoom = state.rooms.find(r => r._id === updatedRoom._id);
+            const mergedRoom = existingRoom
+                ? {
+                    ...existingRoom,
+                    // 업데이트 가능한 수치 필드만 덮어씀 (populate 객체 필드는 기존 유지)
+                    lastMessage: updatedRoom.lastMessage ?? existingRoom.lastMessage,
+                    lastMessageAt: updatedRoom.lastMessageAt ?? existingRoom.lastMessageAt,
+                    unreadCountAdmin: updatedRoom.unreadCountAdmin ?? existingRoom.unreadCountAdmin,
+                    unreadCountMember: updatedRoom.unreadCountMember ?? existingRoom.unreadCountMember,
+                    adminVisible: updatedRoom.adminVisible ?? existingRoom.adminVisible,
+                    memberVisible: updatedRoom.memberVisible ?? existingRoom.memberVisible,
+                }
                 : updatedRoom;
+
+            // 현재 열람 중인 방이면 unreadCount를 항상 0으로 고정
+            const processedRoom = state.currentRoom?._id === mergedRoom._id
+                ? { ...mergedRoom, unreadCountAdmin: 0, unreadCountMember: 0 }
+                : mergedRoom;
+
+            // currentRoom도 동일한 방이면 최신 상태로 유지 (populate 데이터 보존)
+            const newCurrentRoom = state.currentRoom?._id === processedRoom._id
+                ? { ...state.currentRoom, ...processedRoom }
+                : state.currentRoom;
 
             const index = state.rooms.findIndex(r => r._id === processedRoom._id);
             let newRooms = [...state.rooms];
@@ -101,7 +121,7 @@ const useChatStore = create((set, get) => ({
             }
             // 최신순 정렬
             newRooms.sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
-            return { rooms: newRooms };
+            return { rooms: newRooms, currentRoom: newCurrentRoom };
         });
     },
 
