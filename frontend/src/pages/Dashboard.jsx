@@ -216,6 +216,7 @@ const Dashboard = () => {
                                     const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0 };
                                     const sum = counts.notice + counts.post + counts.chat;
                                     if (sum === 0) return null;
+                                    const themeColor = membership.channelId?.cardColor || '#FF8C69';
                                     return (
                                         <div
                                             key={`summary-${chId}`}
@@ -225,18 +226,39 @@ const Dashboard = () => {
                                                 else if (counts.post > 0) navigate(`/board?channelId=${chId}`);
                                                 else navigate(`/notices?channelId=${chId}`);
                                             }}
-                                            className="flex items-center gap-4 p-5 bg-[#23232f] border border-[#FF8C69]/10 rounded-3xl cursor-pointer hover:border-[#FF8C69]/30 transition-all group shadow-xl"
+                                            className="flex items-center gap-4 p-5 bg-[#23232f] border rounded-3xl cursor-pointer transition-all group shadow-xl"
+                                            style={{ borderColor: `${themeColor}1A` }}
+                                            onMouseEnter={(e) => e.currentTarget.style.borderColor = `${themeColor}4D`}
+                                            onMouseLeave={(e) => e.currentTarget.style.borderColor = `${themeColor}1A`}
                                         >
-                                            <div className="w-12 h-12 rounded-2xl bg-[#FF8C69]/10 flex items-center justify-center text-2xl shadow-inner">🏘️</div>
+                                            {membership.channelId?.profileImage ? (
+                                                <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-inner flex-shrink-0">
+                                                    <img src={membership.channelId.profileImage} alt="" className="w-full h-full object-cover" />
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner flex-shrink-0"
+                                                    style={{
+                                                        backgroundColor: `${themeColor}1A`,
+                                                        color: themeColor
+                                                    }}
+                                                >🏘️</div>
+                                            )}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-white truncate">{membership.channelId?.name}</p>
                                                 <div className="flex items-center gap-3 mt-1">
                                                     {counts.notice > 0 && <span className="text-[10px] text-purple-400 font-bold flex items-center gap-1">📢 {counts.notice}</span>}
                                                     {counts.post > 0 && <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">📋 {counts.post}</span>}
-                                                    {counts.chat > 0 && <span className="text-[10px] text-[#FF8C69] font-bold flex items-center gap-1 animate-pulse">💬 {counts.chat}</span>}
+                                                    {counts.chat > 0 && <span className="text-[10px] font-bold flex items-center gap-1 animate-pulse" style={{ color: themeColor }}>💬 {counts.chat}</span>}
                                                 </div>
                                             </div>
-                                            <span className="text-[#FF8C69] text-xs font-black px-3 py-1.5 bg-[#FF8C69]/10 rounded-full">+{sum}</span>
+                                            <span
+                                                className="text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg"
+                                                style={{
+                                                    backgroundColor: themeColor,
+                                                    boxShadow: `0 4px 12px ${themeColor}40`
+                                                }}
+                                            >+{sum}</span>
                                         </div>
                                     );
                                 })}
