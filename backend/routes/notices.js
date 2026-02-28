@@ -117,6 +117,25 @@ router.patch('/:id/read', protect, async (req, res) => {
     }
 });
 
+// @route   PATCH /api/notices/channel/:channelId/read-all
+// @desc    채널 내 모든 공지사항 읽음 처리
+// @access  Private
+router.patch('/channel/:channelId/read-all', protect, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const channelId = req.params.channelId;
+
+        await Notice.updateMany(
+            { channelId, readBy: { $ne: userId } },
+            { $addToSet: { readBy: userId } }
+        );
+
+        res.json({ message: '모든 공지사항을 읽음 처리했습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: '읽음 처리 오류' });
+    }
+});
+
 // @route   DELETE /api/notices/:id
 // @desc    공지사항 삭제 (관리자 전용)
 // @access  Private/Admin

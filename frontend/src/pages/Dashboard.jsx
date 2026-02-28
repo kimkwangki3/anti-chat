@@ -212,7 +212,7 @@ const Dashboard = () => {
                                         })}
                                     </div>
                                 )}
-                                {user?.role === 'member' && myChannels.map(membership => {
+                                {myChannels.map(membership => {
                                     const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
                                     const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0, poll: 0 };
                                     const sum = (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
@@ -356,9 +356,10 @@ const Dashboard = () => {
                                             )}
                                             <div className="flex items-center gap-2">
                                                 {/* 채널별 통합 알림 배지 추가 (사용자 요청) */}
-                                                {(unreadCounts[membership.channelId?._id]?.notice > 0 ||
-                                                    unreadCounts[membership.channelId?._id]?.post > 0 ||
-                                                    unreadCounts[membership.channelId?._id]?.chat > 0) && (
+                                                {(unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.notice > 0 ||
+                                                    unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.post > 0 ||
+                                                    unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.chat > 0 ||
+                                                    unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.poll > 0) && (
                                                         <div
                                                             className="flex items-center gap-1.5 px-3 py-1 bg-red-500 text-white text-[10px] font-black rounded-full shadow-lg shadow-red-500/40 animate-bounce cursor-default"
                                                             onClick={(e) => e.stopPropagation()}

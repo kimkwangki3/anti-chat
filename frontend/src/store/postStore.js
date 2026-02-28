@@ -83,6 +83,20 @@ const usePostStore = create((set, get) => ({
         }
     },
 
+    markAllAsRead: async (channelId) => {
+        try {
+            await axios.patch(`/posts/channel/${channelId}/read-all`);
+            set((state) => ({
+                posts: state.posts.map(p => ({
+                    ...p,
+                    readBy: [...(p.readBy || []), 'already_read']
+                }))
+            }));
+        } catch (error) {
+            console.error('전체 게시글 읽음 처리 실패:', error);
+        }
+    },
+
     deletePost: async (postId) => {
         set({ isLoading: true, error: null });
         try {

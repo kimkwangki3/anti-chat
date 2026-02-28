@@ -66,6 +66,22 @@ const useNoticeStore = create((set, get) => ({
         }
     },
 
+    markAllAsRead: async (channelId) => {
+        try {
+            await axios.patch(`/notices/channel/${channelId}/read-all`);
+            set((state) => ({
+                notices: state.notices.map(n => ({
+                    ...n,
+                    readBy: n.readBy.includes(axios.defaults.headers.common?.userId) // Dummy update for UI
+                        ? n.readBy
+                        : [...n.readBy, 'current_user']
+                }))
+            }));
+        } catch (error) {
+            console.error('전체 읽음 처리 실패:', error);
+        }
+    },
+
     reset: () => set({ notices: [], isLoading: false, error: null })
 }));
 

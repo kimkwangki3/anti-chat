@@ -8,7 +8,7 @@ import useNotificationStore from '../store/notificationStore';
 const BoardPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { posts, fetchPostsByChannel, createPost, deletePost, isLoading, error } = usePostStore();
+    const { posts, fetchPostsByChannel, createPost, deletePost, markAllAsRead, isLoading, error } = usePostStore();
     const { user } = useAuthStore();
     const { currentChannel } = useChannelStore();
     const { resetUnreadCount } = useNotificationStore();
@@ -22,8 +22,9 @@ const BoardPage = () => {
         if (channelId) {
             fetchPostsByChannel(channelId);
             resetUnreadCount(channelId, 'post');
+            markAllAsRead(channelId);
         }
-    }, [fetchPostsByChannel, channelId, resetUnreadCount]);
+    }, [fetchPostsByChannel, channelId, resetUnreadCount, markAllAsRead]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

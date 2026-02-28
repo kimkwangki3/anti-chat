@@ -73,6 +73,25 @@ router.patch('/:id/read', protect, async (req, res) => {
     }
 });
 
+// @route   PATCH /api/posts/channel/:channelId/read-all
+// @desc    채널 내 모든 게시글 읽음 처리
+// @access  Private
+router.patch('/channel/:channelId/read-all', protect, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const channelId = req.params.channelId;
+
+        await Post.updateMany(
+            { channelId, readBy: { $ne: userId } },
+            { $addToSet: { readBy: userId } }
+        );
+
+        res.json({ message: '모든 게시글을 읽음 처리했습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: '읽음 처리 오류' });
+    }
+});
+
 // @route   GET /api/posts/:id
 // @desc    Get post details
 // @access  Private

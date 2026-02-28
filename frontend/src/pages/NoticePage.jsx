@@ -8,7 +8,7 @@ import useNotificationStore from '../store/notificationStore';
 import { getFileUrl } from '../utils/fileUtils';
 
 const NoticePage = () => {
-    const { notices, fetchNotices, createNotice, deleteNotice, uploadImage, markAsRead, isLoading } = useNoticeStore();
+    const { notices, fetchNotices, createNotice, deleteNotice, uploadImage, markAsRead, markAllAsRead, isLoading } = useNoticeStore();
     const { user } = useAuthStore();
     const { currentChannel } = useChannelStore();
     const { onlineCount } = useSocket();
@@ -38,8 +38,9 @@ const NoticePage = () => {
             }
             fetchNotices(channelId);
             resetUnreadCount(channelId, 'notice');
+            markAllAsRead(channelId);
         }
-    }, [fetchNotices, channelId, resetUnreadCount, currentChannel]);
+    }, [fetchNotices, channelId, resetUnreadCount, currentChannel, markAllAsRead]);
 
     useEffect(() => {
         if (scrollRef.current) {
