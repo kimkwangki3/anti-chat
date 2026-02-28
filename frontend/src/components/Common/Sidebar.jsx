@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
 import useChannelStore from '../../store/channelStore';
 import useNotificationStore from '../../store/notificationStore';
+import UserAvatar from './UserAvatar';
 
 // SF Symbol 스타일 아이콘 컴포넌트
 const SideIcon = ({ name, active }) => {
@@ -158,9 +159,12 @@ const Sidebar = () => {
             {/* 유저 프로필 */}
             <div className="p-4">
                 <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-white/[0.04] border border-white/[0.06] mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#FF8C69] to-[#E8735A] flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-[#FF8C69]/20 flex-shrink-0">
-                        {user?.name?.charAt(0)}
-                    </div>
+                    <UserAvatar
+                        profileImage={user?.profileImage}
+                        name={user?.name}
+                        size="w-8 h-8"
+                        radiusClass="rounded-lg"
+                    />
                     <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-white truncate leading-tight">{user?.name}</p>
                         <p className="text-[10px] text-[#636366] leading-tight">
