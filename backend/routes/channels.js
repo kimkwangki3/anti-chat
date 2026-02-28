@@ -185,8 +185,11 @@ const Poll = require('../models/Poll');
 router.get('/unread-counts', protect, async (req, res) => {
     try {
         const userId = req.user._id;
-        const memberships = await ChannelMember.find({ userId, status: 'approved' });
-        const channelIds = memberships.map(m => m.channelId);
+        const memberships = await ChannelMember.find({ userId });
+        const channelIds = memberships
+            .filter(m => m.status === 'approved')
+            .map(m => m.channelId);
+        console.log(`[Unread API] User ${userId} active channels: ${channelIds.length}`);
 
         const counts = {};
 
@@ -233,6 +236,7 @@ router.get('/unread-counts', protect, async (req, res) => {
                 poll: pollCount,
                 chat: chatCount
             };
+            console.log(`[Unread API] Channel ${channelId}: notice=${noticeCount}, post=${postCount}, poll=${pollCount}, chat=${chatCount}`);
         }
 
         res.json(counts);
