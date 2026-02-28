@@ -170,7 +170,7 @@ const Dashboard = () => {
                                             }}
                                             className="relative p-8 rounded-[2.5rem] bg-gradient-to-br from-[#FF8C69] to-[#E8735A] shadow-2xl shadow-[#FF8C69]/30 cursor-pointer hover:scale-[1.02] transition-all group overflow-hidden"
                                         >
-                                            <div className="absolute top-0 right-0 p-4 opacity-20 text-7xl group-hover:scale-125 transition-transform">👑</div>
+
                                             <div className="relative z-10">
                                                 <div className="flex items-center gap-2 mb-4">
                                                     <span className={`w-2.5 h-2.5 bg-white rounded-full ${totalPending > 0 ? 'animate-ping' : ''}`}></span>
