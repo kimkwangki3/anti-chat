@@ -133,10 +133,8 @@ const Dashboard = () => {
                         반가워요, <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{user?.role === 'superadmin' ? '최고관리자' : (user?.name || user?.username)}</span>님 🍑
                     </h2>
                     {/* TEMP DEBUG LOG */}
-                    <div className="bg-red-500/20 text-red-100 p-2 my-4 rounded text-xs overflow-x-auto">
-                        [DEBUG] unreadCounts: {JSON.stringify(unreadCounts)} <br />
-                        [DEBUG] totalUnread: {totalUnread}
-                    </div>
+                    <p className="text-[#a1a1aa] text-sm hidden">
+                    </p>
                 </div>
                 {user?.role === 'admin' && (
                     <button
