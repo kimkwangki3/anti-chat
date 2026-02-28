@@ -57,7 +57,8 @@ const ChatPage = () => {
         if (!socket.connected) {
             socket.auth = { token };
             socket.connect();
-            socket.emit('setup', user);
+            const sid = localStorage.getItem('sessionId');
+            socket.emit('setup', { ...user, sessionId: sid });
         }
 
         socket.on('receive_message', (message) => {
