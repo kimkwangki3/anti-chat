@@ -66,12 +66,12 @@ const Dashboard = () => {
                             <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalUsers}</span>
                         </div>
                     </div>
-                    <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#4f6ef7]/20 shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-[#4f6ef7]">🏘️</div>
+                    <div className="bg-[#23232f] p-8 rounded-[2.5rem] border border-[#FF8C69]/20 shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 text-6xl group-hover:scale-125 transition-transform text-[#FF8C69]">🏘️</div>
                         <h3 className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-4">오늘 개설 신규 채널</h3>
-                        <p className="text-5xl font-black text-white leading-none">{stats.today.newChannels}<span className="text-sm font-bold text-[#4f6ef7] ml-2">개</span></p>
+                        <p className="text-5xl font-black text-white leading-none">{stats.today.newChannels}<span className="text-sm font-bold text-[#FF8C69] ml-2">개</span></p>
                         <div className="mt-6 flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-[#4f6ef7] bg-[#4f6ef7]/10 px-3 py-1 rounded-full border border-[#4f6ef7]/20">+ 확장 중</span>
+                            <span className="text-[10px] font-bold text-[#FF8C69] bg-[#FF8C69]/10 px-3 py-1 rounded-full border border-[#FF8C69]/20">+ 확장 중</span>
                             <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalChannels}</span>
                         </div>
                     </div>

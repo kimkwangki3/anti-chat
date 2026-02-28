@@ -70,14 +70,14 @@ const SuperAdminChannelDetail = () => {
                     ← 채널 관측소(목록)로 돌아가기
                 </button>
                 <div className="flex items-center gap-6">
-                    <div className="w-20 h-20 rounded-3xl bg-[#4f6ef7]/10 flex items-center justify-center text-4xl border border-[#4f6ef7]/20 shadow-2xl">
+                    <div className="w-20 h-20 rounded-3xl bg-[#FF8C69]/10 flex items-center justify-center text-4xl border border-[#FF8C69]/20 shadow-2xl">
                         🏘️
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black text-white italic uppercase tracking-tight font-mono">
-                            {channel.name} <span className="text-[#4f6ef7]">커맨드</span> 💂‍♂️
+                        <h1 className="text-4xl font-black text-white uppercase tracking-tight">
+                            {channel.name} <span className="text-[#FF8C69]">커맨드</span> 💂‍♂️
                         </h1>
-                        <p className="text-[#6b6b8a] text-xs mt-1 font-medium italic">{channel.description}</p>
+                        <p className="text-[#6b6b8a] text-xs mt-1 font-medium">{channel.description}</p>
                     </div>
                 </div>
             </header>
@@ -92,7 +92,7 @@ const SuperAdminChannelDetail = () => {
                         key={tab.key}
                         onClick={() => setActiveTab(tab.key)}
                         className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === tab.key
-                            ? 'bg-[#4f6ef7] text-white shadow-lg shadow-[#4f6ef7]/20'
+                            ? 'bg-[#FF8C69] text-white shadow-lg shadow-[#FF8C69]/20'
                             : 'text-[#6b6b8a] hover:text-white bg-white/5'
                             }`}
                     >
@@ -117,8 +117,8 @@ const SuperAdminChannelDetail = () => {
                                 {content.members.map(m => (
                                     <tr key={m._id} className="hover:bg-white/[0.02] group transition-colors">
                                         <td className="px-8 py-4">
-                                            <p className="text-sm font-bold text-white group-hover:text-[#4f6ef7] transition-colors">{m.userId?.name}</p>
-                                            <p className="text-[10px] font-mono text-[#444466] uppercase">{m.userId?.username}</p>
+                                            <p className="text-sm font-bold text-white group-hover:text-[#FF8C69] transition-colors">{m.userId?.name}</p>
+                                            <p className="text-[10px] font-bold text-[#444466] uppercase">{m.userId?.username}</p>
                                         </td>
                                         <td className="px-8 py-4">
                                             <span className={`text-[9px] font-black uppercase tracking-tight px-2 py-0.5 rounded-full ${m.userId?.status === 'active' || !m.userId?.status ? 'bg-[#06d6a0]/10 text-[#06d6a0]' : 'bg-red-500/10 text-red-500'}`}>

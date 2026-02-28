@@ -22,28 +22,28 @@ const ChannelCreateModal = ({ isOpen, onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-[#12121a] border border-[rgba(79,110,247,0.2)] rounded-2xl p-8 shadow-2xl">
-                <h2 className="text-2xl font-bold font-['Bebas_Neue'] tracking-wider text-white mb-6 uppercase italic">CREATE NEW <span className="text-[#4f6ef7]">CHANNEL</span></h2>
+            <div className="w-full max-w-md bg-[#12121a] border border-[rgba(255,140,105,0.2)] rounded-2xl p-8 shadow-2xl">
+                <h2 className="text-2xl font-bold tracking-wider text-white mb-6 uppercase">CREATE NEW <span className="text-[#FF8C69]">CHANNEL</span></h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
-                        <label className="block text-[10px] font-bold text-[#444466] uppercase tracking-widest mb-2 font-mono ml-1">채널 이름</label>
+                        <label className="block text-xs font-bold text-[#444466] uppercase tracking-widest mb-2 ml-1">채널 이름</label>
                         <input
                             type="text"
                             required
                             placeholder="예: 프로젝트 A 협업 채널"
-                            className="w-full bg-[#1a1a28] border border-[rgba(79,110,247,0.15)] rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4f6ef7] transition-all"
+                            className="w-full bg-[#1a1a28] border border-white/5 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FF8C69] transition-all"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
                     </div>
                     <div>
-                        <label className="block text-[10px] font-bold text-[#444466] uppercase tracking-widest mb-2 font-mono ml-1">채널 설명</label>
+                        <label className="block text-xs font-bold text-[#444466] uppercase tracking-widest mb-2 ml-1">채널 설명</label>
                         <textarea
                             required
                             placeholder="채널의 목적과 규칙을 설명해 주세요."
                             rows="4"
-                            className="w-full bg-[#1a1a28] border border-[rgba(79,110,247,0.15)] rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#4f6ef7] transition-all"
+                            className="w-full bg-[#1a1a28] border border-white/5 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FF8C69] transition-all"
                             value={formData.description}
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         ></textarea>
@@ -59,7 +59,7 @@ const ChannelCreateModal = ({ isOpen, onClose }) => {
                         </button>
                         <button
                             type="submit"
-                            className="flex-1 py-3 bg-[#4f6ef7] text-white font-bold rounded-lg hover:bg-[#7bb3ff] transition-all shadow-lg shadow-[#4f6ef7]/20"
+                            className="flex-1 py-3 orange-gradient text-white font-bold rounded-lg hover:scale-105 transition-transform shadow-lg shadow-[#FF8C69]/20"
                         >
                             채널 생성하기
                         </button>

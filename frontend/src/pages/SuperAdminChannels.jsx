@@ -47,8 +47,8 @@ const SuperAdminChannels = () => {
         <div className="min-h-screen bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto">
             <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-bold tracking-tight mb-2 uppercase italic text-white font-mono">
-                        시스템 <span className="text-[#4f6ef7]">채널</span> 관 🛰️
+                    <h1 className="text-4xl font-bold tracking-tight mb-2 uppercase text-white">
+                        시스템 <span className="text-[#FF8C69]">채널</span> 관 🛰️
                     </h1>
                     <p className="text-[#6b6b8a] text-[10px] font-bold uppercase tracking-[0.3em] ml-1">전체 네트워크 서비스 모니터링</p>
                 </div>
@@ -59,9 +59,9 @@ const SuperAdminChannels = () => {
                         placeholder="채널 이름 또는 설명으로 검색..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#12121a] border border-white/10 rounded-xl px-6 py-3 text-sm text-white focus:outline-none focus:border-[#4f6ef7]/50 transition-all font-mono"
+                        className="w-full bg-[#12121a] border border-white/10 rounded-xl px-6 py-3 text-sm text-white focus:outline-none focus:border-[#FF8C69]/50 transition-all font-medium"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#4f6ef7] transition-colors">🔍</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FF8C69] transition-colors">🔍</span>
                 </div>
             </header>
 
@@ -88,11 +88,11 @@ const SuperAdminChannels = () => {
                                     <tr key={channel._id} className="hover:bg-white/[0.02] transition-colors group">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-[#4f6ef7]/10 flex items-center justify-center text-2xl border border-[#4f6ef7]/10">
+                                                <div className="w-12 h-12 rounded-2xl bg-[#FF8C69]/10 flex items-center justify-center text-2xl border border-[#FF8C69]/10">
                                                     🏘️
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-base font-bold text-white group-hover:text-[#4f6ef7] transition-colors cursor-pointer"
+                                                    <p className="text-base font-bold text-white group-hover:text-[#FF8C69] transition-colors cursor-pointer"
                                                         onClick={() => navigate(`/superadmin/channels/${channel._id}`)}>
                                                         {channel.name}
                                                     </p>

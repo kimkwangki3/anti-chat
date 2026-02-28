@@ -393,15 +393,15 @@ export const SocketProvider = ({ children }) => {
                     <div
                         key={noti.id}
                         onClick={() => handleNotificationClick(noti)}
-                        className="pointer-events-auto bg-[#1a1a28]/95 backdrop-blur-xl border border-[rgba(79,110,247,0.3)] p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-top-5 duration-500 w-80 cursor-pointer hover:scale-105 hover:border-[#4f6ef7] transition-all group overflow-hidden"
+                        className="pointer-events-auto bg-[#1a1a28]/95 backdrop-blur-xl border border-[rgba(255,140,105,0.3)] p-5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in slide-in-from-top-5 duration-500 w-80 cursor-pointer hover:scale-105 hover:border-[#FF8C69] transition-all group overflow-hidden"
                     >
-                        <div className="absolute top-0 left-0 w-1 h-full bg-[#4f6ef7] shadow-[0_0_15px_rgba(79,110,247,0.5)]"></div>
+                        <div className="absolute top-0 left-0 w-1 h-full bg-[#FF8C69] shadow-[0_0_15px_rgba(255,140,105,0.5)]"></div>
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-[#4f6ef7]/10 flex items-center justify-center text-2xl group-hover:bg-[#4f6ef7]/20 transition-colors">
+                            <div className="w-12 h-12 rounded-2xl bg-[#FF8C69]/10 flex items-center justify-center text-2xl group-hover:bg-[#FF8C69]/20 transition-colors">
                                 {noti.type === 'notice' ? '📢' : noti.type === 'post' ? '📋' : noti.type === 'poll' ? '🗳️' : noti.type === 'member' ? '👥' : '💬'}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="text-[10px] font-bold text-[#4f6ef7] uppercase tracking-[0.2em] font-mono mb-1">
+                                <h4 className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] mb-1">
                                     {noti.title}
                                 </h4>
                                 <p className="text-xs text-[#e8e8f0] font-bold truncate">

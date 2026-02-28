@@ -17,7 +17,7 @@ const AdminEditChannel = () => {
         name: '',
         description: '',
         profileImage: '',
-        cardColor: '#4f6ef7'
+        cardColor: '#FF8C69'
     });
     const [uploading, setUploading] = useState(false);
 
@@ -35,7 +35,7 @@ const AdminEditChannel = () => {
                         name: channel.name,
                         description: channel.description,
                         profileImage: channel.profileImage || '',
-                        cardColor: channel.cardColor || '#4f6ef7'
+                        cardColor: channel.cardColor || '#FF8C69'
                     });
                 }
             }
@@ -80,7 +80,7 @@ const AdminEditChannel = () => {
 
     if (isLoading) return (
         <div className="h-full flex items-center justify-center bg-[#1a1a24] text-[#FF8C69]">
-            <div className="animate-bounce text-4xl italic font-black font-mono uppercase tracking-widest">Loading...</div>
+            <div className="animate-bounce text-4xl font-black uppercase tracking-widest">Loading...</div>
         </div>
     );
 
@@ -89,14 +89,14 @@ const AdminEditChannel = () => {
             <header className="mb-12">
                 <button
                     onClick={() => navigate(-1)}
-                    className="text-[10px] font-black text-[#FF8C69] hover:text-[#E8735A] transition-colors uppercase tracking-[0.2em] mb-6 flex items-center gap-2 group font-mono"
+                    className="text-[10px] font-black text-[#FF8C69] hover:text-[#E8735A] transition-colors uppercase tracking-[0.2em] mb-6 flex items-center gap-2 group"
                 >
                     <span className="text-lg group-hover:-translate-x-1 transition-transform">←</span> 이전 페이지로
                 </button>
-                <h1 className="text-4xl font-black italic tracking-tighter text-white mb-2 font-mono uppercase">
+                <h1 className="text-4xl font-black tracking-tighter text-white mb-2 uppercase">
                     채널 <span className="text-[#FF8C69]">정보</span> 수정
                 </h1>
-                <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em] ml-1">나만의 소중한 채널 정보를 관리하세요</p>
+                <p className="text-[#6b6b8a] text-xs font-bold tracking-[0.2em] uppercase ml-1">나만의 소중한 채널 정보를 관리하세요</p>
             </header>
 
             <div className="max-w-3xl bg-[#23232f] border border-white/5 rounded-[2.5rem] p-10 md:p-16 shadow-2xl relative overflow-hidden group">
@@ -105,7 +105,7 @@ const AdminEditChannel = () => {
                 <form onSubmit={handleSubmit} className="space-y-12 relative z-10">
                     <div className="flex flex-col md:flex-row gap-10">
                         <div className="space-y-4 flex-shrink-0">
-                            <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic font-mono">Channel Icon</label>
+                            <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2">Channel Icon</label>
                             <div className="relative group/avatar">
                                 <div className="w-32 h-32 rounded-3xl bg-[#1a1a24] border border-white/5 flex items-center justify-center overflow-hidden shadow-inner relative">
                                     {formData.profileImage ? (
@@ -127,10 +127,10 @@ const AdminEditChannel = () => {
                         </div>
 
                         <div className="space-y-4 flex-1">
-                            <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic font-mono">Channel Style</label>
+                            <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2">Channel Style</label>
                             <div className="p-6 bg-[#1a1a24] border border-white/5 rounded-3xl shadow-inner space-y-4">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[11px] font-bold text-[#6b6b8a] uppercase tracking-widest font-mono">Card Accent Color</span>
+                                    <span className="text-[11px] font-bold text-[#6b6b8a] uppercase tracking-widest">Card Accent Color</span>
                                     <input
                                         type="color"
                                         value={formData.cardColor}
@@ -142,7 +142,7 @@ const AdminEditChannel = () => {
                                     className="h-1 rounded-full opacity-50 transition-all duration-500"
                                     style={{ background: `linear-gradient(to right, ${formData.cardColor}, transparent)` }}
                                 ></div>
-                                <p className="text-[9px] text-[#44445a] font-mono leading-relaxed">
+                                <p className="text-xs text-[#6b6b8a] font-medium leading-relaxed">
                                     이 색상은 채널 검색 시 카드 하이라이트와 테두리에 적용됩니다.
                                 </p>
                             </div>
@@ -150,7 +150,7 @@ const AdminEditChannel = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic font-mono">Channel Identity</label>
+                        <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2">Channel Identity</label>
                         <div className="relative group/input">
                             <div className="absolute -inset-0.5 orange-gradient rounded-2xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500 pointer-events-none"></div>
                             <input
@@ -158,14 +158,14 @@ const AdminEditChannel = () => {
                                 required
                                 value={formData.name}
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-8 py-5 text-white text-sm font-bold focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-inner font-mono"
+                                className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-8 py-5 text-white text-sm font-bold focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-inner"
                                 placeholder="채널의 이름을 정해주세요"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-4">
-                        <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2 italic font-mono">Channel Story</label>
+                        <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2">Channel Story</label>
                         <div className="relative group/input">
                             <div className="absolute -inset-0.5 orange-gradient rounded-3xl blur opacity-[0.05] group-focus-within/input:opacity-20 transition duration-500 pointer-events-none"></div>
                             <textarea
@@ -178,19 +178,19 @@ const AdminEditChannel = () => {
                         </div>
                     </div>
 
-                    {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest font-mono italic">{error}</p>}
+                    {error && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest">{error}</p>}
 
                     <div className="flex gap-6 pt-4">
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="flex-1 py-5 bg-[#1a1a24] border border-white/5 text-[#6b6b8a] text-[10px] font-black rounded-2xl hover:bg-white/5 transition-all uppercase tracking-widest shadow-lg font-mono"
+                            className="flex-1 py-5 bg-[#1a1a24] border border-white/5 text-[#6b6b8a] text-xs font-black rounded-2xl hover:bg-white/5 transition-all uppercase tracking-widest shadow-lg"
                         >
                             변경 취소
                         </button>
                         <button
                             type="submit"
-                            className="flex-[2] py-5 orange-gradient text-white text-[10px] font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-[0.2em] font-mono"
+                            className="flex-[2] py-5 orange-gradient text-white text-xs font-black rounded-2xl shadow-xl shadow-[#FF8C69]/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-[0.2em]"
                         >
                             시스템 설정 업데이트 ✨
                         </button>

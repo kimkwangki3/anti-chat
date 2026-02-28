@@ -37,23 +37,23 @@ const ChannelSearchPage = () => {
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto">
             <header className="mb-12">
-                <h1 className="text-4xl font-bold font-mono tracking-wider mb-2 uppercase italic text-white">채널 <span className="text-[#4f6ef7]">탐색</span> 부</h1>
-                <p className="text-[#6b6b8a] text-[10px] font-mono tracking-[0.3em] uppercase ml-1">가입할 새로운 커뮤니티를 검색하세요</p>
+                <h1 className="text-4xl font-bold tracking-wider mb-2 text-white">채널 <span className="text-[#FF8C69]">탐색</span> 부</h1>
+                <p className="text-[#6b6b8a] text-xs font-bold tracking-[0.2em] uppercase ml-1">가입할 새로운 커뮤니티를 검색하세요</p>
             </header>
 
             <form onSubmit={handleSearch} className="mb-12 relative group max-w-2xl">
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#4f6ef7] to-[#7c3aed] rounded-2xl blur opacity-10 group-focus-within:opacity-30 transition duration-500"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#FF8C69] to-[#FFB5A0] rounded-2xl blur opacity-10 group-focus-within:opacity-30 transition duration-500"></div>
                 <div className="relative flex gap-4">
                     <input
                         type="text"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="채널 이름 또는 키워드로 검색..."
-                        className="flex-1 bg-[#12121a] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#4f6ef7]/40 transition-all shadow-2xl placeholder:text-[#333344] font-medium"
+                        className="flex-1 bg-[#12121a] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#FF8C69]/40 transition-all shadow-2xl placeholder:text-[#333344] font-medium"
                     />
                     <button
                         type="submit"
-                        className="px-8 bg-[#4f6ef7] text-white font-black rounded-2xl hover:bg-[#5f7ef7] transition-all shadow-lg shadow-[#4f6ef7]/20 uppercase text-[11px] tracking-widest active:scale-95"
+                        className="px-8 orange-gradient text-white font-black rounded-2xl hover:scale-105 transition-transform shadow-lg shadow-[#FF8C69]/20 uppercase text-[11px] tracking-widest active:scale-95"
                     >
                         데이터 검색
                     </button>
@@ -78,15 +78,15 @@ const ChannelSearchPage = () => {
                                 key={channel._id}
                                 className="bg-[#12121a] p-8 border rounded-[2.5rem] transition-all group relative overflow-hidden flex flex-col h-full shadow-2xl"
                                 style={{
-                                    borderColor: `${channel.cardColor || '#4f6ef7'}1A`,
-                                    boxShadow: `0 25px 50px -12px ${channel.cardColor || '#4f6ef7'}10`
+                                    borderColor: `${channel.cardColor || '#FF8C69'}1A`,
+                                    boxShadow: `0 25px 50px -12px ${channel.cardColor || '#FF8C69'}10`
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#4f6ef7'}66`}
-                                onMouseLeave={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#4f6ef7'}1A`}
+                                onMouseEnter={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#FF8C69'}66`}
+                                onMouseLeave={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#FF8C69'}1A`}
                             >
                                 <div
                                     className="absolute top-0 right-0 w-32 h-32 rounded-bl-[5rem] pointer-events-none transition-all"
-                                    style={{ backgroundColor: `${channel.cardColor || '#4f6ef7'}10` }}
+                                    style={{ backgroundColor: `${channel.cardColor || '#FF8C69'}10` }}
                                 ></div>
                                 <div className="flex justify-between items-start mb-6 relative z-10">
                                     <span className="text-[9px] font-black text-[#444466] uppercase tracking-[0.2em]">
@@ -94,7 +94,7 @@ const ChannelSearchPage = () => {
                                     </span>
                                     <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-full">
                                         <span className={`w-1.5 h-1.5 rounded-full ${channel.ownerId?.isOnline ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-[#333344]'}`}></span>
-                                        <span className={`text-[8px] font-black uppercase tracking-tighter ${channel.ownerId?.isOnline ? 'text-[#06d6a0]' : 'text-[#333344]'}`}>
+                                        <span className={`text-[8px] font-bold uppercase tracking-tighter ${channel.ownerId?.isOnline ? 'text-[#06d6a0]' : 'text-[#333344]'}`}>
                                             MASTER {channel.ownerId?.isOnline ? 'ONLINE' : 'OFFLINE'}
                                         </span>
                                     </div>
@@ -108,15 +108,15 @@ const ChannelSearchPage = () => {
                                     ) : (
                                         <div
                                             className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner flex-shrink-0"
-                                            style={{ backgroundColor: `${channel.cardColor || '#4f6ef7'}20` }}
+                                            style={{ backgroundColor: `${channel.cardColor || '#FF8C69'}20` }}
                                         >
                                             📡
                                         </div>
                                     )}
                                     <h3
-                                        className="text-2xl font-black text-white group-hover:text-[#4f6ef7] transition-colors leading-tight"
+                                        className="text-2xl font-black text-white transition-colors leading-tight"
                                         style={{ '--tw-text-opacity': '1', color: 'white' }}
-                                        onMouseEnter={(e) => e.currentTarget.style.color = channel.cardColor || '#4f6ef7'}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = channel.cardColor || '#FF8C69'}
                                         onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
                                     >{channel.name}</h3>
                                 </div>
@@ -125,22 +125,22 @@ const ChannelSearchPage = () => {
 
                                 <div
                                     className="flex items-center justify-between mt-auto border-t pt-6 relative z-10"
-                                    style={{ borderColor: `${channel.cardColor || '#4f6ef7'}1A` }}
+                                    style={{ borderColor: `${channel.cardColor || '#FF8C69'}1A` }}
                                 >
                                     <div className="flex items-center gap-3">
                                         <div
                                             className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border"
                                             style={{
-                                                backgroundColor: `${channel.cardColor || '#4f6ef7'}1A`,
-                                                color: channel.cardColor || '#4f6ef7',
-                                                borderColor: `${channel.cardColor || '#4f6ef7'}20`
+                                                backgroundColor: `${channel.cardColor || '#FF8C69'}1A`,
+                                                color: channel.cardColor || '#FF8C69',
+                                                borderColor: `${channel.cardColor || '#FF8C69'}20`
                                             }}
                                         >
                                             {channel.ownerId?.name?.[0]}
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-black text-white leading-none">{channel.ownerId?.name}</p>
-                                            <p className="text-[8px] text-[#444466] font-mono leading-none mt-1">OWNER</p>
+                                            <p className="text-[8px] text-[#444466] font-bold leading-none mt-1">OWNER</p>
                                         </div>
                                     </div>
 
@@ -158,8 +158,8 @@ const ChannelSearchPage = () => {
                                                 onClick={() => handleJoinRequest(channel._id)}
                                                 className="px-5 py-2.5 text-white text-[10px] font-black rounded-xl transition-all shadow-xl uppercase tracking-widest active:scale-95"
                                                 style={{
-                                                    backgroundColor: channel.cardColor || '#4f6ef7',
-                                                    boxShadow: `0 10px 15px -3px ${channel.cardColor || '#4f6ef7'}40`
+                                                    backgroundColor: channel.cardColor || '#FF8C69',
+                                                    boxShadow: `0 10px 15px -3px ${channel.cardColor || '#FF8C69'}40`
                                                 }}
                                             >
                                                 가입 신청
@@ -170,9 +170,9 @@ const ChannelSearchPage = () => {
                                         <span
                                             className="px-5 py-2.5 border text-[10px] font-black rounded-xl uppercase tracking-widest"
                                             style={{
-                                                backgroundColor: `${channel.cardColor || '#4f6ef7'}1A`,
-                                                color: channel.cardColor || '#4f6ef7',
-                                                borderColor: `${channel.cardColor || '#4f6ef7'}20`
+                                                backgroundColor: `${channel.cardColor || '#FF8C69'}1A`,
+                                                color: channel.cardColor || '#FF8C69',
+                                                borderColor: `${channel.cardColor || '#FF8C69'}20`
                                             }}
                                         >
                                             내 채널
