@@ -4,6 +4,7 @@ import useChatStore from '../../store/chatStore';
 import useAuthStore from '../../store/authStore';
 import axios from '../../api/axios';
 import socket from '../../socket/socket';
+import UserAvatar from '../Common/UserAvatar';
 
 const ChatSidebar = () => {
     const {
