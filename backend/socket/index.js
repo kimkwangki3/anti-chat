@@ -1,6 +1,7 @@
 const Message = require('../models/Message');
 const ChatRoom = require('../models/ChatRoom');
 const User = require('../models/User');
+const ChannelMember = require('../models/ChannelMember');
 const { writeChatLog, writeAuthLog } = require('../utils/logService');
 const { sendPushNotification, sendPushToChannelMembers } = require('../utils/pushService');
 
@@ -97,8 +98,29 @@ const socketHandler = (io) => {
         socket.on('send_message', async (data) => {
             const { roomId, senderId, content, channelId, fileUrl, fileType, fileName } = data;
 
-
             try {
+                // 발신자 및 방 정보 먼저 조회
+                const room = await ChatRoom.findById(roomId);
+                if (!room) return;
+
+                // 해당 멤버의 채널 상태 검사 (휴정 여부)
+                const targetChannelId = channelId || room.channelId;
+                // 채팅방의 멤버 ID (사용자 ID)
+                const chatMemberId = room.memberId;
+
+                const channelMember = await ChannelMember.findOne({
+                    channelId: targetChannelId,
+                    userId: chatMemberId
+                });
+
+                // 멤버가 아예 없거나 휴정 상태이면 전송 차단
+                if (!channelMember || channelMember.status === 'suspended') {
+                    socket.emit('chat_error', {
+                        message: '해당 회원은 현재 휴정 상태이므로 메시지를 주고받을 수 없습니다.'
+                    });
+                    return; // DB 저장 및 전송 로직 중단
+                }
+
                 const message = await Message.create({
                     roomId,
                     senderId,
@@ -109,12 +131,12 @@ const socketHandler = (io) => {
                 });
 
                 const user = await User.findById(senderId);
+
                 if (user) {
                     const logContent = fileUrl ? `[${fileName || (fileType?.startsWith('image/') ? '사진' : '파일')}] ${content || ''}` : content;
                     writeChatLog(roomId, user.name, logContent);
                 }
 
-                const room = await ChatRoom.findById(roomId);
                 if (room) {
                     const isAdminSender = room.adminId.toString() === senderId.toString();
                     const recipientId = isAdminSender ? room.memberId : room.adminId;

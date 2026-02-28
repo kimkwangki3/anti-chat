@@ -78,8 +78,13 @@ const ChatPage = () => {
             }
         });
 
+        socket.on('chat_error', (errorData) => {
+            alert(errorData.message || '메시지 전송에 실패했습니다.');
+        });
+
         return () => {
             socket.off('receive_message');
+            socket.off('chat_error');
         };
     }, [currentRoom?._id, addMessage, token]);
 
