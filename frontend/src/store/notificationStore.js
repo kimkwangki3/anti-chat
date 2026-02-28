@@ -89,6 +89,7 @@ const useNotificationStore = create(
                 try {
                     const { default: axios } = await import('../api/axios');
                     const { data } = await axios.get('/channels/unread-counts');
+                    console.log('[NotificationStore] Fetched Unread Counts:', data);
                     set({ unreadCounts: data });
                 } catch (error) {
                     console.error('Fetch unread counts failed:', error);

@@ -152,7 +152,7 @@ const Dashboard = () => {
                 </section>
             ) : (
                 <>
-                    {(notifications.length > 0 || (user?.role === 'admin' && totalPending > 0) || (user?.role === 'member' && totalUnread > 0)) && (
+                    {(notifications.length > 0 || totalPending > 0 || totalUnread > 0) && (
                         <section className="mb-10">
                             <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2 mb-5">
                                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> 새로운 소식
@@ -189,9 +189,9 @@ const Dashboard = () => {
 
                                         {/* 관리자용 채팅 알림 추가 */}
                                         {myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
-                                            const chId = membership.channelId?._id;
-                                            const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0 };
-                                            if (counts.chat === 0) return null;
+                                            const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
+                                            const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0, poll: 0 };
+                                            if (Number(counts.chat) === 0) return null;
                                             return (
                                                 <div
                                                     key={`admin-chat-noti-${chId}`}
@@ -425,7 +425,7 @@ const Dashboard = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 {myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
-                                    const chId = membership.channelId?._id;
+                                    const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
                                     const themeColor = membership.channelId?.cardColor || '#FF8C69';
                                     const chatCount = unreadCounts[chId]?.chat || 0;
 
