@@ -227,7 +227,7 @@ router.get('/unread-counts', protect, async (req, res) => {
                 }
             });
 
-            counts[channelId] = {
+            counts[channelId.toString()] = {
                 notice: noticeCount,
                 post: postCount,
                 poll: pollCount,

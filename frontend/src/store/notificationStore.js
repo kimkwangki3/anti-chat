@@ -24,7 +24,7 @@ const useNotificationStore = create(
 
             incrementUnreadCount: (channelId, type) => {
                 set((state) => {
-                    const counts = state.unreadCounts[channelId] || { notice: 0, post: 0, chat: 0 };
+                    const counts = state.unreadCounts[channelId] || { notice: 0, post: 0, chat: 0, poll: 0 };
                     return {
                         unreadCounts: {
                             ...state.unreadCounts,
@@ -36,7 +36,7 @@ const useNotificationStore = create(
 
             resetUnreadCount: (channelId, type) => {
                 set((state) => {
-                    const counts = state.unreadCounts[channelId] || { notice: 0, post: 0, chat: 0 };
+                    const counts = state.unreadCounts[channelId] || { notice: 0, post: 0, chat: 0, poll: 0 };
                     return {
                         unreadCounts: {
                             ...state.unreadCounts,

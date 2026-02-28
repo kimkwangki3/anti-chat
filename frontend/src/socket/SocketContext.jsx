@@ -307,7 +307,7 @@ export const SocketProvider = ({ children }) => {
                 channelId: data.channelId,
                 path: `/polls?channelId=${data.channelId}`
             });
-            incrementUnreadCount(data.channelId, 'notice'); // 공지에 포함하여 카운트
+            incrementUnreadCount(data.channelId, 'poll'); // notice -> poll
             playNotificationSound();
         };
 

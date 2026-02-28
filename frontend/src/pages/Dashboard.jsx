@@ -25,12 +25,13 @@ const Dashboard = () => {
     useEffect(() => {
         if (user?._id) {
             fetchMyChannels();
+            fetchUnreadCounts();
             if (user.role === 'superadmin') {
                 fetchStats();
             }
         }
         setCurrentChannel(null);
-    }, [user?._id, fetchMyChannels, setCurrentChannel, user?.role]);
+    }, [user?._id, fetchMyChannels, setCurrentChannel, user?.role, fetchUnreadCounts]);
 
     const fetchStats = async () => {
         setIsStatsLoading(true);
@@ -213,8 +214,8 @@ const Dashboard = () => {
                                 )}
                                 {user?.role === 'member' && myChannels.map(membership => {
                                     const chId = membership.channelId?._id;
-                                    const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0 };
-                                    const sum = counts.notice + counts.post + counts.chat;
+                                    const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0, poll: 0 };
+                                    const sum = (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
                                     if (sum === 0) return null;
                                     const themeColor = membership.channelId?.cardColor || '#FF8C69';
                                     return (
