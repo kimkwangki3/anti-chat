@@ -8,6 +8,7 @@ const SideIcon = ({ name, active }) => {
     const c = active ? '#FF8C69' : '#636366';
     const icons = {
         home: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 10.5L12 3L21 10.5V20C21 20.5523 20.5523 21 20 21H15V15H9V21H4C3.44772 21 3 20.5523 3 20V10.5Z" fill={active ? `${c}30` : 'none'} stroke={c} strokeWidth="1.7" strokeLinejoin="round" /></svg>,
+        search: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M21 21L16.65 16.65" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>,
         bell: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke={c} strokeWidth="1.7" strokeLinecap="round" /></svg>,
         vote: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke={c} strokeWidth="1.7" /><path d="M8 12L11 15L16 9" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>,
         board: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M9 13H15M9 17H12M14 2V8H20" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>,
@@ -38,6 +39,7 @@ const Sidebar = () => {
 
     const menuItems = [
         { id: 'dashboard', label: '홈', icon: 'home', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
+        { id: 'search', label: '채널 검색', icon: 'search', path: '/search-channels', hidden: !!urlChannelId },
         { id: 'notice', label: '공지사항', icon: 'bell', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
         { id: 'poll', label: '투표', icon: 'vote', path: `/polls?channelId=${urlChannelId}`, hidden: !urlChannelId },
         { id: 'board', label: '게시판', icon: 'board', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },

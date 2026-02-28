@@ -293,14 +293,6 @@ const Dashboard = () => {
                             <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
                                 <span className="w-2 h-2 bg-[#FF8C69] rounded-full"></span> 참여 중인 채널
                             </h2>
-                            {user?.role === 'member' && (
-                                <button
-                                    onClick={() => navigate('/search-channels')}
-                                    className="text-[11px] font-bold text-[#FF8C69] hover:text-[#FFB5A0] transition-colors uppercase tracking-widest"
-                                >
-                                    + 탐색하기
-                                </button>
-                            )}
                         </div>
                         {isLoading ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -311,15 +303,17 @@ const Dashboard = () => {
                         ) : myChannels.length === 0 ? (
                             <div className="bg-[#23232f] border border-dashed border-[#FF8C69]/20 rounded-3xl p-16 text-center shadow-inner">
                                 <div className="text-5xl mb-6">🏝️</div>
-                                <p className="text-[#6b6b8a] text-sm mb-8 font-bold">
-                                    {user?.role === 'admin' ? '운영 중인 채널이 없어요. 새로운 채널을 개설해 보세요!' : '가입된 채널이 없어요. 새로운 채널을 찾아보세요!'}
+                                <p className="text-[#6b6b8a] text-sm font-bold">
+                                    {user?.role === 'admin' ? '운영 중인 채널이 없어요. 새로운 채널을 개설해 보세요!' : '가입된 채널이 없어요. 새로운 채널을 좌측 메뉴에서 찾아보세요!'}
                                 </p>
-                                <button
-                                    onClick={() => user?.role === 'admin' ? setIsModalOpen(true) : navigate('/search-channels')}
-                                    className="px-10 py-4 orange-gradient text-white font-bold rounded-2xl shadow-xl shadow-[#FF8C69]/20 text-xs tracking-widest uppercase hover:scale-105 transition-transform"
-                                >
-                                    {user?.role === 'admin' ? '새 채널 개설하기' : '채널 탐색하기'}
-                                </button>
+                                {user?.role === 'admin' && (
+                                    <button
+                                        onClick={() => setIsModalOpen(true)}
+                                        className="mt-8 px-10 py-4 orange-gradient text-white font-bold rounded-2xl shadow-xl shadow-[#FF8C69]/20 text-xs tracking-widest uppercase hover:scale-105 transition-transform"
+                                    >
+                                        새 채널 개설하기
+                                    </button>
+                                )}
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
