@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
+import useNotificationStore from '../store/notificationStore';
 import * as XLSX from 'xlsx';
 
 const PollPage = () => {
@@ -28,12 +29,24 @@ const PollPage = () => {
         expiresAt: ''
     });
 
+    const { resetUnreadCount } = useNotificationStore();
+
     useEffect(() => {
         if (channelId) {
             fetchPolls();
             fetchChannelRole();
+            resetUnreadCount(channelId, 'notice');
+            markAllPollsRead();
         }
     }, [channelId]);
+
+    const markAllPollsRead = async () => {
+        try {
+            await axios.patch(`/polls/channel/${channelId}/read-all`);
+        } catch (error) {
+            console.error('Mark all polls read failed:', error);
+        }
+    };
 
     const fetchChannelRole = async () => {
         try {
@@ -105,7 +118,6 @@ const PollPage = () => {
                 'Voted At': new Date(v.createdAt).toLocaleString()
             }));
 
-            // 만약 익명투표라면 요약만 제공 가능하지만, 여기서는 요청에 따라 관리자에게 제공 시도
             const worksheet = XLSX.utils.json_to_sheet(exportData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Results");
@@ -186,7 +198,6 @@ const PollPage = () => {
                         )}
                     </section>
 
-                    {/* 완료된 투표 - 관리자만 확인 가능 */}
                     {(channelRole === 'admin' || user?.role === 'superadmin') && (
                         <section>
                             <div className="flex items-center gap-3 mb-8">
@@ -209,7 +220,6 @@ const PollPage = () => {
                     )}
                 </div>
 
-                {/* 투표 생성 모달 */}
                 {isCreateModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-[#0a0a0f]/90 backdrop-blur-md" onClick={() => setIsCreateModalOpen(false)}></div>

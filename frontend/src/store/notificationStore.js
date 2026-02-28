@@ -79,6 +79,18 @@ const useNotificationStore = create(
                 return Object.values(pendingCounts).reduce((sum, n) => sum + n, 0);
             },
 
+            setUnreadCounts: (counts) => set({ unreadCounts: counts }),
+
+            fetchUnreadCounts: async () => {
+                try {
+                    const { default: axios } = await import('../api/axios');
+                    const { data } = await axios.get('/channels/unread-counts');
+                    set({ unreadCounts: data });
+                } catch (error) {
+                    console.error('Fetch unread counts failed:', error);
+                }
+            },
+
             resetStore: () => set({ notifications: [], unreadCounts: {}, pendingCounts: {} })
         }),
         {

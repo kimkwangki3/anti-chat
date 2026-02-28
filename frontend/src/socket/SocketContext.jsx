@@ -33,8 +33,8 @@ export const SocketProvider = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, token, sessionId: storeSessionId } = useAuthStore();
-    const { currentChannel } = useChannelStore();
-    const { addNotification, incrementUnreadCount, removeNotification, notifications, incrementPendingCount } = useNotificationStore();
+    const { myChannels, fetchMyChannels, currentChannel } = useChannelStore();
+    const { addNotification, incrementUnreadCount, removeNotification, notifications, incrementPendingCount, fetchUnreadCounts } = useNotificationStore();
     const { soundType, volume, sounds } = useSettingsStore();
     const { markMessagesRead } = useChatStore();
     const [onlineCount, setOnlineCount] = useState(0);
@@ -42,9 +42,11 @@ export const SocketProvider = ({ children }) => {
     // [고도화] 리스너 호출 시 최신 상태 참조를 위한 Ref 사용
     const locationRef = useRef(location);
     const channelRef = useRef(currentChannel);
+    const userRef = useRef(user); // userRef 추가
 
     useEffect(() => { locationRef.current = location; }, [location]);
     useEffect(() => { channelRef.current = currentChannel; }, [currentChannel]);
+    useEffect(() => { userRef.current = user; }, [user]); // userRef 업데이트
 
     // [고도화] 알림 억제 여부 판단 함수 (Ref 사용으로 안정화)
     const shouldSuppressNotification = (targetType, targetChannelId, targetRoomId) => {
@@ -305,6 +307,7 @@ export const SocketProvider = ({ children }) => {
                 channelId: data.channelId,
                 path: `/polls?channelId=${data.channelId}`
             });
+            incrementUnreadCount(data.channelId, 'notice'); // 공지에 포함하여 카운트
             playNotificationSound();
         };
 
@@ -344,17 +347,37 @@ export const SocketProvider = ({ children }) => {
     }, [user?._id]); // user 정보가 바뀌어 로그아웃/로그인 될 때만 리스너 재설정
 
     useEffect(() => {
+        if (socket.connected && user?._id) {
+            // 1. 기본 유저 방 조인 및 세션 설정
+            socket.emit('setup', { ...user, sessionId: localStorage.getItem('sessionId') });
+
+            // 2. 가입된 모든 채널 방 조인 (글로벌 알림용)
+            if (myChannels.length > 0) {
+                myChannels.forEach(membership => {
+                    if (membership.channelId?._id) {
+                        socket.emit('join_channel', membership.channelId._id);
+                    }
+                });
+            }
+
+            // 3. 초기 읽지 않은 개수 서버와 동기화
+            fetchUnreadCounts();
+        }
+    }, [socket.connected, user?._id, myChannels, fetchUnreadCounts]);
+
+    useEffect(() => {
         if (currentChannel?._id && socket.connected) {
             socket.emit('join_channel', currentChannel._id);
             socket.on('channel_online_count', (count) => setOnlineCount(count));
             return () => {
-                socket.emit('leave_channel', currentChannel._id);
+                // 채널을 완전히 떠나지는 않음 (글로벌 알림 수신 유지)
+                // 다만 온라인 카운트 리스너만 제거
                 socket.off('channel_online_count');
             };
         } else {
             setOnlineCount(0);
         }
-    }, [currentChannel, user]);
+    }, [currentChannel, socket.connected]);
 
     const handleNotificationClick = (noti) => {
         removeNotification(noti.id);

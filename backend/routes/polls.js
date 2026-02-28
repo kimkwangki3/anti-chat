@@ -39,7 +39,7 @@ router.post('/', protect, async (req, res) => {
         // 소켓 알림 발송을 위해 소켓 인스턴스 가져오기 (server.js에서 설정된 io)
         const io = req.app.get('io');
         if (io) {
-            io.to(channelId).emit('new_poll_created', {
+            io.to(`channel_${channelId}`).emit('new_poll_created', {
                 pollId: poll._id,
                 channelId,
                 title: poll.title
@@ -49,6 +49,42 @@ router.post('/', protect, async (req, res) => {
         res.status(201).json(poll);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    투표 읽음 처리
+// @route   PATCH /api/polls/:id/read
+router.patch('/:id/read', protect, async (req, res) => {
+    try {
+        const poll = await Poll.findById(req.params.id);
+        if (!poll) return res.status(404).json({ message: '투표를 찾을 수 없습니다.' });
+
+        if (!poll.readBy.includes(req.user._id)) {
+            poll.readBy.push(req.user._id);
+            await poll.save();
+        }
+        res.json(poll);
+    } catch (error) {
+        res.status(500).json({ message: '읽음 처리 오류' });
+    }
+});
+
+// @desc    채널 내 모든 투표 읽음 처리
+// @route   PATCH /api/polls/channel/:channelId/read-all
+router.patch('/channel/:channelId/read-all', protect, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const channelId = req.params.channelId;
+
+        // 해당 채널의 읽지 않은 모든 투표 업데이트
+        await Poll.updateMany(
+            { channelId, readBy: { $ne: userId } },
+            { $addToSet: { readBy: userId } }
+        );
+
+        res.json({ message: '모든 투표를 읽음 처리했습니다.' });
+    } catch (error) {
+        res.status(500).json({ message: '읽음 처리 오류' });
     }
 });
 

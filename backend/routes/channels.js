@@ -174,4 +174,61 @@ router.post('/upload', protect, upload.single('file'), (req, res) => {
     }
 });
 
+const Notice = require('../models/Notice');
+const Post = require('../models/Post');
+const ChatRoom = require('../models/ChatRoom');
+
+// @route   GET /api/channels/unread-counts
+// @desc    모든 채널의 읽지 않은 소식(공지, 게시글, 채팅) 개수 조회
+// @access  Private
+router.get('/unread-counts', protect, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const memberships = await ChannelMember.find({ userId, status: 'approved' });
+        const channelIds = memberships.map(m => m.channelId);
+
+        const counts = {};
+
+        for (const channelId of channelIds) {
+            // 1. 공지사항 안 읽은 개수
+            const noticeCount = await Notice.countDocuments({
+                channelId,
+                readBy: { $ne: userId }
+            });
+
+            // 2. 게시글 안 읽은 개수
+            const postCount = await Post.countDocuments({
+                channelId,
+                readBy: { $ne: userId }
+            });
+
+            // 3. 채팅 안 읽은 개수
+            let chatCount = 0;
+            const chatRooms = await ChatRoom.find({
+                channelId,
+                $or: [{ adminId: userId }, { memberId: userId }]
+            });
+
+            chatRooms.forEach(room => {
+                if (room.adminId.toString() === userId.toString()) {
+                    chatCount += (room.unreadCountAdmin || 0);
+                } else {
+                    chatCount += (room.unreadCountMember || 0);
+                }
+            });
+
+            counts[channelId] = {
+                notice: noticeCount,
+                post: postCount,
+                chat: chatCount
+            };
+        }
+
+        res.json(counts);
+    } catch (error) {
+        console.error('Unread counts fetch error:', error);
+        res.status(500).json({ message: '알림 정보를 불러오는데 실패했습니다.' });
+    }
+});
+
 module.exports = router;
