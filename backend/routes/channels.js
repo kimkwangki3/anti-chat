@@ -197,13 +197,13 @@ router.get('/unread-counts', protect, async (req, res) => {
             // 1. 공지사항 안 읽은 개수
             const noticeCount = await Notice.countDocuments({
                 channelId,
-                readBy: { $ne: userId }
+                readBy: { $ne: new mongoose.Types.ObjectId(userId) }
             });
 
             // 2. 게시글 안 읽은 개수
             const postCount = await Post.countDocuments({
                 channelId,
-                readBy: { $ne: userId }
+                readBy: { $ne: new mongoose.Types.ObjectId(userId) }
             });
 
             // 3. 투표 안 읽은 개수
@@ -211,7 +211,7 @@ router.get('/unread-counts', protect, async (req, res) => {
                 channelId,
                 status: 'active',
                 expiresAt: { $gt: new Date() },
-                readBy: { $ne: userId }
+                readBy: { $ne: new mongoose.Types.ObjectId(userId) }
             });
 
             // 4. 채팅 안 읽은 개수
