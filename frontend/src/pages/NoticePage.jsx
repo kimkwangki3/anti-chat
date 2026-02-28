@@ -29,10 +29,17 @@ const NoticePage = () => {
 
     useEffect(() => {
         if (channelId) {
+            // 새로고침 시 currentChannel이 없거나 URL과 다를 경우 동기화
+            if (!currentChannel || currentChannel._id !== channelId) {
+                const channelInfo = useChannelStore.getState().myChannels.find(m => m.channelId?._id === channelId)?.channelId;
+                if (channelInfo) {
+                    useChannelStore.getState().setCurrentChannel(channelInfo);
+                }
+            }
             fetchNotices(channelId);
             resetUnreadCount(channelId, 'notice');
         }
-    }, [fetchNotices, channelId, resetUnreadCount]);
+    }, [fetchNotices, channelId, resetUnreadCount, currentChannel]);
 
     useEffect(() => {
         if (scrollRef.current) {
