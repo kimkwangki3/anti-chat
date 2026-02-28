@@ -330,6 +330,20 @@ const Dashboard = () => {
                                                 >🏘️</div>
                                             )}
                                             <div className="flex items-center gap-2">
+                                                {/* 채널별 통합 알림 배지 추가 (사용자 요청) */}
+                                                {(unreadCounts[membership.channelId?._id]?.notice > 0 ||
+                                                    unreadCounts[membership.channelId?._id]?.post > 0 ||
+                                                    unreadCounts[membership.channelId?._id]?.chat > 0) && (
+                                                        <div
+                                                            className="flex items-center gap-1.5 px-3 py-1 bg-red-500 text-white text-[10px] font-black rounded-full shadow-lg shadow-red-500/40 animate-bounce cursor-default"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+                                                            {(unreadCounts[membership.channelId?._id]?.notice || 0) +
+                                                                (unreadCounts[membership.channelId?._id]?.post || 0) +
+                                                                (unreadCounts[membership.channelId?._id]?.chat || 0)}
+                                                        </div>
+                                                    )}
                                                 <span
                                                     className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter shadow-sm border`}
                                                     style={{
