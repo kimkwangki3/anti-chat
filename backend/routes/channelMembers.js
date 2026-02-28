@@ -14,14 +14,28 @@ router.post('/join', protect, async (req, res) => {
     try {
         const existing = await ChannelMember.findOne({ channelId, userId: req.user._id });
         if (existing) {
-            return res.status(400).json({ message: '이미 가입 신청하셨거나 멤버입니다.' });
+            if (existing.status === 'withdrawn') {
+                const hoursSinceWithdrawal = (Date.now() - new Date(existing.updatedAt).getTime()) / (1000 * 60 * 60);
+                if (hoursSinceWithdrawal < 48) {
+                    return res.status(403).json({ message: '채널 탈퇴 후 2일(48시간) 내에는 재가입할 수 없습니다.' });
+                }
+                // Update existing record
+                existing.status = 'pending';
+                await existing.save();
+
+                member = existing;
+            } else {
+                return res.status(400).json({ message: '이미 가입 신청하셨거나 멤버입니다.' });
+            }
+        } else {
+            member = await ChannelMember.create({
+                channelId,
+                userId: req.user._id,
+                status: 'pending'
+            });
         }
 
-        const member = await ChannelMember.create({
-            channelId,
-            userId: req.user._id,
-            status: 'pending'
-        });
+
 
         // 채널 관리자에게 실시간 알림 emit
         const channel = await Channel.findById(channelId);
@@ -70,6 +84,43 @@ router.get('/role/:channelId', protect, async (req, res) => {
             role: member ? member.role : 'none',
             status: member ? member.status : 'none'
         });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/channel-members/leave
+// @desc    채널 탈퇴
+// @access  Private
+router.post('/leave', protect, async (req, res) => {
+    const { channelId } = req.body;
+
+    try {
+        const channel = await Channel.findById(channelId);
+        if (!channel) return res.status(404).json({ message: '채널 정보를 찾을 수 없습니다.' });
+
+        if (channel.ownerId.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: '채널 관리자는 채널을 탈퇴할 수 없습니다.' });
+        }
+
+        const member = await ChannelMember.findOne({ channelId, userId: req.user._id });
+
+        if (!member || member.status !== 'approved') {
+            return res.status(400).json({ message: '채널의 멤버가 아닙니다.' });
+        }
+
+        member.status = 'withdrawn';
+        await member.save();
+
+        if (channel.ownerId) {
+            req.io.to(channel.ownerId.toString()).emit('member_left', {
+                channelId,
+                userId: req.user._id,
+                userName: req.user.name
+            });
+        }
+
+        res.json({ message: '성공적으로 채널에서 탈퇴했습니다.' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

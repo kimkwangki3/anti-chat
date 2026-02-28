@@ -27,7 +27,7 @@ const Sidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { logout, user } = useAuthStore();
-    const { currentChannel } = useChannelStore();
+    const { currentChannel, leaveChannel } = useChannelStore();
     const { unreadCounts, pendingCounts } = useNotificationStore();
 
     const params = new URLSearchParams(location.search);
@@ -168,6 +168,24 @@ const Sidebar = () => {
                         </p>
                     </div>
                 </div>
+                {urlChannelId && currentChannel?.ownerId?._id !== user?._id && currentChannel?.ownerId !== user?._id && (
+                    <button
+                        onClick={async () => {
+                            if (window.confirm('정말 채널을 탈퇴하시겠습니까? 탈퇴 후 2일(48시간) 동안 재가입이 제한됩니다.')) {
+                                const success = await leaveChannel(urlChannelId);
+                                if (success) {
+                                    navigate('/');
+                                }
+                            }
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2 mb-2 rounded-xl text-[12px] font-medium text-[#FF8C69]/80 hover:text-white hover:bg-[#FF8C69] transition-all"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l-5-5 5-5M13.8 12H3" />
+                        </svg>
+                        탈퇴신청하기
+                    </button>
+                )}
                 <button
                     onClick={logout}
                     className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] font-medium text-[#636366] hover:text-[#FF453A] hover:bg-[#FF453A]/5 transition-all"

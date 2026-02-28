@@ -78,6 +78,23 @@ const useChannelStore = create(
                     await axios.post('/channel-members/join', { channelId });
                     return true;
                 } catch (error) {
+                    alert(error.response?.data?.message || '가입 신청에 실패했습니다.');
+                    return false;
+                }
+            },
+
+            leaveChannel: async (channelId) => {
+                try {
+                    const response = await axios.post('/channel-members/leave', { channelId });
+                    alert(response.data.message || '채널에서 탈퇴했습니다.');
+                    get().fetchMyChannels();
+
+                    if (get().currentChannel?._id === channelId) {
+                        set({ currentChannel: null });
+                    }
+                    return true;
+                } catch (error) {
+                    alert(error.response?.data?.message || '채널 탈퇴에 실패했습니다.');
                     return false;
                 }
             },
