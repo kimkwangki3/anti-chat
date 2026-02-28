@@ -194,49 +194,58 @@ router.get('/unread-counts', protect, async (req, res) => {
         const counts = {};
 
         for (const channelId of channelIds) {
-            // 1. 공지사항 안 읽은 개수
-            const noticeCount = await Notice.countDocuments({
-                channelId,
-                readBy: { $ne: new mongoose.Types.ObjectId(userId) }
-            });
+            try {
+                const validChannelId = new mongoose.Types.ObjectId(channelId);
+                const validUserId = new mongoose.Types.ObjectId(userId);
 
-            // 2. 게시글 안 읽은 개수
-            const postCount = await Post.countDocuments({
-                channelId,
-                readBy: { $ne: new mongoose.Types.ObjectId(userId) }
-            });
+                // 1. 공지사항 안 읽은 개수
+                const noticeCount = await Notice.countDocuments({
+                    channelId: validChannelId,
+                    readBy: { $ne: validUserId }
+                });
 
-            // 3. 투표 안 읽은 개수
-            const pollCount = await Poll.countDocuments({
-                channelId,
-                status: 'active',
-                expiresAt: { $gt: new Date() },
-                readBy: { $ne: new mongoose.Types.ObjectId(userId) }
-            });
+                // 2. 게시글 안 읽은 개수
+                const postCount = await Post.countDocuments({
+                    channelId: validChannelId,
+                    readBy: { $ne: validUserId }
+                });
 
-            // 4. 채팅 안 읽은 개수
-            let chatCount = 0;
-            const chatRooms = await ChatRoom.find({
-                channelId,
-                $or: [{ adminId: userId }, { memberId: userId }]
-            });
+                // 3. 투표 안 읽은 개수
+                const pollCount = await Poll.countDocuments({
+                    channelId: validChannelId,
+                    status: 'active',
+                    expiresAt: { $gt: new Date() },
+                    readBy: { $ne: validUserId }
+                });
 
-            chatRooms.forEach(room => {
-                const isRoomAdmin = room.adminId?.toString() === userId.toString();
-                if (isRoomAdmin) {
-                    chatCount += (room.unreadCountAdmin || 0);
-                } else {
-                    chatCount += (room.unreadCountMember || 0);
-                }
-            });
+                // 4. 채팅 안 읽은 개수
+                let chatCount = 0;
+                const chatRooms = await ChatRoom.find({
+                    channelId: validChannelId,
+                    $or: [{ adminId: validUserId }, { memberId: validUserId }]
+                });
 
-            counts[channelId.toString()] = {
-                notice: noticeCount,
-                post: postCount,
-                poll: pollCount,
-                chat: chatCount
-            };
-            console.log(`[Unread API] Channel ${channelId}: notice=${noticeCount}, post=${postCount}, poll=${pollCount}, chat=${chatCount}`);
+                chatRooms.forEach(room => {
+                    const isRoomAdmin = room.adminId?.toString() === userId.toString();
+                    if (isRoomAdmin) {
+                        chatCount += (room.unreadCountAdmin || 0);
+                    } else {
+                        chatCount += (room.unreadCountMember || 0);
+                    }
+                });
+
+                counts[channelId.toString()] = {
+                    notice: noticeCount,
+                    post: postCount,
+                    poll: pollCount,
+                    chat: chatCount
+                };
+                console.log(`[Unread API] Channel ${channelId}: notice=${noticeCount}, post=${postCount}, poll=${pollCount}, chat=${chatCount}`);
+            } catch (err) {
+                console.error(`[Unread API] Error processing channel ${channelId}:`, err.message);
+                // 해당 채널 계산을 건너뛰고 나머지 채널 계속 진행
+                continue;
+            }
         }
 
         res.json(counts);
