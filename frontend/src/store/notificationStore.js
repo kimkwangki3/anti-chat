@@ -23,24 +23,28 @@ const useNotificationStore = create(
             },
 
             incrementUnreadCount: (channelId, type) => {
+                const cid = channelId?.toString();
+                if (!cid) return;
                 set((state) => {
-                    const counts = state.unreadCounts[channelId] || { notice: 0, post: 0, chat: 0, poll: 0 };
+                    const counts = state.unreadCounts[cid] || { notice: 0, post: 0, chat: 0, poll: 0 };
                     return {
                         unreadCounts: {
                             ...state.unreadCounts,
-                            [channelId]: { ...counts, [type]: (counts[type] || 0) + 1 }
+                            [cid]: { ...counts, [type]: (counts[type] || 0) + 1 }
                         }
                     };
                 });
             },
 
             resetUnreadCount: (channelId, type) => {
+                const cid = channelId?.toString();
+                if (!cid) return;
                 set((state) => {
-                    const counts = state.unreadCounts[channelId] || { notice: 0, post: 0, chat: 0, poll: 0 };
+                    const counts = state.unreadCounts[cid] || { notice: 0, post: 0, chat: 0, poll: 0 };
                     return {
                         unreadCounts: {
                             ...state.unreadCounts,
-                            [channelId]: { ...counts, [type]: 0 }
+                            [cid]: { ...counts, [type]: 0 }
                         }
                     };
                 });

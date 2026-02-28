@@ -19,7 +19,7 @@ const Dashboard = () => {
     const totalPending = Object.values(pendingCounts || {}).reduce((s, n) => s + n, 0);
     const totalUnread = Object.values(unreadCounts || {}).reduce((acc, counts) => {
         if (!counts) return acc;
-        return acc + (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
+        return acc + (Number(counts.notice) || 0) + (Number(counts.post) || 0) + (Number(counts.chat) || 0) + (Number(counts.poll) || 0);
     }, 0);
 
     useEffect(() => {
@@ -213,7 +213,7 @@ const Dashboard = () => {
                                     </div>
                                 )}
                                 {user?.role === 'member' && myChannels.map(membership => {
-                                    const chId = membership.channelId?._id;
+                                    const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
                                     const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0, poll: 0 };
                                     const sum = (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
                                     if (sum === 0) return null;
@@ -249,10 +249,10 @@ const Dashboard = () => {
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm font-bold text-white truncate">{membership.channelId?.name}</p>
                                                 <div className="flex items-center gap-3 mt-1">
-                                                    {counts.notice > 0 && <span className="text-[10px] text-purple-400 font-bold flex items-center gap-1">📢 {counts.notice}</span>}
-                                                    {counts.post > 0 && <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">📋 {counts.post}</span>}
-                                                    {counts.poll > 0 && <span className="text-[10px] text-[#06d6a0] font-bold flex items-center gap-1">🗳️ {counts.poll}</span>}
-                                                    {counts.chat > 0 && <span className="text-[10px] font-bold flex items-center gap-1 animate-pulse" style={{ color: themeColor }}>💬 {counts.chat}</span>}
+                                                    {(Number(counts.notice) > 0) && <span className="text-[10px] text-purple-400 font-bold flex items-center gap-1">📢 {counts.notice}</span>}
+                                                    {(Number(counts.post) > 0) && <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">📋 {counts.post}</span>}
+                                                    {(Number(counts.poll) > 0) && <span className="text-[10px] text-[#06d6a0] font-bold flex items-center gap-1">🗳️ {counts.poll}</span>}
+                                                    {(Number(counts.chat) > 0) && <span className="text-[10px] font-bold flex items-center gap-1 animate-pulse" style={{ color: themeColor }}>💬 {counts.chat}</span>}
                                                 </div>
                                             </div>
                                             <span
@@ -364,10 +364,10 @@ const Dashboard = () => {
                                                             onClick={(e) => e.stopPropagation()}
                                                         >
                                                             <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
-                                                            {(unreadCounts[membership.channelId?._id]?.notice || 0) +
-                                                                (unreadCounts[membership.channelId?._id]?.post || 0) +
-                                                                (unreadCounts[membership.channelId?._id]?.chat || 0) +
-                                                                (unreadCounts[membership.channelId?._id]?.poll || 0)}
+                                                            {(unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.notice || 0) +
+                                                                (unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.post || 0) +
+                                                                (unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.chat || 0) +
+                                                                (unreadCounts[membership.channelId?._id?.toString() || membership.channelId?.toString()]?.poll || 0)}
                                                         </div>
                                                     )}
                                                 <span
