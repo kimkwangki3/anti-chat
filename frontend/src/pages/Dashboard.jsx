@@ -190,102 +190,82 @@ const Dashboard = () => {
                                             </div>
                                         </div>
 
-                                        {/* 관리자용 채팅 알림 추가 */}
-                                        {myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
+
+
+                                        {myChannels.map(membership => {
                                             const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
                                             const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0, poll: 0 };
-                                            if (Number(counts.chat) === 0) return null;
+                                            const sum = (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
+                                            if (sum === 0) return null;
+                                            const themeColor = membership.channelId?.cardColor || '#FF8C69';
                                             return (
                                                 <div
-                                                    key={`admin-chat-noti-${chId}`}
+                                                    key={`summary-${chId}`}
                                                     onClick={() => {
                                                         setCurrentChannel(membership.channelId);
-                                                        navigate(`/chat?channelId=${chId}`);
+                                                        if (counts.chat > 0) navigate(`/chat?channelId=${chId}`);
+                                                        else if (counts.notice > 0) navigate(`/notices?channelId=${chId}`);
+                                                        else if (counts.poll > 0) navigate(`/polls?channelId=${chId}`);
+                                                        else navigate(`/board?channelId=${chId}`);
                                                     }}
-                                                    className="flex items-center gap-4 p-6 bg-[#23232f] border border-[#FF8C69]/30 rounded-[2rem] cursor-pointer hover:bg-[#2a2a3a] transition-all group shadow-2xl animate-pulse"
+                                                    className="flex items-center gap-4 p-5 bg-[#23232f] border rounded-3xl cursor-pointer transition-all group shadow-xl"
+                                                    style={{ borderColor: `${themeColor}1A` }}
+                                                    onMouseEnter={(e) => e.currentTarget.style.borderColor = `${themeColor}4D`}
+                                                    onMouseLeave={(e) => e.currentTarget.style.borderColor = `${themeColor}1A`}
                                                 >
-                                                    <div className="w-14 h-14 rounded-2xl bg-[#FF8C69]/10 flex items-center justify-center text-3xl shadow-inner">💬</div>
+                                                    {membership.channelId?.profileImage ? (
+                                                        <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-inner flex-shrink-0">
+                                                            <img src={membership.channelId.profileImage} alt="" className="w-full h-full object-cover" />
+                                                        </div>
+                                                    ) : (
+                                                        <div
+                                                            className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner flex-shrink-0"
+                                                            style={{
+                                                                backgroundColor: `${themeColor}1A`,
+                                                                color: themeColor
+                                                            }}
+                                                        >🏘️</div>
+                                                    )}
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-[10px] font-black text-[#FF8C69] uppercase tracking-widest mb-1">새로운 대화 요청</p>
-                                                        <p className="text-sm font-bold text-white truncate">{membership.channelId?.name} 채널에 {counts.chat}개의 읽지 않은 대화가 있습니다.</p>
+                                                        <p className="text-sm font-bold text-white truncate">{membership.channelId?.name}</p>
+                                                        <div className="flex items-center gap-3 mt-1">
+                                                            {(Number(counts.notice) > 0) && <span className="text-[10px] text-purple-400 font-bold flex items-center gap-1">📢 {counts.notice}</span>}
+                                                            {(Number(counts.post) > 0) && <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">📋 {counts.post}</span>}
+                                                            {(Number(counts.poll) > 0) && <span className="text-[10px] text-[#06d6a0] font-bold flex items-center gap-1">🗳️ {counts.poll}</span>}
+                                                            {(Number(counts.chat) > 0) && <span className="text-[10px] font-bold flex items-center gap-1 animate-pulse" style={{ color: themeColor }}>💬 {counts.chat}</span>}
+                                                        </div>
                                                     </div>
-                                                    <span className="bg-[#FF8C69] text-white text-xs font-black px-4 py-2 rounded-full shadow-lg shadow-[#FF8C69]/20">접속하기</span>
+                                                    <span
+                                                        className="text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg"
+                                                        style={{
+                                                            backgroundColor: themeColor,
+                                                            boxShadow: `0 4px 12px ${themeColor}40`
+                                                        }}
+                                                    >+{sum}</span>
                                                 </div>
                                             );
                                         })}
-                                    </div>
-                                )}
-                                {myChannels.map(membership => {
-                                    const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
-                                    const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0, poll: 0 };
-                                    const sum = (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
-                                    if (sum === 0) return null;
-                                    const themeColor = membership.channelId?.cardColor || '#FF8C69';
-                                    return (
-                                        <div
-                                            key={`summary-${chId}`}
-                                            onClick={() => {
-                                                setCurrentChannel(membership.channelId);
-                                                if (counts.chat > 0) navigate(`/chat?channelId=${chId}`);
-                                                else if (counts.notice > 0) navigate(`/notices?channelId=${chId}`);
-                                                else if (counts.poll > 0) navigate(`/polls?channelId=${chId}`);
-                                                else navigate(`/board?channelId=${chId}`);
-                                            }}
-                                            className="flex items-center gap-4 p-5 bg-[#23232f] border rounded-3xl cursor-pointer transition-all group shadow-xl"
-                                            style={{ borderColor: `${themeColor}1A` }}
-                                            onMouseEnter={(e) => e.currentTarget.style.borderColor = `${themeColor}4D`}
-                                            onMouseLeave={(e) => e.currentTarget.style.borderColor = `${themeColor}1A`}
-                                        >
-                                            {membership.channelId?.profileImage ? (
-                                                <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-inner flex-shrink-0">
-                                                    <img src={membership.channelId.profileImage} alt="" className="w-full h-full object-cover" />
+                                        {notifications.slice(0, 3).map(noti => (
+                                            <div
+                                                key={noti.id}
+                                                onClick={() => navigate(noti.path)}
+                                                className="flex items-center gap-4 p-4 bg-[#23232f]/50 border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition-all opacity-70 hover:opacity-100"
+                                            >
+                                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-lg">
+                                                    {noti.type === 'notice' ? '📢' : noti.type === 'post' ? '📋' : noti.type === 'member' ? '👤' : '💬'}
                                                 </div>
-                                            ) : (
-                                                <div
-                                                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner flex-shrink-0"
-                                                    style={{
-                                                        backgroundColor: `${themeColor}1A`,
-                                                        color: themeColor
-                                                    }}
-                                                >🏘️</div>
-                                            )}
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-white truncate">{membership.channelId?.name}</p>
-                                                <div className="flex items-center gap-3 mt-1">
-                                                    {(Number(counts.notice) > 0) && <span className="text-[10px] text-purple-400 font-bold flex items-center gap-1">📢 {counts.notice}</span>}
-                                                    {(Number(counts.post) > 0) && <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">📋 {counts.post}</span>}
-                                                    {(Number(counts.poll) > 0) && <span className="text-[10px] text-[#06d6a0] font-bold flex items-center gap-1">🗳️ {counts.poll}</span>}
-                                                    {(Number(counts.chat) > 0) && <span className="text-[10px] font-bold flex items-center gap-1 animate-pulse" style={{ color: themeColor }}>💬 {counts.chat}</span>}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-wider">{noti.title}</p>
+                                                    <p className="text-xs text-[#a0a0b0] truncate">{noti.message}</p>
                                                 </div>
                                             </div>
-                                            <span
-                                                className="text-white text-xs font-black px-3 py-1.5 rounded-full shadow-lg"
-                                                style={{
-                                                    backgroundColor: themeColor,
-                                                    boxShadow: `0 4px 12px ${themeColor}40`
-                                                }}
-                                            >+{sum}</span>
-                                        </div>
-                                    );
-                                })}
-                                {notifications.slice(0, 3).map(noti => (
-                                    <div
-                                        key={noti.id}
-                                        onClick={() => navigate(noti.path)}
-                                        className="flex items-center gap-4 p-4 bg-[#23232f]/50 border border-white/5 rounded-2xl cursor-pointer hover:border-white/10 transition-all opacity-70 hover:opacity-100"
-                                    >
-                                        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-lg">
-                                            {noti.type === 'notice' ? '📢' : noti.type === 'post' ? '📋' : noti.type === 'member' ? '👤' : '💬'}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-wider">{noti.title}</p>
-                                            <p className="text-xs text-[#a0a0b0] truncate">{noti.message}</p>
-                                        </div>
+                                        ))}
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </section>
                     )}
+
                     <section className="mb-12">
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-sm font-bold tracking-widest uppercase text-[#8080a0] flex items-center gap-2">
