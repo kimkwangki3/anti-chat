@@ -95,7 +95,8 @@ router.post('/rooms', protect, async (req, res) => {
         // 생성 후 바로 사용자 정보 채우기 (프론트엔드 렌더링 오류 방지)
         room = await ChatRoom.findById(room._id)
             .populate('adminId', 'name username isOnline')
-            .populate('memberId', 'name username isOnline');
+            .populate('memberId', 'name username isOnline')
+            .populate('channelId', 'name profileImage cardColor');
 
         res.status(201).json(room);
     } catch (error) {
@@ -127,6 +128,7 @@ router.get('/rooms', protect, async (req, res) => {
         const rooms = await ChatRoom.find(query)
             .populate('adminId', 'name username isOnline')
             .populate('memberId', 'name username isOnline')
+            .populate('channelId', 'name profileImage cardColor')
             .sort({ lastMessageAt: -1 });
 
         res.json(rooms);
@@ -187,7 +189,8 @@ router.put('/rooms/:id/clear', protect, async (req, res) => {
 
         const room = await ChatRoom.findByIdAndUpdate(req.params.id, update, { new: true })
             .populate('adminId', 'name username isOnline')
-            .populate('memberId', 'name username isOnline');
+            .populate('memberId', 'name username isOnline')
+            .populate('channelId', 'name profileImage cardColor');
 
         // 실시간 동기화: 해당 방에 있는 유저들에게 삭제 알림
         const io = req.app.get('io');

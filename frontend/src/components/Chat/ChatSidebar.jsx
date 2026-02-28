@@ -155,33 +155,58 @@ const ChatSidebar = () => {
                         const unreadCount = isUserAdmin ? room.unreadCountAdmin : room.unreadCountMember;
                         const isOnline = otherUser?.isOnline;
 
+                        // 채널 브랜딩 정보
+                        const channelName = room.channelId?.name || '알 수 없는 채널';
+                        const channelColor = room.channelId?.cardColor || '#FF8C69';
+                        const channelImage = room.channelId?.profileImage;
+
                         return (
                             <div
                                 key={room._id}
                                 onClick={() => handleSelectRoom(room)}
                                 className={`group relative p-4 md:p-5 rounded-[2rem] border transition-all cursor-pointer flex items-center gap-4 ${isActive
-                                    ? 'bg-[#FF8C69] border-[#FF8C69] shadow-2xl shadow-[#FF8C69]/20 translate-x-1'
-                                    : 'bg-[#1a1a24] border-white/5 hover:border-[#FF8C69]/20'
+                                    ? 'shadow-2xl translate-x-1 text-white'
+                                    : 'bg-[#1a1a24] border-white/5 hover:border-white/20'
                                     }`}
+                                style={isActive ? { backgroundColor: channelColor, borderColor: channelColor, boxShadow: `0 20px 40px ${channelColor}40` } : {}}
                             >
                                 <div className="relative flex-shrink-0">
-                                    <div className={`w-14 h-14 rounded-[1.25rem] flex items-center justify-center text-xl font-black shadow-2xl transition-all ${isActive ? 'bg-white text-[#FF8C69]' : 'bg-[#23232f] text-[#6b6b8a] border border-white/5'}`}>
+                                    <div className={`w-14 h-14 rounded-[1.25rem] flex items-center justify-center text-xl font-black shadow-2xl transition-all ${isActive ? 'bg-white' : 'bg-[#23232f] text-[#6b6b8a] border border-white/5'}`}
+                                        style={isActive ? { color: channelColor } : {}}>
                                         {otherUser?.name?.[0] || '?'}
                                     </div>
-                                    {isOnline && <span className={`absolute -bottom-1 -right-1 w-5 h-5 bg-[#06d6a0] border-[4px] rounded-full animate-pulse ${isActive ? 'border-[#FF8C69]' : 'border-[#1a1a24]'}`}></span>}
+                                    {isOnline && <span className={`absolute -bottom-1 -right-1 w-5 h-5 bg-[#06d6a0] border-[4px] rounded-full animate-pulse ${isActive ? 'border-transparent' : 'border-[#1a1a24]'}`} style={isActive ? { borderColor: channelColor } : {}}></span>}
+
+                                    {/* 채널 아이콘 배지 */}
+                                    <div className="absolute -top-1 -left-1 w-6 h-6 rounded-lg bg-[#12121a] border border-white/10 flex items-center justify-center overflow-hidden shadow-lg">
+                                        {channelImage ? (
+                                            <img src={channelImage} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-[10px] font-black" style={{ color: channelColor }}>#</span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start mb-0.5">
-                                        <div className="flex items-center gap-2">
-                                            <h3 className={`text-[15px] font-black truncate transition-colors ${isActive ? 'text-white' : 'text-[#e8e8f0]'}`}>
-                                                {otherUser?.name}
-                                            </h3>
-                                            {unreadCount > 0 && !isActive && (
-                                                <span className="bg-[#FF8C69] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-[#FF8C69]/20 min-w-[20px] text-center border border-white/10">
-                                                    {unreadCount}
+                                        <div className="flex flex-col">
+                                            <div className="flex items-center gap-1.5 mb-0.5">
+                                                <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20' : 'bg-white/5'}`}
+                                                    style={!isActive ? { color: channelColor } : { color: 'white' }}>
+                                                    {channelName}
                                                 </span>
-                                            )}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className={`text-[15px] font-black truncate transition-colors ${isActive ? 'text-white' : 'text-[#e8e8f0]'}`}>
+                                                    {otherUser?.name}
+                                                </h3>
+                                                {unreadCount > 0 && !isActive && (
+                                                    <span className="bg-[#FF8C69] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-[#FF8C69]/20 min-w-[20px] text-center border border-white/10"
+                                                        style={{ backgroundColor: channelColor, boxShadow: `0 5px 10px ${channelColor}40` }}>
+                                                        {unreadCount}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                         <span className={`text-[9px] font-bold font-mono uppercase mt-1 ${isActive ? 'text-white/60' : 'text-[#444466]'}`}>
                                             {room.lastMessageAt ? new Date(room.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
