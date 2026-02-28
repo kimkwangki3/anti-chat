@@ -16,7 +16,7 @@ const socketHandler = (io) => {
                 socket.userId = userIdStr;
                 socket.sessionId = userData.sessionId;
 
-                console.log(`[SOCKET] ${userData.name} joined private room: ${userIdStr}`);
+
 
                 // 데이터베이스의 세션 ID와 비교하여 중복 로그인 체크
                 try {
@@ -38,7 +38,7 @@ const socketHandler = (io) => {
         socket.on('join_room', (roomId) => {
             if (roomId) {
                 socket.join(roomId);
-                console.log(`[SOCKET] User joined chat room: ${roomId}`);
+
             }
         });
 
@@ -66,7 +66,7 @@ const socketHandler = (io) => {
         socket.on('join_channel', (channelId) => {
             if (channelId) {
                 socket.join(`channel_${channelId}`);
-                console.log(`[SOCKET] Joined channel: ${channelId}`);
+
 
                 const clientCount = io.sockets.adapter.rooms.get(`channel_${channelId}`)?.size || 0;
                 io.to(`channel_${channelId}`).emit('channel_online_count', clientCount);
@@ -96,7 +96,7 @@ const socketHandler = (io) => {
         // 메시지 전송 (파일 기록 추가)
         socket.on('send_message', async (data) => {
             const { roomId, senderId, content, channelId, fileUrl, fileType, fileName } = data;
-            console.log(`[SOCKET] Message logic - Room: ${roomId}, Sender: ${senderId}, HasFile: ${!!fileUrl}`);
+
 
             try {
                 const message = await Message.create({
@@ -131,7 +131,7 @@ const socketHandler = (io) => {
                         }
                     }
                     const isRecipientInRoom = recipientSocketsInRoom.length > 0;
-                    console.log(`[SOCKET] Recipient in room: ${isRecipientInRoom} (recipient: ${recipientId})`);
+
 
                     // 가시성 보장 및 마지막 메시지 텍스트 결정
                     let lastMsgText = content;
@@ -163,7 +163,7 @@ const socketHandler = (io) => {
                         .populate('adminId', 'name username isOnline')
                         .populate('memberId', 'name username isOnline');
 
-                    console.log(`[SOCKET] Emitting message to room: ${roomId}`);
+
                     io.to(roomId).emit('receive_message', message);
 
                     // 채팅방 목록 업데이트 정보 전송 (정렬 및 카운트 반영을 위함)
@@ -171,7 +171,7 @@ const socketHandler = (io) => {
                     io.to(room.memberId.toString()).emit('room_updated', updatedRoom);
 
                     const recipientRoom = recipientId.toString();
-                    console.log(`[SOCKET] Sending notification to recipient room: ${recipientRoom}`);
+
 
                     io.to(recipientRoom).emit('chat_notification', {
                         roomId,

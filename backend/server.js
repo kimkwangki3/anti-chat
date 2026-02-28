@@ -13,19 +13,13 @@ const webpush = require('web-push');
 // Web Push VAPID 설정 (키가 없으면 서버 크래시 방지)
 const vapidPublic = process.env.PUBLIC_VAPID_KEY;
 const vapidPrivate = process.env.PRIVATE_VAPID_KEY;
-console.log(`[VAPID] Public key length: ${vapidPublic ? vapidPublic.length : 'MISSING'}, Private key length: ${vapidPrivate ? vapidPrivate.length : 'MISSING'}`);
 
 if (vapidPublic && vapidPrivate) {
     try {
         webpush.setVapidDetails('mailto:contact@example.com', vapidPublic, vapidPrivate);
-        console.log('[VAPID] VAPID keys configured successfully ✅');
     } catch (err) {
         console.error('[VAPID] Failed to set VAPID details:', err.message);
-        console.error('[VAPID] ⚠️ Push notifications will NOT work until valid keys are set!');
     }
-} else {
-    console.warn('[VAPID] ⚠️ VAPID keys are missing! Push notifications are DISABLED.');
-    console.warn('[VAPID] Set PUBLIC_VAPID_KEY and PRIVATE_VAPID_KEY in environment variables.');
 }
 
 const app = express();
