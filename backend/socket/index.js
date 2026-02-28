@@ -6,9 +6,9 @@ const { sendPushNotification, sendPushToChannelMembers } = require('../utils/pus
 
 const socketHandler = (io) => {
     io.on('connection', (socket) => {
-        console.log('소켓 연결됨:', socket.id);
+        console.log('?�켓 ?�결??', socket.id);
 
-        // 사용자 개별 룸 참가 (알림용)
+        // ?�용??개별 �?참�? (?�림??
         socket.on('setup', async (userData) => {
             if (userData?._id) {
                 const userIdStr = userData._id.toString();
@@ -16,57 +16,57 @@ const socketHandler = (io) => {
                 socket.userId = userIdStr;
                 socket.sessionId = userData.sessionId;
 
-                console.log(`[SOCKET] ${userData.name} joined private room: ${userIdStr}`);
 
-                // 데이터베이스의 세션 ID와 비교하여 중복 로그인 체크
+
+                // ?�이?�베?�스???�션 ID?� 비교?�여 중복 로그??체크
                 try {
                     const latestUser = await User.findById(userData._id);
                     if (latestUser && latestUser.currentSessionId && latestUser.currentSessionId !== userData.sessionId) {
-                        console.log(`[SOCKET] Session mismatch for ${userData.name}. Enforcing logout.`);
-                        socket.emit('force_logout', { message: '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.' });
+
+                        socket.emit('force_logout', { message: '?�른 기기?�서 로그?�이 감�??�어 ?�동 로그?�웃?�니??' });
                     } else {
                         socket.emit('connected');
                     }
                 } catch (error) {
-                    console.error('[SOCKET] setup 세션 체크 에러:', error);
+                    console.error('[SOCKET] setup ?�션 체크 ?�러:', error);
                     socket.emit('connected');
                 }
             }
         });
 
-        // 채팅방 입장을 위한 전용 핸들러 (누락분 추가)
+        // 채팅�??�장???�한 ?�용 ?�들??(?�락�?추�?)
         socket.on('join_room', (roomId) => {
             if (roomId) {
                 socket.join(roomId);
-                console.log(`[SOCKET] User joined chat room: ${roomId}`);
+
             }
         });
 
-        // 읽음 처리: 채팅방 입장 시 상대방 메시지를 isRead: true로 업데이트
+        // ?�음 처리: 채팅�??�장 ???��?�?메시지�?isRead: true�??�데?�트
         socket.on('mark_read', async ({ roomId, userId }) => {
             if (!roomId || !userId) return;
             try {
-                // 내가 받은 메시지(상대방이 보낸 것)를 읽음 처리
+                // ?��? 받�? 메시지(?��?방이 보낸 �?�??�음 처리
                 const result = await Message.updateMany(
                     { roomId, senderId: { $ne: userId }, isRead: false },
                     { $set: { isRead: true } }
                 );
 
                 if (result.modifiedCount > 0) {
-                    // 발신자들에게 읽음 알림 - 방 전체에 emit (발신자 자신 포함)
+                    // 발신?�들?�게 ?�음 ?�림 - �??�체??emit (발신???�신 ?�함)
                     io.to(roomId).emit('messages_read', { roomId, readerId: userId });
-                    console.log(`[SOCKET] Marked ${result.modifiedCount} messages as read in room: ${roomId}`);
+
                 }
             } catch (error) {
-                console.error('[SOCKET] mark_read 에러:', error);
+                console.error('[SOCKET] mark_read ?�러:', error);
             }
         });
 
-        // 채널 룸 참가 및 인원 집계
+        // 채널 �?참�? �??�원 집계
         socket.on('join_channel', (channelId) => {
             if (channelId) {
                 socket.join(`channel_${channelId}`);
-                console.log(`[SOCKET] Joined channel: ${channelId}`);
+
 
                 const clientCount = io.sockets.adapter.rooms.get(`channel_${channelId}`)?.size || 0;
                 io.to(`channel_${channelId}`).emit('channel_online_count', clientCount);
@@ -79,24 +79,24 @@ const socketHandler = (io) => {
             io.to(`channel_${channelId}`).emit('channel_online_count', clientCount);
         });
 
-        // 새로운 공지사항 생성 알림
+        // ?�로??공�??�항 ?�성 ?�림
         socket.on('new_notice', async (data) => {
             const { channelId, notice } = data;
             socket.to(`channel_${channelId}`).emit('notice_received', notice);
 
-            // 공지사항 웹 푸시 발송
+            // 공�??�항 ???�시 발송
             await sendPushToChannelMembers(channelId, socket.userId, {
-                title: `📢 새 공지사항: ${notice.title}`,
-                body: '채널에 새로운 공지사항이 등록되었습니다.',
+                title: `?�� ??공�??�항: ${notice.title}`,
+                body: '채널???�로??공�??�항???�록?�었?�니??',
                 url: `/notices?channelId=${channelId}`,
                 tag: 'notice'
             });
         });
 
-        // 메시지 전송 (파일 기록 추가)
+        // 메시지 ?�송 (?�일 기록 추�?)
         socket.on('send_message', async (data) => {
             const { roomId, senderId, content, channelId, fileUrl, fileType, fileName } = data;
-            console.log(`[SOCKET] Message logic - Room: ${roomId}, Sender: ${senderId}, HasFile: ${!!fileUrl}`);
+
 
             try {
                 const message = await Message.create({
@@ -110,7 +110,7 @@ const socketHandler = (io) => {
 
                 const user = await User.findById(senderId);
                 if (user) {
-                    const logContent = fileUrl ? `[${fileName || (fileType?.startsWith('image/') ? '사진' : '파일')}] ${content || ''}` : content;
+                    const logContent = fileUrl ? `[${fileName || (fileType?.startsWith('image/') ? '?�진' : '?�일')}] ${content || ''}` : content;
                     writeChatLog(roomId, user.name, logContent);
                 }
 
@@ -119,7 +119,7 @@ const socketHandler = (io) => {
                     const isAdminSender = room.adminId.toString() === senderId.toString();
                     const recipientId = isAdminSender ? room.memberId : room.adminId;
 
-                    // 수신자가 현재 방에 접속 중인지 확인 (접속 중이면 unreadCount 증가 안 함)
+                    // ?�신?��? ?�재 방에 ?�속 중인지 ?�인 (?�속 중이�?unreadCount 증�? ????
                     const roomOccupants = io.sockets.adapter.rooms.get(roomId);
                     const recipientSocketsInRoom = [];
                     if (roomOccupants) {
@@ -131,12 +131,12 @@ const socketHandler = (io) => {
                         }
                     }
                     const isRecipientInRoom = recipientSocketsInRoom.length > 0;
-                    console.log(`[SOCKET] Recipient in room: ${isRecipientInRoom} (recipient: ${recipientId})`);
 
-                    // 가시성 보장 및 마지막 메시지 텍스트 결정
+
+                    // 가?�성 보장 �?마�?�?메시지 ?�스??결정
                     let lastMsgText = content;
                     if (fileUrl) {
-                        const typeLabel = fileType?.startsWith('image/') ? '사진' : '파일';
+                        const typeLabel = fileType?.startsWith('image/') ? '?�진' : '?�일';
                         lastMsgText = content ? `[${typeLabel}] ${content}` : `[${typeLabel}] ${fileName || ''}`;
                     }
 
@@ -148,14 +148,14 @@ const socketHandler = (io) => {
                     };
 
                     if (!isRecipientInRoom) {
-                        // 수신자가 방에 없을 때만 unreadCount 증가
+                        // ?�신?��? 방에 ?�을 ?�만 unreadCount 증�?
                         if (isAdminSender) {
                             updateData.$inc = { unreadCountMember: 1 };
                         } else {
                             updateData.$inc = { unreadCountAdmin: 1 };
                         }
                     } else {
-                        // 수신자가 방에 있으면 isRead: true로 메시지 즉시 저장
+                        // ?�신?��? 방에 ?�으�?isRead: true�?메시지 즉시 ?�??
                         await Message.findByIdAndUpdate(message._id, { isRead: true });
                     }
 
@@ -163,15 +163,15 @@ const socketHandler = (io) => {
                         .populate('adminId', 'name username isOnline')
                         .populate('memberId', 'name username isOnline');
 
-                    console.log(`[SOCKET] Emitting message to room: ${roomId}`);
+
                     io.to(roomId).emit('receive_message', message);
 
-                    // 채팅방 목록 업데이트 정보 전송 (정렬 및 카운트 반영을 위함)
+                    // 채팅�?목록 ?�데?�트 ?�보 ?�송 (?�렬 �?카운??반영???�함)
                     io.to(room.adminId.toString()).emit('room_updated', updatedRoom);
                     io.to(room.memberId.toString()).emit('room_updated', updatedRoom);
 
                     const recipientRoom = recipientId.toString();
-                    console.log(`[SOCKET] Sending notification to recipient room: ${recipientRoom}`);
+
 
                     io.to(recipientRoom).emit('chat_notification', {
                         roomId,
@@ -180,25 +180,25 @@ const socketHandler = (io) => {
                         channelId: channelId || room.channelId
                     });
 
-                    // 웹 푸시 발송 (백그라운드 알림용) - pushService 사용
+                    // ???�시 발송 (백그?�운???�림?? - pushService ?�용
                     await sendPushNotification(recipientId, {
-                        title: `${user?.name}님의 새로운 메시지 🍑`,
+                        title: `${user?.name}?�의 ?�로??메시지 ?��`,
                         body: lastMsgText.length > 50 ? lastMsgText.substring(0, 50) + '...' : lastMsgText,
                         url: `/chat?channelId=${channelId || room.channelId}&roomId=${roomId}`,
                         tag: `chat-${roomId}`
                     });
                 }
             } catch (error) {
-                console.error('[SOCKET] 메시지 전송 에러:', error);
+                console.error('[SOCKET] 메시지 ?�송 ?�러:', error);
             }
         });
 
-        // 연결 해제 시 모든 참가 중인 채널의 인원 수 업데이트 필요
+        // ?�결 ?�제 ??모든 참�? 중인 채널???�원 ???�데?�트 ?�요
         socket.on('disconnecting', () => {
             for (const room of socket.rooms) {
                 if (room.startsWith('channel_')) {
                     const channelId = room.split('_')[1];
-                    // 지연 실행 (포트폴리오 등에서 브라우저 갱신 시 안정성 확보)
+                    // 지???�행 (?�트?�리???�에??브라?��? 갱신 ???�정???�보)
                     setTimeout(() => {
                         const clientCount = io.sockets.adapter.rooms.get(room)?.size || 0;
                         io.to(room).emit('channel_online_count', clientCount);
@@ -207,11 +207,11 @@ const socketHandler = (io) => {
             }
         });
 
-        // 타이핑 상태
+        // ?�?�핑 ?�태
         socket.on('typing', (room) => socket.in(room).emit('typing'));
         socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
 
-        // 연결 해제 시 온라인 상태 및 로그아웃 시간 업데이트
+        // ?�결 ?�제 ???�라???�태 �?로그?�웃 ?�간 ?�데?�트
         socket.on('disconnect_user', async (userId) => {
             if (userId) {
                 const user = await User.findById(userId);
@@ -219,14 +219,14 @@ const socketHandler = (io) => {
                     user.isOnline = false;
                     user.lastLogoutAt = Date.now();
                     await user.save();
-                    writeAuthLog(`로그아웃: ${user.username}`);
-                    console.log('사용자 오프라인 처리 및 로그 기록:', user.username);
+                    writeAuthLog(`로그?�웃: ${user.username}`);
+                    console.log('?�용???�프?�인 처리 �?로그 기록:', user.username);
                 }
             }
         });
 
         socket.on('disconnect', () => {
-            console.log('소켓 연결 해제됨');
+            console.log('?�켓 ?�결 ?�제??);
         });
     });
 };
