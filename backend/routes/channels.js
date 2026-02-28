@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Channel = require('../models/Channel');
 const ChannelMember = require('../models/ChannelMember');
 const User = require('../models/User');
@@ -91,6 +92,95 @@ router.get('/my-channels', protect, async (req, res) => {
     }
 });
 
+// @route   GET /api/channels/unread-counts
+// @desc    모든 채널의 읽지 않은 소식(공지, 게시글, 채팅, 투표) 개수 조회
+// @access  Private
+router.get('/unread-counts', protect, async (req, res) => {
+    try {
+        console.log('[Unread API] Starting query for user:', req.user._id);
+        const userId = req.user._id;
+
+        console.log('[Unread API] Fetching memberships...');
+        const memberships = await ChannelMember.find({ userId });
+        console.log('[Unread API] Fetched memberships:', memberships.length);
+
+        const channelIds = memberships
+            .filter(m => {
+                const hasChannel = m.status === 'approved' && m.channelId;
+                return hasChannel;
+            })
+            .map(m => {
+                if (m.channelId._id) return m.channelId._id.toString();
+                return m.channelId.toString();
+            });
+
+        console.log(`[Unread API] User ${userId} active channels: ${channelIds.length}`);
+
+        const counts = {};
+
+        for (const channelId of channelIds) {
+            try {
+                const validChannelId = new mongoose.Types.ObjectId(channelId);
+                const validUserId = new mongoose.Types.ObjectId(userId);
+
+                // 1. 공지사항 안 읽은 개수
+                const noticeCount = await Notice.countDocuments({
+                    channelId: validChannelId,
+                    readBy: { $ne: validUserId }
+                });
+
+                // 2. 게시글 안 읽은 개수
+                const postCount = await Post.countDocuments({
+                    channelId: validChannelId,
+                    readBy: { $ne: validUserId }
+                });
+
+                // 3. 투표 안 읽은 개수
+                const pollCount = await Poll.countDocuments({
+                    channelId: validChannelId,
+                    status: 'active',
+                    expiresAt: { $gt: new Date() },
+                    readBy: { $ne: validUserId }
+                });
+
+                // 4. 채팅 안 읽은 개수
+                let chatCount = 0;
+                const chatRooms = await ChatRoom.find({
+                    channelId: validChannelId,
+                    $or: [{ adminId: validUserId }, { memberId: validUserId }]
+                });
+
+                chatRooms.forEach(room => {
+                    const isRoomAdmin = room.adminId?.toString() === userId.toString();
+                    if (isRoomAdmin) {
+                        chatCount += (room.unreadCountAdmin || 0);
+                    } else {
+                        chatCount += (room.unreadCountMember || 0);
+                    }
+                });
+
+                counts[channelId.toString()] = {
+                    notice: noticeCount,
+                    post: postCount,
+                    poll: pollCount,
+                    chat: chatCount
+                };
+                console.log(`[Unread API] Channel ${channelId}: notice=${noticeCount}, post=${postCount}, poll=${pollCount}, chat=${chatCount}`);
+            } catch (err) {
+                console.error(`[Unread API] Error processing channel ${channelId}:`, err.message);
+                // 해당 채널 계산을 건너뛰고 나머지 채널 계속 진행
+                continue;
+            }
+        }
+
+        res.json(counts);
+    } catch (error) {
+        console.error('Unread counts fetch error:', error);
+        res.status(500).json({ message: '알림 정보를 불러오는데 실패했습니다.' });
+    }
+});
+
+
 // @route   GET /api/channels/:id
 // @desc    특정 채널 상세 정보 조회
 // @access  Private
@@ -178,81 +268,5 @@ const Notice = require('../models/Notice');
 const Post = require('../models/Post');
 const ChatRoom = require('../models/ChatRoom');
 const Poll = require('../models/Poll');
-
-// @route   GET /api/channels/unread-counts
-// @desc    모든 채널의 읽지 않은 소식(공지, 게시글, 채팅, 투표) 개수 조회
-// @access  Private
-router.get('/unread-counts', protect, async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const memberships = await ChannelMember.find({ userId });
-        const channelIds = memberships
-            .filter(m => m.status === 'approved' && m.channelId)
-            .map(m => m.channelId);
-        console.log(`[Unread API] User ${userId} active channels: ${channelIds.length}`);
-
-        const counts = {};
-
-        for (const channelId of channelIds) {
-            try {
-                const validChannelId = new mongoose.Types.ObjectId(channelId);
-                const validUserId = new mongoose.Types.ObjectId(userId);
-
-                // 1. 공지사항 안 읽은 개수
-                const noticeCount = await Notice.countDocuments({
-                    channelId: validChannelId,
-                    readBy: { $ne: validUserId }
-                });
-
-                // 2. 게시글 안 읽은 개수
-                const postCount = await Post.countDocuments({
-                    channelId: validChannelId,
-                    readBy: { $ne: validUserId }
-                });
-
-                // 3. 투표 안 읽은 개수
-                const pollCount = await Poll.countDocuments({
-                    channelId: validChannelId,
-                    status: 'active',
-                    expiresAt: { $gt: new Date() },
-                    readBy: { $ne: validUserId }
-                });
-
-                // 4. 채팅 안 읽은 개수
-                let chatCount = 0;
-                const chatRooms = await ChatRoom.find({
-                    channelId: validChannelId,
-                    $or: [{ adminId: validUserId }, { memberId: validUserId }]
-                });
-
-                chatRooms.forEach(room => {
-                    const isRoomAdmin = room.adminId?.toString() === userId.toString();
-                    if (isRoomAdmin) {
-                        chatCount += (room.unreadCountAdmin || 0);
-                    } else {
-                        chatCount += (room.unreadCountMember || 0);
-                    }
-                });
-
-                counts[channelId.toString()] = {
-                    notice: noticeCount,
-                    post: postCount,
-                    poll: pollCount,
-                    chat: chatCount
-                };
-                console.log(`[Unread API] Channel ${channelId}: notice=${noticeCount}, post=${postCount}, poll=${pollCount}, chat=${chatCount}`);
-            } catch (err) {
-                console.error(`[Unread API] Error processing channel ${channelId}:`, err.message);
-                // 해당 채널 계산을 건너뛰고 나머지 채널 계속 진행
-                continue;
-            }
-        }
-
-        res.json(counts);
-    } catch (error) {
-        console.error('Unread counts fetch error:', error);
-        res.status(500).json({ message: '알림 정보를 불러오는데 실패했습니다.' });
-    }
-});
 
 module.exports = router;
