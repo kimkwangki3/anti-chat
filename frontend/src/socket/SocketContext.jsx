@@ -53,6 +53,8 @@ export const SocketProvider = ({ children }) => {
         const currentRoomId = params.get('roomId');
         const pathname = locationRef.current.pathname;
 
+        // 공지사항, 게시판 등은 무조건 알림이 오도록 수정 (사용자 요청)
+        /*
         // 1. 공지사항: 해당 채널의 공지사항 페이지에 있는 경우
         if (targetType === 'notice' && pathname === '/notices' && currentChannelId === targetChannelId) {
             return true;
@@ -61,7 +63,9 @@ export const SocketProvider = ({ children }) => {
         if (targetType === 'post' && pathname === '/board' && currentChannelId === targetChannelId) {
             return true;
         }
-        // 3. 채팅: 해당 채널의 특정 채팅방에 있는 경우
+        */
+
+        // 3. 채팅: 해당 채널의 특정 채팅방에 있는 경우에만 억제 (중복 방지)
         if (targetType === 'chat' && pathname === '/chat' && currentChannelId === targetChannelId && currentRoomId === targetRoomId) {
             return true;
         }
