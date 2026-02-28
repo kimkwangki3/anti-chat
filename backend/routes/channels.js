@@ -187,7 +187,7 @@ router.get('/unread-counts', protect, async (req, res) => {
         const userId = req.user._id;
         const memberships = await ChannelMember.find({ userId });
         const channelIds = memberships
-            .filter(m => m.status === 'approved')
+            .filter(m => m.status === 'approved' && m.channelId)
             .map(m => m.channelId);
         console.log(`[Unread API] User ${userId} active channels: ${channelIds.length}`);
 
