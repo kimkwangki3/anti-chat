@@ -19,7 +19,7 @@ const Dashboard = () => {
     const totalPending = Object.values(pendingCounts || {}).reduce((s, n) => s + n, 0);
     const totalUnread = Object.values(unreadCounts || {}).reduce((acc, counts) => {
         if (!counts) return acc;
-        return acc + (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0);
+        return acc + (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
     }, 0);
 
     useEffect(() => {
@@ -223,8 +223,9 @@ const Dashboard = () => {
                                             onClick={() => {
                                                 setCurrentChannel(membership.channelId);
                                                 if (counts.chat > 0) navigate(`/chat?channelId=${chId}`);
-                                                else if (counts.post > 0) navigate(`/board?channelId=${chId}`);
-                                                else navigate(`/notices?channelId=${chId}`);
+                                                else if (counts.notice > 0) navigate(`/notices?channelId=${chId}`);
+                                                else if (counts.poll > 0) navigate(`/polls?channelId=${chId}`);
+                                                else navigate(`/board?channelId=${chId}`);
                                             }}
                                             className="flex items-center gap-4 p-5 bg-[#23232f] border rounded-3xl cursor-pointer transition-all group shadow-xl"
                                             style={{ borderColor: `${themeColor}1A` }}
@@ -249,6 +250,7 @@ const Dashboard = () => {
                                                 <div className="flex items-center gap-3 mt-1">
                                                     {counts.notice > 0 && <span className="text-[10px] text-purple-400 font-bold flex items-center gap-1">📢 {counts.notice}</span>}
                                                     {counts.post > 0 && <span className="text-[10px] text-blue-400 font-bold flex items-center gap-1">📋 {counts.post}</span>}
+                                                    {counts.poll > 0 && <span className="text-[10px] text-[#06d6a0] font-bold flex items-center gap-1">🗳️ {counts.poll}</span>}
                                                     {counts.chat > 0 && <span className="text-[10px] font-bold flex items-center gap-1 animate-pulse" style={{ color: themeColor }}>💬 {counts.chat}</span>}
                                                 </div>
                                             </div>
@@ -363,7 +365,8 @@ const Dashboard = () => {
                                                             <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
                                                             {(unreadCounts[membership.channelId?._id]?.notice || 0) +
                                                                 (unreadCounts[membership.channelId?._id]?.post || 0) +
-                                                                (unreadCounts[membership.channelId?._id]?.chat || 0)}
+                                                                (unreadCounts[membership.channelId?._id]?.chat || 0) +
+                                                                (unreadCounts[membership.channelId?._id]?.poll || 0)}
                                                         </div>
                                                     )}
                                                 <span

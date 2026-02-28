@@ -35,7 +35,7 @@ const PollPage = () => {
         if (channelId) {
             fetchPolls();
             fetchChannelRole();
-            resetUnreadCount(channelId, 'notice');
+            resetUnreadCount(channelId, 'poll');
             markAllPollsRead();
         }
     }, [channelId]);

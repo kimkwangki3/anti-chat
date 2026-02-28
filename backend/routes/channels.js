@@ -177,9 +177,10 @@ router.post('/upload', protect, upload.single('file'), (req, res) => {
 const Notice = require('../models/Notice');
 const Post = require('../models/Post');
 const ChatRoom = require('../models/ChatRoom');
+const Poll = require('../models/Poll');
 
 // @route   GET /api/channels/unread-counts
-// @desc    모든 채널의 읽지 않은 소식(공지, 게시글, 채팅) 개수 조회
+// @desc    모든 채널의 읽지 않은 소식(공지, 게시글, 채팅, 투표) 개수 조회
 // @access  Private
 router.get('/unread-counts', protect, async (req, res) => {
     try {
@@ -202,7 +203,15 @@ router.get('/unread-counts', protect, async (req, res) => {
                 readBy: { $ne: userId }
             });
 
-            // 3. 채팅 안 읽은 개수
+            // 3. 투표 안 읽은 개수
+            const pollCount = await Poll.countDocuments({
+                channelId,
+                status: 'active',
+                expiresAt: { $gt: new Date() },
+                readBy: { $ne: userId }
+            });
+
+            // 4. 채팅 안 읽은 개수
             let chatCount = 0;
             const chatRooms = await ChatRoom.find({
                 channelId,
@@ -210,7 +219,8 @@ router.get('/unread-counts', protect, async (req, res) => {
             });
 
             chatRooms.forEach(room => {
-                if (room.adminId.toString() === userId.toString()) {
+                const isRoomAdmin = room.adminId?.toString() === userId.toString();
+                if (isRoomAdmin) {
                     chatCount += (room.unreadCountAdmin || 0);
                 } else {
                     chatCount += (room.unreadCountMember || 0);
@@ -220,6 +230,7 @@ router.get('/unread-counts', protect, async (req, res) => {
             counts[channelId] = {
                 notice: noticeCount,
                 post: postCount,
+                poll: pollCount,
                 chat: chatCount
             };
         }
