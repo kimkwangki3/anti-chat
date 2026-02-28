@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peach-chat-v3';
+const CACHE_NAME = 'peach-chat-v4';
 const STATIC_ASSETS = ['/', '/index.html'];
 
 // 설치: 정적 파일 캐싱
