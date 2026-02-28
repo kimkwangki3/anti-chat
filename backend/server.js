@@ -129,6 +129,24 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/corporate-c
         } catch (adminErr) {
             console.error('최고관리자 초기화 에러:', adminErr);
         }
+
+        // 채팅방 기존 인덱스 삭제 (중복 제약 조건 완화)
+        try {
+            const chatrooms = mongoose.connection.db.collection('chatrooms');
+            // 이전의 엄격한 인덱스 (adminId, memberId) 삭제 시도
+            // 인덱스 이름은 보통 field1_1_field2_1 형식이거나 직접 지정한 이름
+            const indexes = await chatrooms.indexes();
+            const oldIndex = indexes.find(idx =>
+                idx.key.adminId === 1 && idx.key.memberId === 1 && Object.keys(idx.key).length === 2
+            );
+
+            if (oldIndex) {
+                await chatrooms.dropIndex(oldIndex.name);
+                console.log(`[Database] Old unique index '${oldIndex.name}' dropped from chatrooms.`);
+            }
+        } catch (idxErr) {
+            console.error('[Database] Index cleanup error:', idxErr.message);
+        }
     })
     .catch(err => console.error('MongoDB 연결 실패:', err));
 

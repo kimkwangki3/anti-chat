@@ -100,7 +100,7 @@ router.post('/rooms', protect, async (req, res) => {
         res.status(201).json(room);
     } catch (error) {
         console.error('채팅방 생성 오류:', error);
-        res.status(500).json({ message: '채팅방 생성에 실패했습니다.' });
+        res.status(500).json({ message: '채팅방 생성에 실패했습니다: ' + error.message });
     }
 });
 
