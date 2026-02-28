@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
@@ -7,7 +7,7 @@ import useChannelStore from '../store/channelStore';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
-    const { user, logout, updateProfile } = useAuthStore();
+    const { user, logout, updateProfile, uploadProfileImage } = useAuthStore();
     const { myChannels } = useChannelStore();
     const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
 
@@ -15,14 +15,25 @@ const SettingsPage = () => {
     const ownedChannelId = myChannels.find(m =>
         (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)
     )?.channelId?._id;
+
     const [pushStatus, setPushStatus] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
     const [isSubscribing, setIsSubscribing] = useState(false);
 
+    // 대화명(name) 수정
     const [isEditingName, setIsEditingName] = useState(false);
     const [newName, setNewName] = useState(user?.name || '');
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // 이 줄을 추가하여 react에서 useState를 가져오도록 함 (기존 import 수정 필요할 수 있음)
+    // 닉네임 수정
+    const [isEditingNickname, setIsEditingNickname] = useState(false);
+    const [newNickname, setNewNickname] = useState(user?.nickname || '');
+    const [isUpdatingNickname, setIsUpdatingNickname] = useState(false);
+
+    // 프로필 이미지
+    const fileInputRef = useRef(null);
+    const [previewImage, setPreviewImage] = useState(null);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [selectedFile, setSelectedFile] = useState(null);
 
     const urlBase64ToUint8Array = (base64String) => {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -71,9 +82,8 @@ const SettingsPage = () => {
             setIsEditingName(false);
             return;
         }
-
         setIsUpdating(true);
-        const success = await updateProfile(newName.trim());
+        const success = await updateProfile(newName.trim(), user?.nickname);
         if (success) {
             alert('대화명이 변경되었습니다! 🍑');
             setIsEditingName(false);
@@ -81,6 +91,53 @@ const SettingsPage = () => {
             alert('대화명 변경에 실패했습니다.');
         }
         setIsUpdating(false);
+    };
+
+    const handleUpdateNickname = async () => {
+        if (newNickname === (user?.nickname || '')) {
+            setIsEditingNickname(false);
+            return;
+        }
+        setIsUpdatingNickname(true);
+        const success = await updateProfile(user?.name, newNickname.trim());
+        if (success) {
+            alert('닉네임이 변경되었습니다! 🍑');
+            setIsEditingNickname(false);
+        } else {
+            alert('닉네임 변경에 실패했습니다.');
+        }
+        setIsUpdatingNickname(false);
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setSelectedFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => setPreviewImage(reader.result);
+        reader.readAsDataURL(file);
+    };
+
+    const handleUploadImage = async () => {
+        if (!selectedFile) return;
+        setIsUploadingImage(true);
+        const formData = new FormData();
+        formData.append('profileImage', selectedFile);
+        const result = await uploadProfileImage(formData);
+        if (result.success) {
+            alert('프로필 사진이 변경되었습니다! 🍑');
+            setPreviewImage(null);
+            setSelectedFile(null);
+        } else {
+            alert('이미지 업로드에 실패했습니다.');
+        }
+        setIsUploadingImage(false);
+    };
+
+    const handleCancelImagePreview = () => {
+        setPreviewImage(null);
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     const playPreview = (type) => {
@@ -94,6 +151,9 @@ const SettingsPage = () => {
         { id: 'crystal', label: '크리스탈 딩', icon: '💎' },
         { id: 'knock', label: '깔끔한 노크', icon: '🚪' },
     ];
+
+    // 현재 표시할 프로필 이미지 (미리보기 or 실제 저장된 이미지 or 없음)
+    const displayImage = previewImage || user?.profileImage;
 
     return (
         <div className="bg-[#1a1a24] p-6 md:p-12">
@@ -137,54 +197,178 @@ const SettingsPage = () => {
                         </div>
                     </section>
                 )}
-                {/* Profile Section */}
+
+                {/* ===== PROFILE SECTION ===== */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
                         <span className="text-8xl font-black italic uppercase font-mono leading-none">IDENTITY</span>
                     </div>
 
-                    <div className="flex items-center gap-6 relative z-10">
-                        <div className="w-20 h-20 rounded-3xl orange-gradient flex items-center justify-center text-3xl font-bold text-white shadow-xl shadow-[#FF8C69]/20">
-                            {user?.name?.[0]}
+                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
+                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span>
+                        프로필 편집
+                    </h3>
+
+                    {/* 프로필 사진 영역 */}
+                    <div className="flex flex-col items-center gap-4 mb-8 relative z-10">
+                        {/* 아바타 */}
+                        <div className="relative group">
+                            <div className="w-28 h-28 rounded-[2rem] overflow-hidden shadow-2xl shadow-[#FF8C69]/20 border-2 border-white/10">
+                                {displayImage ? (
+                                    <img
+                                        src={displayImage}
+                                        alt="프로필 사진"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full orange-gradient flex items-center justify-center text-4xl font-black text-white">
+                                        {user?.name?.[0]?.toUpperCase()}
+                                    </div>
+                                )}
+                            </div>
+                            {/* 카메라 아이콘 오버레이 */}
+                            {!previewImage && (
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="absolute -bottom-2 -right-2 w-9 h-9 bg-[#FF8C69] rounded-xl flex items-center justify-center text-white text-sm shadow-lg hover:bg-[#ffaa33] active:scale-95 transition-all"
+                                    title="사진 변경"
+                                >
+                                    📷
+                                </button>
+                            )}
                         </div>
-                        <div className="flex-1">
+
+                        {/* 미리보기 상태 - 업로드/취소 버튼 */}
+                        {previewImage ? (
+                            <div className="flex gap-2 w-full max-w-xs">
+                                <button
+                                    onClick={handleUploadImage}
+                                    disabled={isUploadingImage}
+                                    className="flex-1 py-3 bg-[#FF8C69] text-white text-[11px] font-black rounded-xl hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase tracking-widest shadow-lg shadow-[#FF8C69]/20 active:scale-95"
+                                >
+                                    {isUploadingImage ? '업로드 중...' : '✓ 사진 저장'}
+                                </button>
+                                <button
+                                    onClick={handleCancelImagePreview}
+                                    disabled={isUploadingImage}
+                                    className="flex-1 py-3 bg-white/5 text-[#6b6b8a] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
+                                >
+                                    ✕ 취소
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="px-6 py-3 bg-white/5 text-[#aaaacc] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
+                            >
+                                📷 사진 변경
+                            </button>
+                        )}
+
+                        {/* 히든 파일 인풋 */}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                        />
+                    </div>
+
+                    {/* 구분선 */}
+                    <div className="border-t border-white/5 mb-8"></div>
+
+                    {/* 대화명 편집 */}
+                    <div className="space-y-4 relative z-10">
+                        {/* 대화명 */}
+                        <div className="p-5 rounded-2xl bg-white/5 border border-white/5">
+                            <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-3 font-mono">대화명</p>
                             {isEditingName ? (
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2">
                                     <input
                                         type="text"
                                         value={newName}
                                         onChange={(e) => setNewName(e.target.value)}
-                                        className="bg-[#1a1a24] border border-[#FF8C69]/30 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#FF8C69] transition-all w-full max-w-[200px] font-bold"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleUpdateName()}
+                                        className="flex-1 bg-[#1a1a24] border border-[#FF8C69]/30 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#FF8C69] transition-all font-bold"
                                         placeholder="새로운 대화명"
                                         autoFocus
                                     />
                                     <button
                                         disabled={isUpdating}
                                         onClick={handleUpdateName}
-                                        className="px-4 py-2 bg-[#FF8C69] text-white text-[10px] font-black rounded-lg hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase"
+                                        className="px-4 py-2.5 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase shadow-md shadow-[#FF8C69]/20 active:scale-95"
                                     >
-                                        승인
+                                        {isUpdating ? '...' : '저장'}
                                     </button>
                                     <button
                                         onClick={() => { setIsEditingName(false); setNewName(user.name); }}
-                                        className="px-4 py-2 bg-white/5 text-[#6b6b8a] text-[10px] font-black rounded-lg hover:bg-white/10 transition-all border border-white/5 uppercase"
+                                        className="px-4 py-2.5 bg-white/5 text-[#6b6b8a] text-[10px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase active:scale-95"
                                     >
-                                        폐기
+                                        취소
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-3 mb-1">
-                                    <h2 className="text-xl font-bold text-white">{user?.name}</h2>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-base font-bold text-white">{user?.name || '-'}</span>
                                     <button
                                         onClick={() => setIsEditingName(true)}
-                                        className="p-2 rounded-lg bg-white/5 text-[#6b6b8a] hover:text-[#FF8C69] hover:bg-[#FF8C69]/10 transition-all text-xs"
-                                        title="신원 정보 수정"
+                                        className="px-4 py-2 rounded-xl bg-white/5 text-[#6b6b8a] hover:text-[#FF8C69] hover:bg-[#FF8C69]/10 transition-all text-xs font-black uppercase border border-white/5"
                                     >
-                                        ✏️
+                                        ✏️ 수정
                                     </button>
                                 </div>
                             )}
-                            <p className="text-xs text-[#444466] font-mono tracking-widest uppercase font-bold">{user?.role} ACCESS / {user?.username}</p>
+                        </div>
+
+                        {/* 닉네임 */}
+                        <div className="p-5 rounded-2xl bg-white/5 border border-white/5">
+                            <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] mb-3 font-mono">닉네임</p>
+                            {isEditingNickname ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={newNickname}
+                                        onChange={(e) => setNewNickname(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleUpdateNickname()}
+                                        className="flex-1 bg-[#1a1a24] border border-[#FF8C69]/30 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#FF8C69] transition-all font-bold"
+                                        placeholder="새로운 닉네임"
+                                        autoFocus
+                                        maxLength={20}
+                                    />
+                                    <button
+                                        disabled={isUpdatingNickname}
+                                        onClick={handleUpdateNickname}
+                                        className="px-4 py-2.5 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase shadow-md shadow-[#FF8C69]/20 active:scale-95"
+                                    >
+                                        {isUpdatingNickname ? '...' : '저장'}
+                                    </button>
+                                    <button
+                                        onClick={() => { setIsEditingNickname(false); setNewNickname(user?.nickname || ''); }}
+                                        className="px-4 py-2.5 bg-white/5 text-[#6b6b8a] text-[10px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase active:scale-95"
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-between">
+                                    <span className={`text-base font-bold ${user?.nickname ? 'text-white' : 'text-[#444466]'}`}>
+                                        {user?.nickname || '닉네임 없음'}
+                                    </span>
+                                    <button
+                                        onClick={() => setIsEditingNickname(true)}
+                                        className="px-4 py-2 rounded-xl bg-white/5 text-[#6b6b8a] hover:text-[#FF8C69] hover:bg-[#FF8C69]/10 transition-all text-xs font-black uppercase border border-white/5"
+                                    >
+                                        ✏️ 수정
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 아이디 (읽기 전용) */}
+                        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.03]">
+                            <p className="text-[10px] font-black text-[#444466] uppercase tracking-[0.3em] mb-2 font-mono">아이디 (변경 불가)</p>
+                            <span className="text-sm font-bold text-[#555577] font-mono">{user?.username}</span>
                         </div>
                     </div>
                 </section>

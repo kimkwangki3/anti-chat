@@ -77,9 +77,9 @@ const useAuthStore = create((set) => ({
         useNotificationStore.getState().resetStore();
     },
 
-    updateProfile: async (name) => {
+    updateProfile: async (name, nickname) => {
         try {
-            const response = await axios.patch('/auth/profile', { name });
+            const response = await axios.patch('/auth/profile', { name, nickname });
             const updatedUser = response.data;
 
             localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -90,6 +90,23 @@ const useAuthStore = create((set) => ({
             return false;
         }
     },
+
+    uploadProfileImage: async (formData) => {
+        try {
+            const response = await axios.post('/auth/profile/image', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const { user: updatedUser } = response.data;
+
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            set({ user: updatedUser });
+            return { success: true, profileImage: response.data.profileImage };
+        } catch (error) {
+            console.error('프로필 이미지 업로드 에러:', error);
+            return { success: false };
+        }
+    },
+
 
     checkAuth: async () => {
         const token = localStorage.getItem('token');

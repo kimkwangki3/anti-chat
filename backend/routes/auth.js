@@ -5,6 +5,9 @@ const User = require('../models/User');
 const { protect } = require('../middleware/authMiddleware');
 const { writeAuthLog } = require('../utils/logService');
 const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
 
 // Generate JWT
 const generateToken = (id) => {
@@ -12,6 +15,20 @@ const generateToken = (id) => {
         expiresIn: '30d',
     });
 };
+
+// multer 메모리 스토리지 (Cloudinary 스트림 업로드용)
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('이미지 파일만 업로드 가능합니다.'), false);
+        }
+    }
+});
 
 // @route   POST /api/auth/register
 // @desc    회원가입
@@ -30,7 +47,7 @@ router.post('/register', async (req, res) => {
         const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
         const user = await User.create({
-            name: nickname || username, // 기존 name 필드 호환성을 위해 nickname 또는 username 사용
+            name: nickname || username,
             username,
             password,
             nickname,
@@ -39,7 +56,7 @@ router.post('/register', async (req, res) => {
             region,
             recommender,
             registrationIp: clientIp,
-            role: 'member', // 회원가입 시 기본은 항상 일반 회원
+            role: 'member',
             currentSessionId: sessionId
         });
 
@@ -83,11 +100,8 @@ router.post('/login', async (req, res) => {
             user.currentSessionId = sessionId;
             await user.save();
 
-            // 이전 세션들에게 로그아웃 알림을 보내기 위해 io 인스턴스 사용
             const io = req.app.get('io');
             if (io) {
-                // 특정 유저의 프라이빗 룸에 force_logout 이벤트 전송 (자신 제외 로직은 소켓 setup 시 처리하거나 여기서 처리)
-                // 신규 로그인 시점에는 아직 소켓 setup이 안 됐을 것이므로, 기존 소켓들에게만 전달됨
                 io.to(user._id.toString()).emit('force_logout', {
                     message: '다른 기기에서 로그인이 감지되었습니다.',
                     newSessionId: sessionId
@@ -129,19 +143,24 @@ router.get('/me', protect, async (req, res) => {
 });
 
 // @route   PATCH /api/auth/profile
-// @desc    Update user profile (display name)
+// @desc    Update user profile (display name + nickname)
 // @access  Private
 router.patch('/profile', protect, async (req, res) => {
-    const { name } = req.body;
+    const { name, nickname } = req.body;
 
     if (!name || !name.trim()) {
         return res.status(400).json({ message: '이름을 입력해주세요.' });
     }
 
     try {
+        const updateData = { name: name.trim() };
+        if (nickname !== undefined) {
+            updateData.nickname = nickname.trim();
+        }
+
         const updatedUser = await User.findByIdAndUpdate(
             req.user._id,
-            { name: name.trim() },
+            updateData,
             { new: true, runValidators: true }
         ).select('-password');
 
@@ -153,6 +172,49 @@ router.patch('/profile', protect, async (req, res) => {
     } catch (error) {
         console.error('프로필 수정 에러:', error);
         res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   POST /api/auth/profile/image
+// @desc    Upload or update user profile image (Cloudinary)
+// @access  Private
+router.post('/profile/image', protect, upload.single('profileImage'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: '이미지 파일이 없습니다.' });
+        }
+
+        const streamUpload = (buffer) => {
+            return new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'profile_images',
+                        transformation: [
+                            { width: 400, height: 400, crop: 'fill', gravity: 'face' },
+                            { quality: 'auto', fetch_format: 'auto' }
+                        ]
+                    },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                streamifier.createReadStream(buffer).pipe(stream);
+            });
+        };
+
+        const result = await streamUpload(req.file.buffer);
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { profileImage: result.secure_url },
+            { new: true }
+        ).select('-password');
+
+        res.json({ profileImage: result.secure_url, user: updatedUser });
+    } catch (error) {
+        console.error('프로필 이미지 업로드 에러:', error);
+        res.status(500).json({ message: '이미지 업로드에 실패했습니다.' });
     }
 });
 
