@@ -155,82 +155,84 @@ const SettingsPage = () => {
                     </section>
                 )}
 
-                {/* ===== PROFILE SECTION ===== */}
-                <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                        <span className="text-8xl font-black italic uppercase font-mono leading-none">IDENTITY</span>
-                    </div>
-
-                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
-                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span>
-                        프로필 편집
-                    </h3>
-
-                    {/* 프로필 사진 영역 */}
-                    <div className="flex flex-col items-center gap-4 relative z-10">
-                        {/* 아바타 */}
-                        <div className="relative">
-                            <div className="w-28 h-28 rounded-[2rem] overflow-hidden shadow-2xl shadow-[#FF8C69]/20 border-2 border-white/10">
-                                {displayImage ? (
-                                    <img
-                                        src={displayImage}
-                                        alt="프로필 사진"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full orange-gradient flex items-center justify-center text-4xl font-black text-white">
-                                        {user?.name?.[0]?.toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
-                            {!previewImage && (
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="absolute -bottom-2 -right-2 w-9 h-9 bg-[#FF8C69] rounded-xl flex items-center justify-center text-white text-sm shadow-lg hover:bg-[#ffaa33] active:scale-95 transition-all"
-                                    title="사진 변경"
-                                >
-                                    📷
-                                </button>
-                            )}
+                {/* ===== PROFILE SECTION - 일반 멤버만 표시 ===== */}
+                {!(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                            <span className="text-8xl font-black italic uppercase font-mono leading-none">IDENTITY</span>
                         </div>
 
-                        {/* 미리보기 상태: 저장/취소 버튼 */}
-                        {previewImage ? (
-                            <div className="flex gap-2 w-full max-w-xs">
-                                <button
-                                    onClick={handleUploadImage}
-                                    disabled={isUploadingImage}
-                                    className="flex-1 py-3 bg-[#FF8C69] text-white text-[11px] font-black rounded-xl hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase tracking-widest shadow-lg shadow-[#FF8C69]/20 active:scale-95"
-                                >
-                                    {isUploadingImage ? '업로드 중...' : '✓ 사진 저장'}
-                                </button>
-                                <button
-                                    onClick={handleCancelImagePreview}
-                                    disabled={isUploadingImage}
-                                    className="flex-1 py-3 bg-white/5 text-[#6b6b8a] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
-                                >
-                                    ✕ 취소
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="px-6 py-3 bg-white/5 text-[#aaaacc] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
-                            >
-                                📷 사진 변경
-                            </button>
-                        )}
+                        <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
+                            <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span>
+                            프로필 편집
+                        </h3>
 
-                        {/* 히든 파일 인풋 */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
-                    </div>
-                </section>
+                        {/* 프로필 사진 영역 */}
+                        <div className="flex flex-col items-center gap-4 relative z-10">
+                            {/* 아바타 */}
+                            <div className="relative">
+                                <div className="w-28 h-28 rounded-[2rem] overflow-hidden shadow-2xl shadow-[#FF8C69]/20 border-2 border-white/10">
+                                    {displayImage ? (
+                                        <img
+                                            src={displayImage}
+                                            alt="프로필 사진"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full orange-gradient flex items-center justify-center text-4xl font-black text-white">
+                                            {user?.name?.[0]?.toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
+                                {!previewImage && (
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="absolute -bottom-2 -right-2 w-9 h-9 bg-[#FF8C69] rounded-xl flex items-center justify-center text-white text-sm shadow-lg hover:bg-[#ffaa33] active:scale-95 transition-all"
+                                        title="사진 변경"
+                                    >
+                                        📷
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* 미리보기 상태: 저장/취소 버튼 */}
+                            {previewImage ? (
+                                <div className="flex gap-2 w-full max-w-xs">
+                                    <button
+                                        onClick={handleUploadImage}
+                                        disabled={isUploadingImage}
+                                        className="flex-1 py-3 bg-[#FF8C69] text-white text-[11px] font-black rounded-xl hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase tracking-widest shadow-lg shadow-[#FF8C69]/20 active:scale-95"
+                                    >
+                                        {isUploadingImage ? '업로드 중...' : '✓ 사진 저장'}
+                                    </button>
+                                    <button
+                                        onClick={handleCancelImagePreview}
+                                        disabled={isUploadingImage}
+                                        className="flex-1 py-3 bg-white/5 text-[#6b6b8a] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
+                                    >
+                                        ✕ 취소
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="px-6 py-3 bg-white/5 text-[#aaaacc] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
+                                >
+                                    📷 사진 변경
+                                </button>
+                            )}
+
+                            {/* 히든 파일 인풋 */}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
+                        </div>
+                    </section>
+                )}
 
                 {/* Sound Selection */}
                 <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">

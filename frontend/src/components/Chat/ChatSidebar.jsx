@@ -175,23 +175,19 @@ const ChatSidebar = () => {
                                 style={isActive ? { backgroundColor: channelColor, borderColor: channelColor, boxShadow: `0 20px 40px ${channelColor}40` } : {}}
                             >
                                 <div className="relative flex-shrink-0">
-                                    <UserAvatar
-                                        profileImage={otherUser?.profileImage}
-                                        name={otherUser?.name}
-                                        size="w-14 h-14"
-                                        radiusClass="rounded-[1.25rem]"
-                                        className={isActive ? 'ring-2 ring-white/30' : ''}
-                                    />
-                                    {isOnline && <span className={`absolute -bottom-1 -right-1 w-5 h-5 bg-[#06d6a0] border-[4px] rounded-full animate-pulse ${isActive ? 'border-transparent' : 'border-[#1a1a24]'}`} style={isActive ? { borderColor: channelColor } : {}}></span>}
-
-                                    {/* 채널 아이콘 배지 */}
-                                    <div className="absolute -top-1 -left-1 w-6 h-6 rounded-lg bg-[#12121a] border border-white/10 flex items-center justify-center overflow-hidden shadow-lg">
+                                    {/* 채널 로고를 메인 아바타로 사용 */}
+                                    <div className={`w-14 h-14 rounded-[1.25rem] overflow-hidden flex-shrink-0 flex items-center justify-center shadow-2xl ${isActive ? 'ring-2 ring-white/30' : ''}`}
+                                        style={{ backgroundColor: `${channelColor}25`, borderColor: channelColor }}
+                                    >
                                         {channelImage ? (
                                             <img src={channelImage} alt="" className="w-full h-full object-cover" />
                                         ) : (
-                                            <span className="text-[10px] font-black" style={{ color: channelColor }}>#</span>
+                                            <span className="text-2xl font-black" style={{ color: channelColor }}>
+                                                {channelName?.[0] || '#'}
+                                            </span>
                                         )}
                                     </div>
+                                    {isOnline && <span className={`absolute -bottom-1 -right-1 w-5 h-5 bg-[#06d6a0] border-[4px] rounded-full animate-pulse ${isActive ? 'border-transparent' : 'border-[#1a1a24]'}`} style={isActive ? { borderColor: channelColor } : {}}></span>}
                                 </div>
 
                                 <div className="flex-1 min-w-0">
