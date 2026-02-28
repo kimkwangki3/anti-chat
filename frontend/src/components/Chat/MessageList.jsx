@@ -51,38 +51,58 @@ const MessageList = () => {
                     const isMe = msg.senderId === user?._id || msg.senderId?._id === user?._id;
                     const showAvatar = index === 0 || messages[index - 1].senderId !== msg.senderId;
                     const showTime = index === messages.length - 1 || messages[index + 1].senderId !== msg.senderId;
-
-                    // 읽음 표시: 내 메시지 중 마지막 메시지에만 표시
                     const showReadReceipt = isMe && index === lastSentIndex;
                     const isRead = isMe && index <= lastReadIndex;
+
+                    const iAmAdmin = user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId;
+                    const otherIsAdmin = !iAmAdmin;
+
+                    // 채널 정보 (관리자 아바타용)
+                    const channelImage = currentRoom.channelId?.profileImage;
+                    const channelColor = currentRoom.channelId?.cardColor || '#FF8C69';
+                    const channelName = currentRoom.channelId?.name || '';
+
+                    // 상대방 표시 이름
+                    const otherName = iAmAdmin ? currentRoom.memberId?.name : currentRoom.adminId?.name;
 
                     return (
                         <div
                             key={msg._id}
                             className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-3 animate-in fade-in slide-in-from-bottom-3 duration-500`}
                         >
-                            {!isMe && (() => {
-                                const isAdmin = user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId;
-                                const other = isAdmin ? currentRoom.memberId : currentRoom.adminId;
-                                return (
-                                    <div className={`flex-shrink-0 mb-1 ${!showAvatar && 'invisible'}`}>
+                            {/* 상대방 아바타 */}
+                            {!isMe && (
+                                <div className={`flex-shrink-0 mb-1 ${!showAvatar && 'invisible'}`}>
+                                    {otherIsAdmin ? (
+                                        /* 상대방이 관리자인 경우 → 채널 로고 */
+                                        <div className="w-9 h-9 rounded-2xl overflow-hidden flex items-center justify-center"
+                                            style={{ backgroundColor: `${channelColor}30` }}>
+                                            {channelImage ? (
+                                                <img src={channelImage} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-sm font-black" style={{ color: channelColor }}>
+                                                    {channelName?.[0] || '#'}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        /* 상대방이 멤버인 경우 → 프로필 사진 */
                                         <UserAvatar
-                                            profileImage={other?.profileImage}
-                                            name={other?.name}
+                                            profileImage={currentRoom.memberId?.profileImage}
+                                            name={currentRoom.memberId?.name}
                                             size="w-9 h-9"
                                             radiusClass="rounded-2xl"
                                         />
-                                    </div>
-                                );
-                            })()}
+                                    )}
+                                </div>
+                            )}
                             <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[85%]`}>
                                 {!isMe && showAvatar && (
                                     <span className="text-[9px] font-black text-[#5a5a6a] mb-1.5 ml-1 uppercase tracking-widest font-mono italic leading-none">
-                                        {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
-                                            ? currentRoom.memberId?.name
-                                            : currentRoom.adminId?.name}
+                                        {otherName}
                                     </span>
                                 )}
+
                                 <div className={`relative rounded-2xl md:rounded-[2rem] text-xs md:text-[13px] leading-relaxed shadow-xl transition-all overflow-hidden ${isMe
                                     ? 'bg-[#FF8C69] text-white rounded-tr-none shadow-[#FF8C69]/10'
                                     : 'bg-[#2a2a3a] text-[#e8e8f0] border border-white/5 rounded-tl-none shadow-black/20'
