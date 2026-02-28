@@ -11,7 +11,7 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { myChannels, fetchMyChannels, isLoading, setCurrentChannel } = useChannelStore();
-    const { notifications, pendingCounts, unreadCounts } = useNotificationStore();
+    const { notifications, pendingCounts, unreadCounts, fetchUnreadCounts } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [stats, setStats] = useState(null);
     const [isStatsLoading, setIsStatsLoading] = useState(false);
