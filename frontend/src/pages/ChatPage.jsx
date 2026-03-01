@@ -164,12 +164,30 @@ const ChatPage = () => {
                                 >
                                     <span className="text-xl">←</span>
                                 </button>
+
+                                {/* 채널 로고 추가 */}
+                                <div
+                                    className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden flex items-center justify-center border border-white/5 shadow-2xl"
+                                    style={{ backgroundColor: `${currentChannel?.cardColor || '#FF8C69'}20` }}
+                                >
+                                    {currentChannel?.profileImage ? (
+                                        <img src={currentChannel.profileImage} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-xl font-black" style={{ color: currentChannel?.cardColor || '#FF8C69' }}>
+                                            {channelName?.[0] || '#'}
+                                        </span>
+                                    )}
+                                </div>
+
                                 <div>
-                                    <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">
+                                    <h2 className="text-lg md:text-xl font-bold text-white tracking-tight flex items-center gap-2">
                                         {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
                                             ? currentRoom.memberId?.name
                                             : currentRoom.adminId?.name}
-                                        <span className="ml-2 px-1.5 py-0.5 text-[9px] rounded-md bg-white/10 text-white/50 font-normal">
+                                        <span
+                                            className="px-2 py-0.5 text-[9px] rounded-lg font-black uppercase tracking-widest border border-white/5"
+                                            style={{ backgroundColor: `${currentChannel?.cardColor || '#FF8C69'}15`, color: currentChannel?.cardColor || '#FF8C69' }}
+                                        >
                                             {channelName}
                                         </span>
                                     </h2>

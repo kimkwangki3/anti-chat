@@ -87,35 +87,53 @@ const ChatSidebar = () => {
 
     return (
         <div className="w-full bg-[#12121a] border-r border-white/5 flex flex-col h-full z-20 shadow-2xl">
-            <div className="p-6 md:p-8 border-b border-white/5 bg-[#12121a] flex justify-between items-end h-24 md:h-28">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-black font-mono tracking-tighter text-white italic leading-none mb-1">
-                        CHATS
-                        {currentChannel?.name && (
-                            <span className="ml-2 text-[10px] not-italic font-bold text-white/30 uppercase tracking-[0.1em]">
-                                @{currentChannel.name}
-                            </span>
-                        )}
-                    </h2>
-                    <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] leading-none">Messenger</p>
-                </div>
-                {isAdmin ? (
-                    <button
-                        onClick={() => setShowUserList(!showUserList)}
-                        className="w-12 h-12 rounded-2xl bg-[#FF8C69] text-white flex items-center justify-center hover:bg-[#FFB5A0] transition-all shadow-xl shadow-[#FF8C69]/20 active:scale-95 border border-white/10"
-                    >
-                        <span className="text-2xl leading-none">{showUserList ? '×' : '+'}</span>
-                    </button>
-                ) : (
-                    channelId && (
-                        <button
-                            onClick={() => handleCreateRoom()}
-                            className="px-6 py-2.5 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl border border-white/10 hover:bg-[#FFB5A0] transition-all uppercase tracking-widest shadow-xl shadow-[#FF8C69]/10"
+            <div className="p-5 md:p-6 border-b border-white/5 bg-[#12121a] flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                        <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg overflow-hidden shrink-0 border border-white/10"
+                            style={{ backgroundColor: `${currentChannel?.cardColor || '#FF8C69'}20` }}
                         >
-                            New Talk
+                            {currentChannel?.profileImage ? (
+                                <img src={currentChannel.profileImage} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-xl" style={{ color: currentChannel?.cardColor || '#FF8C69' }}>
+                                    {currentChannel?.name?.[0] || 'C'}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <h2 className="text-lg font-black font-mono tracking-tighter text-white uppercase italic leading-none truncate">
+                                CHATS
+                            </h2>
+                            <span
+                                className="text-[10px] font-bold uppercase tracking-[0.1em] truncate"
+                                style={{ color: currentChannel?.cardColor || '#FF8C69' }}
+                            >
+                                {currentChannel?.name || 'Messenger'}
+                            </span>
+                        </div>
+                    </div>
+                    {isAdmin ? (
+                        <button
+                            onClick={() => setShowUserList(!showUserList)}
+                            className="w-10 h-10 rounded-xl bg-[#FF8C69] text-white flex items-center justify-center hover:bg-[#FFB5A0] transition-all shadow-xl shadow-[#FF8C69]/20 active:scale-95 border border-white/10"
+                            style={{ backgroundColor: currentChannel?.cardColor || '#FF8C69' }}
+                        >
+                            <span className="text-xl leading-none">{showUserList ? '×' : '+'}</span>
                         </button>
-                    )
-                )}
+                    ) : (
+                        channelId && (
+                            <button
+                                onClick={() => handleCreateRoom()}
+                                className="px-5 py-2 bg-[#FF8C69] text-white text-[9px] font-black rounded-xl border border-white/10 hover:bg-[#FFB5A0] transition-all uppercase tracking-widest shadow-xl shadow-[#FF8C69]/10"
+                                style={{ backgroundColor: currentChannel?.cardColor || '#FF8C69' }}
+                            >
+                                New
+                            </button>
+                        )
+                    )}
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar relative p-4 md:p-6 space-y-3">
