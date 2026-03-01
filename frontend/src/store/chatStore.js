@@ -73,12 +73,13 @@ const useChatStore = create((set, get) => ({
         }
     },
 
-    clearMessages: async (roomId) => {
+    clearMessages: async (roomId, channelId) => {
         try {
             await axios.put(`/chat/rooms/${roomId}/clear`);
             set({ messages: [] });
             // 방 목록 정보도 업데이트하여 가시성 유지 및 최신 상태 반영
-            get().fetchRooms();
+            // channelId를 전달하여 현재 채널의 목록만 다시 불러오도록 함
+            get().fetchRooms(channelId);
         } catch (error) {
             console.error('대화내용 삭제 실패:', error);
             throw error;

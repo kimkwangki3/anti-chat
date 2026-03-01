@@ -125,7 +125,7 @@ const ChatPage = () => {
         if (window.confirm('지우시겠습니까?')) {
             try {
                 const { clearMessages } = useChatStore.getState();
-                await clearMessages(currentRoom._id);
+                await clearMessages(currentRoom._id, channelId);
             } catch (error) {
                 alert('대화내용 삭제에 실패했습니다.');
             }
@@ -142,6 +142,7 @@ const ChatPage = () => {
     }
 
     const themeColor = currentChannel?.cardColor || '#FF8C69';
+    const channelName = currentChannel?.name || '알 수 없는 채널';
 
     return (
         <div className="flex h-full bg-[#1a1a24] overflow-hidden relative text-[#e8e8f0]">
@@ -168,6 +169,9 @@ const ChatPage = () => {
                                         {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
                                             ? currentRoom.memberId?.name
                                             : currentRoom.adminId?.name}
+                                        <span className="ml-2 px-1.5 py-0.5 text-[9px] rounded-md bg-white/10 text-white/50 font-normal">
+                                            {channelName}
+                                        </span>
                                     </h2>
                                     <div className="flex items-center gap-1.5">
                                         <span className="w-1.5 h-1.5 bg-[#06d6a0] rounded-full shadow-[0_0_8px_rgba(6,214,160,0.5)] animate-pulse"></span>

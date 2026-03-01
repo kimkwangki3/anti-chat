@@ -17,6 +17,19 @@ const upload = multer({
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB 제한
 });
 
+// 매일 새벽 05:00 기준 시점 계산 (대화내용 노출 임계점)
+const getChatThreshold = () => {
+    const now = new Date();
+    const threshold = new Date(now);
+    threshold.setHours(5, 0, 0, 0);
+
+    // 현재 시간이 새벽 5시 이전이면, 임계점은 '어제 새벽 5시'
+    if (now < threshold) {
+        threshold.setDate(threshold.getDate() - 1);
+    }
+    return threshold;
+};
+
 // @route   GET /api/chat/users/:channelId
 // @desc    해당 채널의 멤버 목록 조회 (관리자 전용)
 // @access  Private/Admin
@@ -125,13 +138,27 @@ router.get('/rooms', protect, async (req, res) => {
             query.channelId = channelId;
         }
 
+        const threshold = getChatThreshold();
         const rooms = await ChatRoom.find(query)
             .populate('adminId', 'name username isOnline profileImage')
             .populate('memberId', 'name username isOnline profileImage')
             .populate('channelId', 'name profileImage cardColor')
             .sort({ lastMessageAt: -1 });
 
-        res.json(rooms);
+        // 마지막 메시지가 임계점(새벽 5시) 이전인 경우 프론트에 빈 값으로 전달하거나 처리
+        // 클라이언트 사이드 필터링을 돕기 위해 threshold 정보를 함께 주거나, 
+        // 아예 lastMessage가 threshold 이전이면 가공 처리
+        const processedRooms = rooms.map(room => {
+            const roomObj = room.toObject();
+            if (roomObj.lastMessageAt < threshold) {
+                roomObj.lastMessage = '';
+                // unreadCount도 이 시점 이전 것은 무시해야 하는지 기획 확인 필요 (일단 유지)
+            }
+            // 수동 삭제 시점(clearedAt)도 고려하여 더 늦은 시점 적용 가능
+            return roomObj;
+        });
+
+        res.json(processedRooms);
     } catch (error) {
         res.status(500).json({ message: '채팅방 목록을 불러오는데 실패했습니다.' });
     }
@@ -220,11 +247,15 @@ router.get('/rooms/:id/messages', protect, async (req, res) => {
 
         const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
         const clearedAt = isAdmin ? room.clearedAtAdmin : room.clearedAtMember;
+        const threshold = getChatThreshold();
 
-        let query = { roomId: req.params.id };
-        if (clearedAt) {
-            query.createdAt = { $gt: clearedAt };
-        }
+        // 수동 삭제 시점(clearedAt)과 시스템 리셋 시점(05:00) 중 더 늦은 시점을 기준으로 필터링
+        const effectiveThreshold = clearedAt && clearedAt > threshold ? clearedAt : threshold;
+
+        let query = {
+            roomId: req.params.id,
+            createdAt: { $gt: effectiveThreshold }
+        };
 
         const messages = await Message.find(query).sort({ createdAt: 1 });
         res.json(messages);

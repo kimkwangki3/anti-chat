@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import useChatStore from '../../store/chatStore';
 import useAuthStore from '../../store/authStore';
+import useChannelStore from '../../store/channelStore';
 import axios from '../../api/axios';
 import socket from '../../socket/socket';
 import UserAvatar from '../Common/UserAvatar';
@@ -11,6 +12,7 @@ const ChatSidebar = () => {
         rooms, fetchRooms, currentRoom, setCurrentRoom,
         isLoading, updateRoomInList, hideRoom, markAsRead
     } = useChatStore();
+    const { currentChannel } = useChannelStore();
     const { user } = useAuthStore();
     const [users, setUsers] = useState([]);
     const [showUserList, setShowUserList] = useState(false);
@@ -87,7 +89,14 @@ const ChatSidebar = () => {
         <div className="w-full bg-[#12121a] border-r border-white/5 flex flex-col h-full z-20 shadow-2xl">
             <div className="p-6 md:p-8 border-b border-white/5 bg-[#12121a] flex justify-between items-end h-24 md:h-28">
                 <div>
-                    <h2 className="text-2xl md:text-3xl font-black font-mono tracking-tighter text-white italic leading-none mb-1">CHATS</h2>
+                    <h2 className="text-2xl md:text-3xl font-black font-mono tracking-tighter text-white italic leading-none mb-1">
+                        CHATS
+                        {currentChannel?.name && (
+                            <span className="ml-2 text-[10px] not-italic font-bold text-white/30 uppercase tracking-[0.1em]">
+                                @{currentChannel.name}
+                            </span>
+                        )}
+                    </h2>
                     <p className="text-[10px] font-bold text-[#FF8C69] uppercase tracking-[0.2em] leading-none">Messenger</p>
                 </div>
                 {isAdmin ? (
