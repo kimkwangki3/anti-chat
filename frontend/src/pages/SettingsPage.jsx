@@ -11,7 +11,6 @@ const SettingsPage = () => {
     const { myChannels } = useChannelStore();
     const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
 
-    // 관리자가 소유한 채널 확인
     const ownedChannelId = myChannels.find(m =>
         (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)
     )?.channelId?._id;
@@ -19,7 +18,6 @@ const SettingsPage = () => {
     const [pushStatus, setPushStatus] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
     const [isSubscribing, setIsSubscribing] = useState(false);
 
-    // 프로필 이미지
     const fileInputRef = useRef(null);
     const [previewImage, setPreviewImage] = useState(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -113,227 +111,202 @@ const SettingsPage = () => {
     const displayImage = previewImage || user?.profileImage;
 
     return (
-        <div className="bg-[#1a1a24] p-6 md:p-12">
+        <div className="page-container p-6 md:p-10 pb-24 md:pb-10 pt-safe">
             {/* Header */}
-            <div className="max-w-2xl mx-auto mb-12 flex items-center justify-between">
+            <header className="flex justify-between items-end mb-12 animate-slide-up">
                 <div>
-                    <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono mb-2">환경 설정</h1>
-                    <p className="text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.4em]">개인 맞춤형 연결 및 보안 설정</p>
+                    <div className="flex items-center gap-3 mb-3">
+                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full shadow-[0_0_10px_#FF8C69]"></span>
+                        <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">System Preferences</h2>
+                    </div>
+                    <h1 className="text-3xl font-black text-white/95 tracking-tight">환경 설정 ⚙️</h1>
+                    <p className="text-slate-500 text-[11px] font-bold tracking-widest uppercase ml-1 opacity-60">Custom connection & security engine</p>
                 </div>
                 <button
                     onClick={() => navigate(-1)}
-                    className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-white hover:bg-white/10 transition-all font-bold"
+                    className="w-12 h-12 glass-card !p-0 flex items-center justify-center text-white hover:bg-white/10 transition-all font-bold"
                 >
                     ✕
                 </button>
-            </div>
+            </header>
 
-            <div className="max-w-2xl mx-auto space-y-8 pb-32">
-                {/* Admin Section */}
+            <div className="max-w-3xl space-y-8 pb-32 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                {/* Admin Quick Access */}
                 {(user?.role === 'admin' || user?.role === 'superadmin') && ownedChannelId && (
-                    <section className="bg-gradient-to-br from-[#FF8C69]/20 to-[#E8735A]/5 rounded-[2.5rem] p-8 border border-[#FF8C69]/30 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-[0.05] pointer-events-none">
+                    <section className="glass-card p-8 bg-gradient-to-br from-[#FF8C69]/10 to-transparent border-[#FF8C69]/20 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform">
                             <span className="text-8xl font-black italic uppercase font-mono leading-none text-[#FF8C69]">ADMIN</span>
                         </div>
-                        <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-6 flex items-center gap-2 font-mono">
+                        <h3 className="text-[10px] font-black text-[#FF8C69] uppercase tracking-[0.4em] mb-6 flex items-center gap-2 font-mono">
                             👑 채널 마스터 엔진
                         </h3>
-                        <div className="grid grid-cols-1 gap-3 relative z-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
                             <button
                                 onClick={() => navigate(`/admin/members?channelId=${ownedChannelId}`)}
-                                className="w-full py-5 bg-[#FF8C69] text-white rounded-2xl text-sm font-black flex items-center justify-center gap-3 shadow-xl shadow-[#FF8C69]/20 active:scale-95 transition-all uppercase tracking-widest"
+                                className="peach-button py-4 text-xs tracking-widest"
                             >
-                                👥 채널 멤버 매니지먼트
+                                👥 멤버 매니지먼트
                             </button>
                             <button
                                 onClick={() => navigate(`/admin/edit-channel?channelId=${ownedChannelId}`)}
-                                className="w-full py-5 bg-white/5 text-[#FF8C69] border border-[#FF8C69]/20 rounded-2xl text-sm font-black flex items-center justify-center gap-3 active:scale-95 transition-all uppercase tracking-widest"
+                                className="glass-card py-4 text-xs font-black text-[#FF8C69] border-[#FF8C69]/20 uppercase tracking-widest hover:bg-[#FF8C69]/5"
                             >
-                                ⚙️ 코어 시스템 상세 구성
+                                ⚙️ 코어 시스템 구성
                             </button>
                         </div>
                     </section>
                 )}
 
-                {/* ===== PROFILE SECTION - 일반 멤버만 표시 ===== */}
-                {!(user?.role === 'admin' || user?.role === 'superadmin') && (
-                    <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                            <span className="text-8xl font-black italic uppercase font-mono leading-none">IDENTITY</span>
-                        </div>
-
-                        <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
-                            <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span>
-                            프로필 편집
-                        </h3>
-
-                        {/* 프로필 사진 영역 */}
-                        <div className="flex flex-col items-center gap-4 relative z-10">
-                            {/* 아바타 */}
-                            <div className="relative">
-                                <div className="w-28 h-28 rounded-[2rem] overflow-hidden shadow-2xl shadow-[#FF8C69]/20 border-2 border-white/10">
-                                    {displayImage ? (
-                                        <img
-                                            src={displayImage}
-                                            alt="프로필 사진"
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full orange-gradient flex items-center justify-center text-4xl font-black text-white">
-                                            {user?.name?.[0]?.toUpperCase()}
-                                        </div>
+                <div className="bento-grid !p-0 gap-8">
+                    {/* Profile Section */}
+                    {!(user?.role === 'admin' || user?.role === 'superadmin') && (
+                        <section className="glass-card p-8 md:col-span-2 relative overflow-hidden">
+                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8 font-mono">신원 인증 데이터</h3>
+                            <div className="flex flex-col md:flex-row items-center gap-10">
+                                <div className="relative">
+                                    <div className="w-32 h-32 rounded-3xl overflow-hidden glass-card !p-0 border-2 border-white/5 shadow-2xl">
+                                        {displayImage ? (
+                                            <img src={displayImage} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-4xl bg-white/5">👤</div>
+                                        )}
+                                    </div>
+                                    {!previewImage && (
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#FF8C69] rounded-2xl flex items-center justify-center text-white text-lg shadow-lg hover:scale-110 transition-transform"
+                                        >
+                                            📷
+                                        </button>
                                     )}
                                 </div>
-                                {!previewImage && (
-                                    <button
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="absolute -bottom-2 -right-2 w-9 h-9 bg-[#FF8C69] rounded-xl flex items-center justify-center text-white text-sm shadow-lg hover:bg-[#ffaa33] active:scale-95 transition-all"
-                                        title="사진 변경"
-                                    >
-                                        📷
-                                    </button>
-                                )}
-                            </div>
-
-                            {/* 미리보기 상태: 저장/취소 버튼 */}
-                            {previewImage ? (
-                                <div className="flex gap-2 w-full max-w-xs">
-                                    <button
-                                        onClick={handleUploadImage}
-                                        disabled={isUploadingImage}
-                                        className="flex-1 py-3 bg-[#FF8C69] text-white text-[11px] font-black rounded-xl hover:bg-[#ffaa33] transition-all disabled:opacity-50 uppercase tracking-widest shadow-lg shadow-[#FF8C69]/20 active:scale-95"
-                                    >
-                                        {isUploadingImage ? '업로드 중...' : '✓ 사진 저장'}
-                                    </button>
-                                    <button
-                                        onClick={handleCancelImagePreview}
-                                        disabled={isUploadingImage}
-                                        className="flex-1 py-3 bg-white/5 text-[#6b6b8a] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
-                                    >
-                                        ✕ 취소
-                                    </button>
+                                <div className="flex-1 space-y-4 w-full">
+                                    <div>
+                                        <p className="text-sm font-black text-white">{user?.name}</p>
+                                        <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest mt-1">
+                                            {user?.role === 'admin' ? 'Operator' : 'Standard Member'}
+                                        </p>
+                                    </div>
+                                    {previewImage ? (
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={handleUploadImage}
+                                                disabled={isUploadingImage}
+                                                className="px-6 py-3 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl hover:bg-[#E8735A] transition-all disabled:opacity-50 uppercase tracking-widest"
+                                            >
+                                                {isUploadingImage ? 'SYNCING...' : 'CONFIRM SYNC'}
+                                            </button>
+                                            <button
+                                                onClick={handleCancelImagePreview}
+                                                disabled={isUploadingImage}
+                                                className="px-6 py-3 glass-card !p-3 text-slate-500 text-[10px] font-black rounded-xl hover:text-white uppercase tracking-widest"
+                                            >
+                                                CANCEL
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <p className="text-[10px] text-slate-600 font-medium">네트워크에 표시될 신원 데이터를 업데이트 하세요.</p>
+                                    )}
                                 </div>
-                            ) : (
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className="px-6 py-3 bg-white/5 text-[#aaaacc] text-[11px] font-black rounded-xl hover:bg-white/10 transition-all border border-white/5 uppercase tracking-widest active:scale-95"
-                                >
-                                    📷 사진 변경
-                                </button>
-                            )}
+                            </div>
+                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                        </section>
+                    )}
 
-                            {/* 히든 파일 인풋 */}
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="hidden"
-                            />
+                    {/* Sound Selection */}
+                    <section className="glass-card p-8">
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8 font-mono">오디오 인터페이스</h3>
+                        <div className="space-y-4">
+                            {soundOptions.map((option) => (
+                                <div
+                                    key={option.id}
+                                    onClick={() => { setSoundType(option.id); playPreview(option.id); }}
+                                    className={`w-full p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group ${soundType === option.id
+                                        ? 'bg-[#FF8C69]/10 border-[#FF8C69]/20 text-white'
+                                        : 'bg-white/5 border-transparent text-slate-600 hover:bg-white/10'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-xl group-hover:scale-110 transition-transform">{option.icon}</span>
+                                        <span className="text-[11px] font-bold uppercase tracking-widest">{option.label}</span>
+                                    </div>
+                                    {soundType === option.id && <div className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full shadow-[0_0_8px_#FF8C69]"></div>}
+                                </div>
+                            ))}
                         </div>
                     </section>
-                )}
 
-                {/* Sound Selection */}
-                <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
-                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-pulse"></span> 오디오 인터페이스
-                    </h3>
-                    <div className="space-y-3">
-                        {soundOptions.map((option) => (
-                            <div
-                                key={option.id}
-                                onClick={() => { setSoundType(option.id); playPreview(option.id); }}
-                                className={`w-full p-5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group ${soundType === option.id
-                                    ? 'bg-[#FF8C69]/10 border-[#FF8C69]/30 text-white'
-                                    : 'bg-white/5 border-transparent text-[#6b6b8a] hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <span className="text-xl group-hover:scale-125 transition-transform">{option.icon}</span>
-                                    <span className="text-sm font-black">{option.label}</span>
+                    {/* Master Volume */}
+                    <section className="glass-card p-8">
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8 font-mono">마스터 게인 제어</h3>
+                        <div className="flex items-center gap-4 mb-4">
+                            <span className="text-xl opacity-40">🔈</span>
+                            <input
+                                type="range" min="0" max="1" step="0.1" value={volume}
+                                onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                className="flex-1 accent-[#FF8C69] h-1 bg-white/5 rounded-full appearance-none cursor-pointer"
+                            />
+                            <span className="text-xl opacity-40">🔊</span>
+                        </div>
+                        <div className="flex justify-between items-end">
+                            <span className="text-[9px] font-black text-slate-700 uppercase tracking-[0.2em]">Output Level</span>
+                            <span className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF8C69] to-white">{Math.round(volume * 100)}%</span>
+                        </div>
+                        <button
+                            onClick={() => playPreview()}
+                            className="w-full mt-8 py-3 glass-card !p-3 border-white/5 text-[9px] font-black text-slate-500 hover:text-[#FF8C69] transition-all uppercase tracking-[0.3em] font-mono"
+                        >
+                            SIGNAL TEST
+                        </button>
+                    </section>
+
+                    {/* Push Notifications */}
+                    <section className="glass-card p-8 md:col-span-2">
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8 font-mono">리얼타임 동기화 프로토콜</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="md:col-span-2 space-y-6">
+                                <div className="flex items-center justify-between p-6 glass-card border-white/5 bg-white/[0.01]">
+                                    <div>
+                                        <p className="text-xs font-black text-white mb-2 uppercase tracking-wide">네트워크 라이브 푸시</p>
+                                        <p className="text-[9px] text-slate-600 uppercase tracking-widest font-mono font-bold">
+                                            Status: {pushStatus === 'granted' ? '✅ ACTIVE' : '❓ WAITING'}
+                                        </p>
+                                    </div>
+                                    {pushStatus !== 'granted' && pushStatus !== 'denied' && (
+                                        <button
+                                            disabled={isSubscribing}
+                                            onClick={handleSubscribe}
+                                            className="px-6 py-3 peach-button text-[10px]"
+                                        >
+                                            {isSubscribing ? 'LINKING...' : 'ACTIVATE'}
+                                        </button>
+                                    )}
                                 </div>
-                                {soundType === option.id && (
-                                    <span className="text-[#FF8C69] text-xs">● ACTIVE</span>
-                                )}
+                                <div className="p-6 glass-card border-[#FF8C69]/10 bg-[#FF8C69]/[0.02]">
+                                    <p className="text-[10px] font-black text-[#FF8C69] mb-3 uppercase tracking-[0.2em]">📱 iOS / iPhone 환경 동기화 안내</p>
+                                    <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+                                        Safari 하단의 공유 아이콘 클릭 후 <span className="text-white font-bold">[홈 화면에 추가]</span> 절차를 완료하십시오.
+                                        생성된 앱 아이콘으로 접속해야 백그라운드 푸시 서비스가 가동됩니다.
+                                    </p>
+                                </div>
                             </div>
-                        ))}
-                    </div>
-                </section>
-
-                {/* Volume Control */}
-                <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 font-mono">마스터 볼륨 레벨</h3>
-                    <div className="flex items-center gap-6">
-                        <span className="text-xl">🔈</span>
-                        <input
-                            type="range"
-                            min="0"
-                            max="1"
-                            step="0.1"
-                            value={volume}
-                            onChange={(e) => setVolume(parseFloat(e.target.value))}
-                            className="flex-1 accent-[#FF8C69] h-1.5 bg-[#1a1a24] rounded-full appearance-none cursor-pointer"
-                        />
-                        <span className="text-xl">🔊</span>
-                    </div>
-                    <div className="mt-4 flex justify-between text-[10px] font-black text-[#444466] uppercase tracking-[0.3em] font-mono">
-                        <span>MIN</span>
-                        <span className="text-[#FF8C69] text-lg">{Math.round(volume * 100)}%</span>
-                        <span>MAX</span>
-                    </div>
-                    <button
-                        onClick={() => playPreview()}
-                        className="w-full mt-8 py-4 bg-white/5 border border-white/5 rounded-2xl text-[10px] font-black text-[#6b6b8a] hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest font-mono"
-                    >
-                        오디오 테스트 시작
-                    </button>
-                </section>
-
-                {/* Notification Permission Section */}
-                <section className="bg-[#23232f] rounded-[2.5rem] p-8 border border-white/5 shadow-2xl">
-                    <h3 className="text-xs font-black text-[#FF8C69] uppercase tracking-[0.3em] mb-8 flex items-center gap-2 font-mono">
-                        <span className="w-2 h-2 bg-[#FF8C69] rounded-full animate-bounce"></span> 리얼타임 푸시 알림 (PWA)
-                    </h3>
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-between p-5 rounded-2xl bg-white/5 border border-white/5">
-                            <div>
-                                <p className="text-sm font-black text-white mb-1 uppercase">네트워크 라이브 알림</p>
-                                <p className="text-[10px] text-[#444466] uppercase tracking-wider font-mono font-bold">
-                                    Status: {pushStatus === 'granted' ? '✅ SUBSCRIPTION ACTIVE' : pushStatus === 'denied' ? '❌ ACCESS DENIED' : '❓ NO PERMISSION'}
-                                </p>
+                            <div className="flex items-center justify-center p-8 bg-white/[0.02] rounded-3xl border border-white/5 border-dashed">
+                                <div className="text-center">
+                                    <div className="text-4xl mb-4 opacity-20">🔔</div>
+                                    <p className="text-[9px] font-black text-slate-700 uppercase tracking-widest leading-loose">Real-time<br />Connection<br />Hub</p>
+                                </div>
                             </div>
-                            {pushStatus !== 'granted' && pushStatus !== 'denied' && (
-                                <button
-                                    disabled={isSubscribing}
-                                    onClick={handleSubscribe}
-                                    className="px-6 py-3 orange-gradient text-white text-[10px] font-black rounded-xl shadow-lg shadow-[#FF8C69]/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-widest disabled:opacity-50"
-                                >
-                                    {isSubscribing ? '구독 활성화 중...' : '알림 수신 허용'}
-                                </button>
-                            )}
-                            {pushStatus === 'denied' && (
-                                <p className="text-[10px] text-red-400 font-mono font-bold uppercase">시스템 설정에서 직접 허용 필요</p>
-                            )}
                         </div>
-                        <div className="p-5 rounded-2xl bg-[#FF8C69]/5 border border-[#FF8C69]/10">
-                            <p className="text-[11px] text-[#FF8C69] font-black mb-2 uppercase tracking-widest">📱 iOS / iPhone 환경 구축 가이드</p>
-                            <p className="text-[11px] text-[#6b6b8a] leading-relaxed font-medium">
-                                Safari 하단의 <span className="text-white font-black italic">공유 아이콘</span>을 클릭한 후<br />
-                                <span className="text-[#FF8C69] font-black"> [홈 화면에 추가]</span> 절차를 반드시 완료해 주세요.<br />
-                                <span className="italic mt-1 block">생성된 홈 아이콘으로 접속해야 실시간 푸시 서비스가 가동됩니다.</span>
-                            </p>
-                        </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
 
                 {/* Account Actions */}
-                <section className="pt-8">
+                <section className="pt-12">
                     <button
                         onClick={logout}
-                        className="w-full py-6 bg-red-500/10 text-red-500 border border-red-500/10 rounded-2xl text-[11px] font-black uppercase tracking-[0.4em] hover:bg-red-500 hover:text-white transition-all shadow-2xl hover:shadow-red-500/40 active:scale-95 font-mono"
+                        className="w-full py-6 glass-card !p-0 border-red-500/10 text-red-500/60 hover:text-white hover:bg-red-500 hover:border-red-500 transition-all font-mono text-[10px] font-black uppercase tracking-[0.5em] shadow-xl hover:shadow-red-500/20 active:scale-[0.98]"
                     >
-                        🔐 세션 종료 및 시스템 로그아웃
+                        🔐 TERMINATE CURRENT SESSION
                     </button>
                 </section>
             </div>

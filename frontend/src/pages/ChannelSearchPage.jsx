@@ -23,160 +23,133 @@ const ChannelSearchPage = () => {
         const success = await joinChannel(channelId);
         if (success) {
             alert('가입 신청이 완료되었습니다. 관리자의 승인을 기다려주세요.');
-            fetchMyChannels(); // 가입 상태 갱신
+            fetchMyChannels();
         } else {
             alert('이미 가입 신청하셨거나 멤버인 채널입니다.');
         }
     };
 
     const getMembershipStatus = (channelId) => {
-        const membership = myChannels.find(m => m.channelId?._id === channelId);
+        const membership = myChannels.find(m => m.channelId?._id === channelId || m.channelId === channelId);
         return membership ? membership.status : null;
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f] text-[#e8e8f0] p-8 overflow-y-auto">
-            <header className="mb-12">
-                <h1 className="text-4xl font-bold tracking-wider mb-2 text-white">채널 <span className="text-[#FF8C69]">탐색</span> 부</h1>
-                <p className="text-[#6b6b8a] text-xs font-bold tracking-[0.2em] uppercase ml-1">가입할 새로운 커뮤니티를 검색하세요</p>
+        <div className="page-container p-6 md:p-10 pb-24 md:pb-10 pt-safe">
+            <header className="mb-12 animate-slide-up">
+                <div className="flex items-center gap-3 mb-3">
+                    <span className="w-2 h-2 bg-[#FF8C69] rounded-full shadow-[0_0_10px_#FF8C69]"></span>
+                    <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">Discovery Protocol</h2>
+                </div>
+                <h1 className="text-4xl font-black text-white/95 tracking-tight mb-2">
+                    채널 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF8C69] to-[#E8735A]">탐색</span> 부 📡
+                </h1>
+                <p className="text-slate-500 text-[11px] font-bold tracking-widest uppercase ml-1">Connect with new communities in the network</p>
             </header>
 
-            <form onSubmit={handleSearch} className="mb-12 relative group max-w-2xl">
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#FF8C69] to-[#FFB5A0] rounded-2xl blur opacity-10 group-focus-within:opacity-30 transition duration-500"></div>
-                <div className="relative flex gap-4">
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="채널 이름 또는 키워드로 검색..."
-                        className="flex-1 bg-[#12121a] border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#FF8C69]/40 transition-all shadow-2xl placeholder:text-[#333344] font-medium"
-                    />
-                    <button
-                        type="submit"
-                        className="px-8 orange-gradient text-white font-black rounded-2xl hover:scale-105 transition-transform shadow-lg shadow-[#FF8C69]/20 uppercase text-[11px] tracking-widest active:scale-95"
-                    >
-                        데이터 검색
-                    </button>
+            <form onSubmit={handleSearch} className="mb-16 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <div className="relative group max-w-2xl">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-[#FF8C69] to-transparent rounded-2xl blur opacity-0 group-focus-within:opacity-20 transition duration-500"></div>
+                    <div className="relative flex gap-4">
+                        <div className="flex-1 relative">
+                            <input
+                                type="text"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="채널 이름 또는 키워드 입력..."
+                                className="w-full bg-white/5 border border-white/5 rounded-2xl px-6 py-4 text-sm text-white focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all shadow-2xl placeholder:text-slate-600 font-medium"
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
+                            </div>
+                        </div>
+                        <button
+                            type="submit"
+                            className="px-8 peach-button"
+                        >
+                            데이터 검색
+                        </button>
+                    </div>
                 </div>
             </form>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bento-grid !p-0 gap-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 {isLoading ? (
-                    [1, 2, 3].map(i => <div key={i} className="h-64 bg-[#12121a] rounded-3xl animate-pulse border border-white/5 shadow-xl"></div>)
+                    [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-64 glass-card animate-pulse"></div>)
                 ) : searchResults.length === 0 ? (
-                    <div className="col-span-full py-40 text-center">
-                        <span className="text-5xl block mb-6 opacity-20">📡</span>
-                        <p className="text-xs font-black uppercase tracking-[0.4em] text-[#333344]">일치하는 데이터가 없습니다</p>
+                    <div className="col-span-full py-40 glass-card text-center border-dashed border-white/10">
+                        <span className="text-6xl block mb-8 opacity-20">📡</span>
+                        <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-600">일치하는 채널 데이터를 찾을 수 없습니다</p>
                     </div>
                 ) : (
                     searchResults.map((channel) => {
-                        const membershipStatus = getMembershipStatus(channel._id);
-                        const isOwner = user?._id === channel.ownerId?._id;
+                        const status = getMembershipStatus(channel._id);
+                        const isOwner = user?._id === (channel.ownerId?._id || channel.ownerId);
 
                         return (
                             <div
                                 key={channel._id}
-                                className="bg-[#12121a] p-8 border rounded-[2.5rem] transition-all group relative overflow-hidden flex flex-col h-full shadow-2xl"
-                                style={{
-                                    borderColor: `${channel.cardColor || '#FF8C69'}1A`,
-                                    boxShadow: `0 25px 50px -12px ${channel.cardColor || '#FF8C69'}10`
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#FF8C69'}66`}
-                                onMouseLeave={(e) => e.currentTarget.style.borderColor = `${channel.cardColor || '#FF8C69'}1A`}
+                                className="glass-card p-8 flex flex-col h-full group relative overflow-hidden"
                             >
-                                <div
-                                    className="absolute top-0 right-0 w-32 h-32 rounded-bl-[5rem] pointer-events-none transition-all"
-                                    style={{ backgroundColor: `${channel.cardColor || '#FF8C69'}10` }}
-                                ></div>
+                                <div className="absolute top-0 right-0 p-8 opacity-[0.02] text-8xl group-hover:scale-125 transition-transform" style={{ color: channel.cardColor || '#FF8C69' }}>📡</div>
+
                                 <div className="flex justify-between items-start mb-6 relative z-10">
-                                    <span className="text-[9px] font-black text-[#444466] uppercase tracking-[0.2em]">
-                                        {isOwner ? '관리 중인 채널' : '참가 가능한 채널'}
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                        {isOwner ? 'System Admin' : 'Public Node'}
                                     </span>
-                                    <div className="flex items-center gap-1.5 bg-black/20 px-2 py-1 rounded-full">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${channel.ownerId?.isOnline ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-[#333344]'}`}></span>
-                                        <span className={`text-[8px] font-bold uppercase tracking-tighter ${channel.ownerId?.isOnline ? 'text-[#06d6a0]' : 'text-[#333344]'}`}>
+                                    <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${channel.ownerId?.isOnline ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-slate-700'}`}></div>
+                                        <span className={`text-[8px] font-black uppercase tracking-widest ${channel.ownerId?.isOnline ? 'text-[#06d6a0]' : 'text-slate-600'}`}>
                                             MASTER {channel.ownerId?.isOnline ? 'ONLINE' : 'OFFLINE'}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4 mb-3">
-                                    {channel.profileImage ? (
-                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/5 shadow-inner flex-shrink-0">
+                                <div className="flex items-center gap-5 mb-4 group-hover:-translate-y-1 transition-transform">
+                                    <div className="w-14 h-14 rounded-2xl overflow-hidden glass-card !p-0 shadow-inner flex-shrink-0">
+                                        {channel.profileImage ? (
                                             <img src={channel.profileImage} alt={channel.name} className="w-full h-full object-cover" />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-inner flex-shrink-0"
-                                            style={{ backgroundColor: `${channel.cardColor || '#FF8C69'}20` }}
-                                        >
-                                            📡
-                                        </div>
-                                    )}
-                                    <h3
-                                        className="text-2xl font-black text-white transition-colors leading-tight"
-                                        style={{ '--tw-text-opacity': '1', color: 'white' }}
-                                        onMouseEnter={(e) => e.currentTarget.style.color = channel.cardColor || '#FF8C69'}
-                                        onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
-                                    >{channel.name}</h3>
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-2xl bg-white/5">🏘️</div>
+                                        )}
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white group-hover:text-[#FF8C69] transition-colors leading-tight truncate">{channel.name}</h3>
                                 </div>
 
-                                <p className="text-[#6b6b8a] text-xs leading-relaxed mb-10 flex-1 font-medium italic">{channel.description}</p>
+                                <p className="text-slate-500 text-xs leading-relaxed mb-10 flex-1 font-medium italic line-clamp-3">{channel.description}</p>
 
-                                <div
-                                    className="flex items-center justify-between mt-auto border-t pt-6 relative z-10"
-                                    style={{ borderColor: `${channel.cardColor || '#FF8C69'}1A` }}
-                                >
+                                <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between relative z-10">
                                     <div className="flex items-center gap-3">
-                                        <div
-                                            className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black border"
-                                            style={{
-                                                backgroundColor: `${channel.cardColor || '#FF8C69'}1A`,
-                                                color: channel.cardColor || '#FF8C69',
-                                                borderColor: `${channel.cardColor || '#FF8C69'}20`
-                                            }}
-                                        >
-                                            {channel.ownerId?.name?.[0]}
+                                        <div className="w-8 h-8 rounded-xl glass-card !p-0 flex items-center justify-center text-[10px] font-black border border-white/5">
+                                            {channel.ownerId?.name?.[0]?.toUpperCase() || 'U'}
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-white leading-none">{channel.ownerId?.name}</p>
-                                            <p className="text-[8px] text-[#444466] font-bold leading-none mt-1">OWNER</p>
+                                            <p className="text-[11px] font-bold text-white leading-none">{channel.ownerId?.name}</p>
+                                            <p className="text-[8px] text-slate-600 font-black leading-none mt-1 uppercase tracking-tighter">Owner</p>
                                         </div>
                                     </div>
 
-                                    {!isOwner && (
-                                        membershipStatus === 'approved' ? (
-                                            <span className="px-5 py-2.5 bg-[#06d6a0]/5 text-[#06d6a0] border border-[#06d6a0]/10 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-[#06d6a0]/5">
-                                                참여 중
-                                            </span>
-                                        ) : membershipStatus === 'pending' ? (
-                                            <span className="px-5 py-2.5 bg-yellow-500/5 text-yellow-500 border border-yellow-500/10 text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-yellow-500/5">
-                                                승인 대기
-                                            </span>
+                                    {!isOwner ? (
+                                        status === 'approved' ? (
+                                            <div className="px-4 py-2 border border-[#06d6a0]/20 bg-[#06d6a0]/5 text-[#06d6a0] text-[9px] font-black rounded-xl uppercase tracking-widest">
+                                                Active
+                                            </div>
+                                        ) : status === 'pending' ? (
+                                            <div className="px-4 py-2 border border-yellow-500/20 bg-yellow-500/5 text-yellow-500 text-[9px] font-black rounded-xl uppercase tracking-widest">
+                                                Pending
+                                            </div>
                                         ) : (
                                             <button
                                                 onClick={() => handleJoinRequest(channel._id)}
-                                                className="px-5 py-2.5 text-white text-[10px] font-black rounded-xl transition-all shadow-xl uppercase tracking-widest active:scale-95"
-                                                style={{
-                                                    backgroundColor: channel.cardColor || '#FF8C69',
-                                                    boxShadow: `0 10px 15px -3px ${channel.cardColor || '#FF8C69'}40`
-                                                }}
+                                                className="px-5 py-2.5 bg-[#FF8C69] hover:bg-[#E8735A] text-white text-[9px] font-black rounded-xl transition-all shadow-lg shadow-[#FF8C69]/20 uppercase tracking-widest active:scale-95"
                                             >
-                                                가입 신청
+                                                Request
                                             </button>
                                         )
-                                    )}
-                                    {isOwner && (
-                                        <span
-                                            className="px-5 py-2.5 border text-[10px] font-black rounded-xl uppercase tracking-widest"
-                                            style={{
-                                                backgroundColor: `${channel.cardColor || '#FF8C69'}1A`,
-                                                color: channel.cardColor || '#FF8C69',
-                                                borderColor: `${channel.cardColor || '#FF8C69'}20`
-                                            }}
-                                        >
-                                            내 채널
-                                        </span>
+                                    ) : (
+                                        <div className="px-4 py-2 border border-[#FF8C69]/20 bg-[#FF8C69]/5 text-[#FF8C69] text-[9px] font-black rounded-xl uppercase tracking-widest">
+                                            My Node
+                                        </div>
                                     )}
                                 </div>
                             </div>

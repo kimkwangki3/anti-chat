@@ -6,7 +6,7 @@ import UserAvatar from './UserAvatar';
 
 // SF Symbol 스타일 아이콘 컴포넌트
 const SideIcon = ({ name, active }) => {
-    const c = active ? '#FF8C69' : '#636366';
+    const c = active ? '#FF8C69' : '#475569';
     const icons = {
         home: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 10.5L12 3L21 10.5V20C21 20.5523 20.5523 21 20 21H15V15H9V21H4C3.44772 21 3 20.5523 3 20V10.5Z" fill={active ? `${c}30` : 'none'} stroke={c} strokeWidth="1.7" strokeLinejoin="round" /></svg>,
         search: <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /><path d="M21 21L16.65 16.65" stroke={c} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>,
@@ -101,7 +101,7 @@ const Sidebar = () => {
     );
 
     return (
-        <div className="w-60 h-full bg-[#111113] border-r border-white/[0.06] flex flex-col z-30">
+        <div className="w-60 h-full bg-[#09090b] border-r border-white/5 flex flex-col z-30">
             {/* 로고 */}
             <div className="px-5 pt-7 pb-5">
                 <div

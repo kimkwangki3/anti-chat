@@ -8,7 +8,7 @@ import UserAvatar from './UserAvatar';
 
 // SF Symbol 스타일 SVG 아이콘 컴포넌트
 const Icon = ({ name, active }) => {
-    const color = active ? '#FF8C69' : '#8e8e93';
+    const color = active ? '#FF8C69' : '#475569';
     const icons = {
         home: (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -100,7 +100,7 @@ const BottomNav = () => {
             {/* 모바일 하단 탭바 - iOS 스타일 */}
             <nav className={`fixed bottom-0 left-0 right-0 z-50 md:hidden ${isIOS ? 'pb-6' : 'pb-1'}`}>
                 {/* Frosted glass bar */}
-                <div className="mx-3 mb-2 bg-[#1c1c1e]/80 backdrop-blur-2xl rounded-[2rem] border border-white/10 shadow-2xl px-2 py-2">
+                <div className="mx-3 mb-2 bg-[#09090b]/80 backdrop-blur-2xl rounded-[2rem] border border-white/5 shadow-2xl px-2 py-2">
                     <div className="flex items-center justify-around">
                         {navItems.filter(item => !item.hidden).map((item) => {
                             const active = isActive(item);
@@ -138,10 +138,10 @@ const BottomNav = () => {
             {showSettings && (
                 <div className="fixed inset-0 z-[100] flex items-end justify-center md:hidden">
                     <div
-                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                         onClick={() => setShowSettings(false)}
                     />
-                    <div className="relative w-full bg-[#1c1c1e]/95 backdrop-blur-2xl rounded-t-[2.5rem] border-t border-white/10 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[85vh] overflow-y-auto">
+                    <div className="relative w-full bg-[#09090b]/95 backdrop-blur-3xl rounded-t-[2.5rem] border-t border-white/5 shadow-2xl animate-in slide-in-from-bottom duration-300 max-h-[85vh] overflow-y-auto">
                         {/* Handle */}
                         <div className="flex justify-center pt-4 pb-2">
                             <div className="w-10 h-1 bg-white/20 rounded-full" />

@@ -33,21 +33,21 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#1a1a24] flex items-center justify-center p-6 relative overflow-hidden py-12 md:py-20">
+        <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-6 relative overflow-hidden py-12 md:py-20">
             {/* Decorative Orbs */}
             <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#FF8C69]/10 rounded-full blur-[120px]"></div>
             <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#E8735A]/5 rounded-full blur-[120px]"></div>
 
-            <div className="w-full max-w-xl relative">
-                <div className="bg-[#23232f] border border-white/5 rounded-[2.5rem] p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] backdrop-blur-2xl">
+            <div className="w-full max-w-xl relative animate-slide-up">
+                <div className="glass-card p-10 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.3)] !bg-white/[0.02] border-white/5">
                     <div className="flex flex-col items-center mb-10 text-center">
-                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-3xl shadow-2xl shadow-white/10 mb-6 animate-pulse border border-[#FF8C69]/20 pointer-events-none">
+                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-3xl shadow-2xl shadow-white/10 mb-6 border border-[#FF8C69]/20 pointer-events-none">
                             <span className="drop-shadow-sm">🍑</span>
                         </div>
                         <h1 className="text-3xl font-black text-white tracking-widest uppercase italic font-mono">
                             JOIN <span className="text-[#FF8C69]">PEACH</span>
                         </h1>
-                        <p className="text-[#6b6b8a] text-[10px] font-bold uppercase tracking-[0.4em] mt-2 font-mono italic opacity-60">Start Your Journey</p>
+                        <p className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.4em] mt-2 font-mono italic opacity-60">Start Your Journey</p>
                     </div>
 
                     {error && (
@@ -61,25 +61,25 @@ const Register = () => {
                         {/* 아이디 / 비밀번호 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">아이디 *</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">아이디 *</label>
                                 <input
                                     type="text"
                                     name="username"
                                     required
                                     placeholder="아이디를 입력하세요"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all placeholder:text-slate-600 font-medium"
                                     value={formData.username}
                                     onChange={handleChange}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">비밀번호 *</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">비밀번호 *</label>
                                 <input
                                     type="password"
                                     name="password"
                                     required
                                     placeholder="비밀번호를 설정하세요"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all placeholder:text-slate-600 font-medium"
                                     value={formData.password}
                                     onChange={handleChange}
                                 />
@@ -89,25 +89,25 @@ const Register = () => {
                         {/* 이름 / 닉네임 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">이름 *</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">이름 *</label>
                                 <input
                                     type="text"
                                     name="name"
                                     required
                                     placeholder="실명을 입력하세요"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all placeholder:text-slate-600 font-medium"
                                     value={formData.name}
                                     onChange={handleChange}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">닉네임 *</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">닉네임 *</label>
                                 <input
                                     type="text"
                                     name="nickname"
                                     required
                                     placeholder="사용할 닉네임을 입력하세요"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all placeholder:text-slate-600 font-medium"
                                     value={formData.nickname}
                                     onChange={handleChange}
                                 />
@@ -117,24 +117,24 @@ const Register = () => {
                         {/* 생년월일 / 연락처 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">생년월일 *</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">생년월일 *</label>
                                 <input
                                     type="date"
                                     name="birthdate"
                                     required
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium appearance-none"
+                                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all appearance-none"
                                     value={formData.birthdate}
                                     onChange={handleChange}
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">연락처 *</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">연락처 *</label>
                                 <input
                                     type="tel"
                                     name="phone"
                                     required
                                     placeholder="010-0000-0000"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all placeholder:text-slate-600 font-medium"
                                     value={formData.phone}
                                     onChange={handleChange}
                                 />
@@ -144,14 +144,14 @@ const Register = () => {
                         {/* 성별 / 추천인 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">성별</label>
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">성별</label>
                                 <div className="flex gap-3">
                                     {['male', 'female'].map(g => (
                                         <button
                                             key={g}
                                             type="button"
                                             onClick={() => setFormData(prev => ({ ...prev, gender: g }))}
-                                            className={`flex-1 py-4 rounded-2xl text-[10px] font-black tracking-widest transition-all border uppercase ${formData.gender === g ? 'bg-[#FF8C69] border-[#FF8C69] text-white shadow-lg shadow-[#FF8C69]/20' : 'bg-[#1a1a24] border-white/5 text-[#3e3e56]'}`}
+                                            className={`flex-1 py-4 rounded-2xl text-[10px] font-black tracking-widest transition-all border uppercase ${formData.gender === g ? 'bg-[#FF8C69] border-[#FF8C69] text-white shadow-lg shadow-[#FF8C69]/20' : 'bg-white/5 border-white/5 text-slate-600 hover:bg-white/10'}`}
                                         >
                                             {g === 'male' ? '남성' : '여성'}
                                         </button>
@@ -159,12 +159,12 @@ const Register = () => {
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-widest ml-4 font-mono text-left">추천인 아이디 (선택)</label>
+                                <label className="block text-[10px) font-bold text-slate-500 uppercase tracking-widest ml-4 font-mono text-left">추천인 아이디 (선택)</label>
                                 <input
                                     type="text"
                                     name="recommender"
                                     placeholder="추천인 아이디 (선택사항)"
-                                    className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/50 transition-all placeholder:text-[#3a3a4a] font-medium"
+                                    className="w-full bg-white/5 border border-white/5 rounded-2xl px-5 py-4 text-white text-sm focus:outline-none focus:border-[#FF8C69]/40 focus:bg-white/[0.07] transition-all placeholder:text-slate-600 font-medium"
                                     value={formData.recommender}
                                     onChange={handleChange}
                                 />
@@ -182,7 +182,7 @@ const Register = () => {
                                 className="w-5 h-5 accent-[#FF8C69] cursor-pointer"
                                 required
                             />
-                            <label htmlFor="agreedToPrivacy" className="flex-1 text-[11px] font-bold text-[#6b6b8a] cursor-pointer">
+                            <label htmlFor="agreedToPrivacy" className="flex-1 text-[11px] font-bold text-slate-500 cursor-pointer">
                                 <Link to="/privacy-policy" className="text-[#FF8C69] hover:underline" target="_blank">개인정보 처리방침</Link>에 동의합니다. (필수)
                             </label>
                         </div>
@@ -190,7 +190,7 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full h-16 orange-gradient hover:scale-[1.02] active:scale-95 text-white font-black py-4 rounded-3xl shadow-2xl shadow-[#FF8C69]/20 transition-all text-sm tracking-[0.3em] uppercase mt-4 flex items-center justify-center font-mono"
+                            className="w-full h-16 peach-button flex items-center justify-center font-mono"
                         >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -201,7 +201,7 @@ const Register = () => {
                     </form>
 
                     <div className="mt-10 text-center">
-                        <p className="text-[11px] text-[#6b6b8a] font-bold uppercase tracking-widest">
+                        <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">
                             Already Have an Account? <Link to="/login" className="text-[#FF8C69] hover:text-[#FFB5A0] transition-colors decoration-[#FF8C69]/20 decoration-2 underline-offset-8 underline">Login Now</Link>
                         </p>
                     </div>
