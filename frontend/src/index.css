@@ -14,28 +14,45 @@
     }
 
     body {
-        @apply bg-[#09090b] text-[#f8fafc] antialiased selection:bg-[#FF8C69]/30;
+        background-color: var(--bg-obsidian);
+        color: #f8fafc;
+        -webkit-font-smoothing: antialiased;
         font-family: 'Inter', 'Pretendard', sans-serif;
     }
 
-    /* Modern Layout Utilities */
     .page-container {
-        @apply h-full bg-[#09090b] overflow-y-auto custom-scrollbar;
+        height: 100%;
+        background-color: var(--bg-obsidian);
+        overflow-y: auto;
     }
 
     .unified-header {
-        @apply h-20 flex-shrink-0 bg-[#09090b]/40 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-6 md:px-10 z-20;
+        height: 5rem;
+        flex-shrink: 0;
+        background-color: rgba(9, 9, 11, 0.4);
+        backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        z-index: 20;
     }
 }
 
 @layer components {
     .glass-card {
-        @apply bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+        background-color: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
     }
 
     .glass-card:hover {
-        @apply border-white/20;
+        border-color: rgba(255, 255, 255, 0.2);
         transform: translateY(-2px);
     }
 
@@ -47,44 +64,41 @@
     }
 
     .peach-button {
-        @apply px-6 py-3 bg-[#FF8C69] text-white rounded-2xl font-semibold shadow-[0_0_20px_var(--primary-peach-glow)] hover:bg-[#ff7b52] hover:scale-[1.02] active:scale-[0.98] transition-all;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        background-color: var(--primary-peach);
+        color: white;
+        border-radius: 1rem;
+        font-weight: 600;
+        box-shadow: 0 0 20px var(--primary-peach-glow);
+        transition: all 0.2s;
     }
 
-    /* Custom scrollbar optimized for PC */
-    @media (min-width: 768px) {
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 10px;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            border: 2px solid transparent;
-            background-clip: content-box;
-        }
-
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid transparent;
-            background-clip: content-box;
-        }
+    .peach-button:hover {
+        background-color: var(--primary-peach-hover);
+        transform: scale(1.02);
     }
 
-    /* Mobile scrollbar: Thin and subtle */
-    @media (max-width: 767px) {
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
-        }
+    .peach-button:active {
+        transform: scale(0.98);
+    }
 
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        border: 2px solid transparent;
+        background-clip: content-box;
     }
 
     @keyframes slideUp {
@@ -102,15 +116,9 @@
     .animate-slide-up {
         animation: slideUp 0.4s ease-out forwards;
     }
+}
 
-    .isolation-auto {
-        isolation: auto;
-    }
-
-    /* Smooth transitions for all interactive elements */
-    button,
-    a,
-    input {
-        @apply transition-all duration-200;
-    }
+/* Utilities */
+.selection-peach::selection {
+    background-color: rgba(255, 140, 105, 0.3);
 }
