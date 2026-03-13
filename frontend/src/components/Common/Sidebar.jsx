@@ -3,6 +3,7 @@ import useAuthStore from '../../store/authStore';
 import useChannelStore from '../../store/channelStore';
 import useNotificationStore from '../../store/notificationStore';
 import UserAvatar from './UserAvatar';
+import { isAdminOrSuperAdminRole, isSuperAdminRole } from '../../utils/roleUtils';
 
 // SF Symbol 스타일 아이콘 컴포넌트
 const SideIcon = ({ name, active }) => {
@@ -33,6 +34,9 @@ const Sidebar = () => {
 
     const params = new URLSearchParams(location.search);
     const urlChannelId = params.get('channelId') || currentChannel?._id;
+    const userRole = user?.role;
+    const canManageChannel = isAdminOrSuperAdminRole(userRole);
+    const isSuperAdmin = isSuperAdminRole(userRole);
 
     const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
     const pendingBadge = (pendingCounts && pendingCounts[urlChannelId]) || 0;
@@ -45,7 +49,7 @@ const Sidebar = () => {
         { id: 'poll', label: '투표', icon: 'vote', path: `/polls?channelId=${urlChannelId}`, hidden: !urlChannelId },
         { id: 'board', label: '게시판', icon: 'board', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
         { id: 'chat', label: '채팅', icon: 'chat', path: `/chat?channelId=${urlChannelId}`, count: counts.chat, hidden: !urlChannelId },
-        { id: 'settings', label: '설정', icon: 'gear', path: '/settings' },
+        { id: 'settings', label: '설정', icon: 'gear', path: urlChannelId ? `/settings?channelId=${urlChannelId}` : '/settings' },
     ];
 
     const adminMenuItems = [
@@ -131,7 +135,7 @@ const Sidebar = () => {
                     ))}
                 </div>
 
-                {(user?.role === 'admin' || user?.role === 'superadmin') && urlChannelId && (
+                {canManageChannel && urlChannelId && (
                     <>
                         <SectionLabel label="채널 관리" />
                         <div className="space-y-0.5">
@@ -142,7 +146,7 @@ const Sidebar = () => {
                     </>
                 )}
 
-                {user?.role === 'superadmin' && (
+                {isSuperAdmin && (
                     <>
                         <SectionLabel label="👑 최고 관리자" accent />
                         <div className="space-y-0.5">

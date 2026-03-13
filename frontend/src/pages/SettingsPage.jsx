@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
 import axios from '../api/axios';
@@ -7,6 +7,7 @@ import useChannelStore from '../store/channelStore';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user, logout, uploadProfileImage, updateProfile } = useAuthStore();
     const { myChannels } = useChannelStore();
     const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
@@ -14,6 +15,17 @@ const SettingsPage = () => {
     const ownedChannelId = myChannels.find(m =>
         (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)
     )?.channelId?._id;
+    const ownedChannelIds = myChannels
+        .filter(m => (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id))
+        .map(m => m.channelId?._id)
+        .filter(Boolean);
+    const query = new URLSearchParams(location.search);
+    const contextChannelId = query.get('channelId');
+    const isChannelSettingsMode = Boolean(
+        contextChannelId &&
+        (user?.role === 'admin' || user?.role === 'superadmin') &&
+        ownedChannelIds.includes(contextChannelId)
+    );
 
     const [pushStatus, setPushStatus] = useState(typeof Notification !== 'undefined' ? Notification.permission : 'default');
     const [isSubscribing, setIsSubscribing] = useState(false);
@@ -25,6 +37,7 @@ const SettingsPage = () => {
     const [profileName, setProfileName] = useState(user?.name || '');
     const [profileNickname, setProfileNickname] = useState(user?.nickname || '');
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const canEditProfileNames = user?.role === 'admin' || user?.role === 'superadmin';
 
     useEffect(() => {
         setProfileName(user?.name || '');
@@ -105,6 +118,11 @@ const SettingsPage = () => {
     };
 
     const handleSaveProfile = async () => {
+        if (!canEditProfileNames) {
+            alert('일반회원은 아바타만 변경할 수 있습니다.');
+            return;
+        }
+
         if (!profileName.trim()) {
             alert('이름을 입력해주세요.');
             return;
@@ -157,7 +175,7 @@ const SettingsPage = () => {
 
             <div className="max-w-3xl space-y-8 pb-32 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                 {/* Admin Quick Access */}
-                {(user?.role === 'admin' || user?.role === 'superadmin') && ownedChannelId && (
+                {(user?.role === 'admin' || user?.role === 'superadmin') && (contextChannelId || ownedChannelId) && (
                     <section className="glass-card p-8 bg-gradient-to-br from-[#FF8C69]/10 to-transparent border-[#FF8C69]/20 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform">
                             <span className="text-8xl font-black italic uppercase font-mono leading-none text-[#FF8C69]">ADMIN</span>
@@ -167,13 +185,13 @@ const SettingsPage = () => {
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
                             <button
-                                onClick={() => navigate(`/admin/members?channelId=${ownedChannelId}`)}
+                                onClick={() => navigate(`/admin/members?channelId=${contextChannelId || ownedChannelId}`)}
                                 className="peach-button py-4 text-xs tracking-widest"
                             >
                                 👥 멤버 매니지먼트
                             </button>
                             <button
-                                onClick={() => navigate(`/admin/edit-channel?channelId=${ownedChannelId}`)}
+                                onClick={() => navigate(`/admin/edit-channel?channelId=${contextChannelId || ownedChannelId}`)}
                                 className="glass-card py-4 text-xs font-black text-[#FF8C69] border-[#FF8C69]/20 uppercase tracking-widest hover:bg-[#FF8C69]/5"
                             >
                                 ⚙️ 코어 시스템 구성
@@ -184,7 +202,7 @@ const SettingsPage = () => {
 
                 <div className="bento-grid !p-0 gap-8">
                     {/* Profile Section */}
-                    {user && (
+                    {user && !isChannelSettingsMode && (
                         <section className="glass-card p-8 md:col-span-2 relative overflow-hidden">
                             <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8 font-mono">신원 인증 데이터</h3>
                             <div className="flex flex-col md:flex-row items-center gap-10">
@@ -241,6 +259,7 @@ const SettingsPage = () => {
                                                 value={profileName}
                                                 onChange={(e) => setProfileName(e.target.value)}
                                                 maxLength={20}
+                                                disabled={!canEditProfileNames}
                                                 className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-[#FF8C69]/40"
                                                 placeholder="관리자 이름"
                                             />
@@ -253,17 +272,24 @@ const SettingsPage = () => {
                                                 value={profileNickname}
                                                 onChange={(e) => setProfileNickname(e.target.value)}
                                                 maxLength={20}
+                                                disabled={!canEditProfileNames}
                                                 className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-[#FF8C69]/40"
                                                 placeholder="닉네임"
                                             />
                                         </div>
-                                        <button
-                                            onClick={handleSaveProfile}
-                                            disabled={isSavingProfile}
-                                            className="px-6 py-3 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl hover:bg-[#E8735A] transition-all disabled:opacity-50 uppercase tracking-widest"
-                                        >
-                                            {isSavingProfile ? 'SAVING...' : '이름 저장'}
-                                        </button>
+                                        {canEditProfileNames ? (
+                                            <button
+                                                onClick={handleSaveProfile}
+                                                disabled={isSavingProfile}
+                                                className="px-6 py-3 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl hover:bg-[#E8735A] transition-all disabled:opacity-50 uppercase tracking-widest"
+                                            >
+                                                {isSavingProfile ? 'SAVING...' : '이름 저장'}
+                                            </button>
+                                        ) : (
+                                            <p className="text-[10px] text-slate-500 font-semibold">
+                                                일반회원은 아바타 사진만 변경할 수 있습니다.
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -271,6 +297,41 @@ const SettingsPage = () => {
                         </section>
                     )}
 
+                    {isChannelSettingsMode && (
+                        <section className="glass-card p-8 md:col-span-2 relative overflow-hidden">
+                            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-6 font-mono">
+                                CHANNEL SETTINGS
+                            </h3>
+                            <p className="text-sm text-slate-400 mb-6">
+                                채널 내부 설정 화면입니다. 채널 정보 변경과 멤버 관리는 아래 메뉴에서 진행하세요.
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <button
+                                    onClick={() => navigate(`/admin/edit-channel?channelId=${contextChannelId}`)}
+                                    className="peach-button py-4 text-xs tracking-widest"
+                                >
+                                    채널 정보 수정
+                                </button>
+                                <button
+                                    onClick={() => navigate(`/admin/members?channelId=${contextChannelId}`)}
+                                    className="glass-card py-4 text-xs font-black text-[#FF8C69] border-[#FF8C69]/20 uppercase tracking-widest hover:bg-[#FF8C69]/5"
+                                >
+                                    멤버 관리
+                                </button>
+                            </div>
+                            <div className="mt-5">
+                                <button
+                                    onClick={() => navigate('/settings')}
+                                    className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                                >
+                                    메인 설정으로 이동
+                                </button>
+                            </div>
+                        </section>
+                    )}
+
+                    {!isChannelSettingsMode && (
+                        <>
                     {/* Sound Selection */}
                     <section className="glass-card p-8">
                         <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8 font-mono">오디오 인터페이스</h3>
@@ -356,6 +417,8 @@ const SettingsPage = () => {
                             </div>
                         </div>
                     </section>
+                        </>
+                    )}
                 </div>
 
                 {/* Account Actions */}

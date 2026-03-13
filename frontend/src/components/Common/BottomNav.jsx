@@ -213,7 +213,7 @@ const BottomNav = () => {
                             <div className="space-y-3">
                                 <div className="bg-[#2c2c2e]/80 rounded-2xl overflow-hidden border border-white/5">
                                     <button
-                                        onClick={() => { navigate('/settings'); setShowSettings(false); }}
+                                        onClick={() => { navigate(activeChannelId ? `/settings?channelId=${activeChannelId}` : '/settings'); setShowSettings(false); }}
                                         className="w-full flex items-center gap-3 px-5 py-4 text-white text-sm font-medium hover:bg-white/5 transition-colors"
                                     >
                                         <span className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-sm">⚙️</span>
