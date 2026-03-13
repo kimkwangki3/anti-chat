@@ -14,6 +14,18 @@ const upload = multer({
     limits: { fileSize: 20 * 1024 * 1024 }, // 20MB per file
 });
 
+const postFileUploadMiddleware = (req, res, next) => {
+    upload.array('files', 5)(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({
+                message: '파일 업로드에 실패했습니다.',
+                detail: err.message
+            });
+        }
+        next();
+    });
+};
+
 const savePostFileLocally = async (req, file) => {
     const uploadDir = path.join(__dirname, '..', 'uploads', 'posts');
     await fs.promises.mkdir(uploadDir, { recursive: true });
@@ -35,7 +47,7 @@ const savePostFileLocally = async (req, file) => {
 // @route   POST /api/posts
 // @desc    Create a post (Admin only)
 // @access  Private/Admin
-router.post('/', protect, admin, upload.array('files', 5), async (req, res) => {
+router.post('/', protect, admin, postFileUploadMiddleware, async (req, res) => {
     const { title, content, channelId } = req.body;
 
     try {

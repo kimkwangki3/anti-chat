@@ -23,7 +23,7 @@ const generateToken = (id) => {
 const storage = multer.memoryStorage();
 const upload = multer({
     storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -32,6 +32,18 @@ const upload = multer({
         }
     }
 });
+
+const profileUploadMiddleware = (req, res, next) => {
+    upload.single('profileImage')(req, res, (err) => {
+        if (err) {
+            return res.status(400).json({
+                message: '이미지 업로드에 실패했습니다.',
+                detail: err.message
+            });
+        }
+        next();
+    });
+};
 
 const getFileExtension = (file) => {
     const extByMime = {
@@ -205,7 +217,7 @@ router.patch('/profile', protect, async (req, res) => {
 // @route   POST /api/auth/profile/image
 // @desc    Upload or update user profile image (Cloudinary)
 // @access  Private
-router.post('/profile/image', protect, upload.single('profileImage'), async (req, res) => {
+router.post('/profile/image', protect, profileUploadMiddleware, async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: '이미지 파일이 없습니다.' });
