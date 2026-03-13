@@ -71,3 +71,57 @@ Get-Content C:\apps\anti\logs\backend.log -Tail 120
 Get-Content C:\apps\anti\logs\frontend.log -Tail 120
 ```
 
+---
+
+## Auto-Append Rule (mandatory)
+- If I judge a change as a mistake or omission, I must update this log in the same work cycle.
+- I must add:
+  - what failed
+  - why it failed
+  - one concrete prevention check
+- I must not close the task before adding the prevention check.
+
+## Newly Added Mistakes (2026-03-14)
+
+6. Missing dependency file in commit (`roleUtils.js`)
+- What failed:
+  - Build failed on server with `Could not resolve "../../utils/roleUtils"`.
+- Why:
+  - Import was added in navigation code, but helper file was not included in pushed commit.
+- Prevention:
+  - Before commit, run `rg -n "from '../../utils/roleUtils|from '../utils/roleUtils'" frontend/src`.
+  - Ensure every imported local module exists and is tracked by git:
+    - `git status --short`
+    - verify required new files are staged.
+
+7. Duplicate blocks in channel settings view
+- What failed:
+  - Channel-context settings displayed two admin action blocks.
+- Why:
+  - Global admin quick access block and channel-mode block were rendered together.
+- Prevention:
+  - For settings changes, validate both routes separately:
+    - `/settings` (main profile mode)
+    - `/settings?channelId=<ownedChannelId>` (channel mode)
+  - Ensure mutually exclusive rendering conditions.
+
+8. Upload error not actionable
+- What failed:
+  - Avatar and board file uploads failed with generic UI alert.
+- Why:
+  - Upload middleware errors were not normalized into JSON with detail.
+- Prevention:
+  - Wrap multer middleware with explicit error response:
+    - return `{ message, detail }` on middleware error.
+  - In frontend, show `detail` if available.
+
+9. Feature implemented but runtime verification incomplete
+- What failed:
+  - Code merged but user still saw failures due to runtime behavior differences.
+- Why:
+  - Build-only verification was done; runtime API path and middleware behavior needed explicit checks.
+- Prevention:
+  - After upload-related changes, always run:
+    - API runtime check from server logs
+    - one real UI upload test (avatar + board attachment)
+  - If user reports failure, first verify deployed commit hash on server before further patching.
