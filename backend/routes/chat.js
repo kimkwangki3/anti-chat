@@ -170,12 +170,31 @@ router.post('/rooms/superadmin', protect, async (req, res) => {
         });
 
         if (!room) {
-            room = await ChatRoom.create({
-                adminId: req.user._id,
-                memberId,
-                channelId: dmChannel._id
-            });
-        } else {
+            try {
+                room = await ChatRoom.create({
+                    adminId: req.user._id,
+                    memberId,
+                    channelId: dmChannel._id
+                });
+            } catch (createError) {
+                // Legacy unique index(adminId+memberId)가 남아있으면 duplicate key가 날 수 있음.
+                // 이 경우 기존 1:1 방을 재사용해 기능 중단을 방지한다.
+                if (createError?.code === 11000) {
+                    room = await ChatRoom.findOne({
+                        adminId: req.user._id,
+                        memberId
+                    });
+                } else {
+                    throw createError;
+                }
+            }
+        }
+
+        if (!room) {
+            return res.status(500).json({ message: '채팅방 생성에 실패했습니다. (기존 방 조회 실패)' });
+        }
+
+        {
             room.adminVisible = true;
             room.memberVisible = true;
             await room.save();

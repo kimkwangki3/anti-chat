@@ -97,10 +97,19 @@ const SuperAdminUsers = () => {
         if (!editingUser) return;
         setIsLoadingPassword(true);
         try {
-            const { data } = await axios.get(`/superadmin/users/${editingUser._id}/password`);
+            let data;
+            try {
+                const primary = await axios.get(`/superadmin/users/${editingUser._id}/password`);
+                data = primary.data;
+            } catch (primaryError) {
+                const fallback = await axios.get(`/superadmin/users-password/${editingUser._id}`);
+                data = fallback.data;
+            }
             setCurrentPassword(data.password || '');
         } catch (error) {
-            alert(error.response?.data?.message || '현재 비밀번호 조회에 실패했습니다.');
+            const serverMessage = error.response?.data?.message;
+            const status = error.response?.status;
+            alert(serverMessage || `현재 비밀번호 조회에 실패했습니다. (HTTP ${status || 'N/A'})`);
         } finally {
             setIsLoadingPassword(false);
         }

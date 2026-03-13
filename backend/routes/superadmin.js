@@ -180,6 +180,19 @@ router.get('/users/:id/password', async (req, res) => {
     }
 });
 
+// @route   GET /api/superadmin/users-password/:id
+// @desc    사용자 현재 비밀번호 조회(우회 경로)
+router.get('/users-password/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('password username');
+        if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+
+        res.json({ username: user.username, password: user.password });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @route   PUT /api/superadmin/users/:id
 // @desc    사용자 기본 정보 수정 (최고관리자 전용)
 router.put('/users/:id', async (req, res) => {
