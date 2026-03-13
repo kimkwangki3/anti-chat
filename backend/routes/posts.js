@@ -1,23 +1,65 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const multer = require('multer');
 const Post = require('../models/Post');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { sendPushToChannelMembers } = require('../utils/pushService');
 
+const storage = multer.memoryStorage();
+const upload = multer({
+    storage,
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB per file
+});
+
+const savePostFileLocally = async (req, file) => {
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'posts');
+    await fs.promises.mkdir(uploadDir, { recursive: true });
+
+    const ext = path.extname(file.originalname || '');
+    const safeBase = path
+        .basename(file.originalname || 'file', ext)
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .slice(0, 80);
+    const fileName = `post_${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${safeBase}${ext}`;
+    const filePath = path.join(uploadDir, fileName);
+    await fs.promises.writeFile(filePath, file.buffer);
+
+    const host = req.get('host') || '127.0.0.1:5000';
+    const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
+    return `${protocol}://${host}/uploads/posts/${fileName}`;
+};
+
 // @route   POST /api/posts
 // @desc    Create a post (Admin only)
 // @access  Private/Admin
-router.post('/', protect, admin, async (req, res) => {
+router.post('/', protect, admin, upload.array('files', 5), async (req, res) => {
     const { title, content, channelId } = req.body;
 
     try {
         if (!channelId) return res.status(400).json({ message: '채널 ID가 필요합니다.' });
 
+        const attachments = [];
+        if (Array.isArray(req.files) && req.files.length > 0) {
+            for (const file of req.files) {
+                const fileUrl = await savePostFileLocally(req, file);
+                attachments.push({
+                    fileName: file.originalname || 'file',
+                    fileUrl,
+                    mimeType: file.mimetype || '',
+                    size: file.size || 0
+                });
+            }
+        }
+
         const post = await Post.create({
             authorId: req.user._id,
             channelId,
             title,
-            content
+            content,
+            attachments
         });
 
         if (req.io) {

@@ -93,9 +93,7 @@ const useAuthStore = create((set) => ({
 
     uploadProfileImage: async (formData) => {
         try {
-            const response = await axios.post('/auth/profile/image', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await axios.post('/auth/profile/image', formData);
 
             // 응답 구조: { profileImage: url, user: updatedUser }
             const profileImageUrl = response.data.profileImage;

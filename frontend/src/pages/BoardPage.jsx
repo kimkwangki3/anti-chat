@@ -4,6 +4,7 @@ import usePostStore from '../store/postStore';
 import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
+import { getFileUrl } from '../utils/fileUtils';
 
 const BoardPage = () => {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ const BoardPage = () => {
     const { resetUnreadCount } = useNotificationStore();
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ title: '', content: '' });
+    const [files, setFiles] = useState([]);
 
     const queryParams = new URLSearchParams(location.search);
     const channelId = queryParams.get('channelId');
@@ -28,9 +30,10 @@ const BoardPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await createPost({ ...formData, channelId });
+        const success = await createPost({ ...formData, channelId, files });
         if (success) {
             setFormData({ title: '', content: '' });
+            setFiles([]);
             setShowForm(false);
         }
     };
@@ -136,6 +139,22 @@ const BoardPage = () => {
                                         onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
                                     ></textarea>
                                 </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-2 font-mono ml-1">첨부 파일</label>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                                        className="w-full bg-[#1a1a28] border border-white/5 rounded-xl px-5 py-3 text-white text-sm focus:outline-none"
+                                    />
+                                    {files.length > 0 && (
+                                        <div className="mt-2 text-xs text-[#6b6b8a]">
+                                            {files.map((file, index) => (
+                                                <p key={`${file.name}-${index}`}>{file.name}</p>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                                 <button
                                     type="submit"
                                     disabled={isLoading}
@@ -200,6 +219,22 @@ const BoardPage = () => {
                                         {post.title}
                                     </h2>
                                     <p className="text-[#6b6b8a] line-clamp-3 text-sm mb-10 leading-relaxed flex-1 font-medium">{post.content}</p>
+                                    {Array.isArray(post.attachments) && post.attachments.length > 0 && (
+                                        <div className="mb-6 space-y-2">
+                                            {post.attachments.slice(0, 2).map((file, index) => (
+                                                <a
+                                                    key={`${file.fileUrl}-${index}`}
+                                                    href={getFileUrl(file.fileUrl)}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="block text-xs text-[#9bb4ff] hover:underline truncate"
+                                                >
+                                                    📎 {file.fileName}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    )}
                                     <div
                                         className="mt-auto pt-6 border-t font-bold text-[10px] uppercase tracking-widest flex justify-between items-center"
                                         style={{ borderColor: `${themeColor}1A` }}

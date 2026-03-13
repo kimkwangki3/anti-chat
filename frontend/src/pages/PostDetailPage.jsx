@@ -4,6 +4,7 @@ import usePostStore from '../store/postStore';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import useChannelStore from '../store/channelStore';
+import { getFileUrl } from '../utils/fileUtils';
 
 const PostDetailPage = () => {
     const { id } = useParams();
@@ -21,7 +22,7 @@ const PostDetailPage = () => {
         fetchPostById(id).then(post => {
             if (post) {
                 markAsRead(id);
-                resetUnreadCount(post.channelId, 'post');
+                resetUnreadCount(post.channelId?._id || post.channelId, 'post');
             }
         });
     }, [id, fetchPostById, markAsRead, resetUnreadCount]);
@@ -84,6 +85,23 @@ const PostDetailPage = () => {
                     >
                         {currentPost.content}
                     </div>
+
+                    {Array.isArray(currentPost.attachments) && currentPost.attachments.length > 0 && (
+                        <div className="mt-8 space-y-2 pl-8">
+                            <p className="text-xs font-bold text-[#9aa0b8] uppercase tracking-widest">첨부 파일</p>
+                            {currentPost.attachments.map((file, index) => (
+                                <a
+                                    key={`${file.fileUrl}-${index}`}
+                                    href={getFileUrl(file.fileUrl)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block text-sm text-[#9bb4ff] hover:underline truncate"
+                                >
+                                    📎 {file.fileName}
+                                </a>
+                            ))}
+                        </div>
+                    )}
                 </article>
             </div>
         </div>

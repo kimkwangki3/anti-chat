@@ -42,7 +42,17 @@ const usePostStore = create((set, get) => ({
     createPost: async (postData) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post('/posts', postData);
+            let payload = postData;
+            if (Array.isArray(postData.files) && postData.files.length > 0) {
+                const formData = new FormData();
+                formData.append('title', postData.title || '');
+                formData.append('content', postData.content || '');
+                formData.append('channelId', postData.channelId || '');
+                postData.files.forEach((file) => formData.append('files', file));
+                payload = formData;
+            }
+
+            const response = await axios.post('/posts', payload);
             set((state) => ({
                 posts: [response.data, ...state.posts],
                 isLoading: false

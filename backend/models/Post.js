@@ -34,6 +34,12 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    attachments: [{
+        fileName: { type: String, required: true },
+        fileUrl: { type: String, required: true },
+        mimeType: { type: String, default: '' },
+        size: { type: Number, default: 0 }
+    }],
     comments: [commentSchema],
     readBy: [{
         type: mongoose.Schema.Types.ObjectId,

@@ -175,7 +175,7 @@ const SettingsPage = () => {
 
             <div className="max-w-3xl space-y-8 pb-32 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                 {/* Admin Quick Access */}
-                {(user?.role === 'admin' || user?.role === 'superadmin') && (contextChannelId || ownedChannelId) && (
+                {(user?.role === 'admin' || user?.role === 'superadmin') && (contextChannelId || ownedChannelId) && !isChannelSettingsMode && (
                     <section className="glass-card p-8 bg-gradient-to-br from-[#FF8C69]/10 to-transparent border-[#FF8C69]/20 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform">
                             <span className="text-8xl font-black italic uppercase font-mono leading-none text-[#FF8C69]">ADMIN</span>
