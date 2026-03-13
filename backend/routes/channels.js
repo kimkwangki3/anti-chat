@@ -7,6 +7,9 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 // Multer 설정 (메모리 스토리지)
 const storage = multer.memoryStorage();
@@ -14,6 +17,30 @@ const upload = multer({
     storage,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB 제한
 });
+
+const getChannelImageExtension = (file) => {
+    const extByMime = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/webp': '.webp',
+        'image/gif': '.gif'
+    };
+    return extByMime[file.mimetype] || path.extname(file.originalname || '').toLowerCase() || '.jpg';
+};
+
+const saveChannelImageLocally = async (req, file) => {
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'channels');
+    await fs.promises.mkdir(uploadDir, { recursive: true });
+
+    const ext = getChannelImageExtension(file);
+    const fileName = `channel_${req.user._id}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+    const filePath = path.join(uploadDir, fileName);
+    await fs.promises.writeFile(filePath, file.buffer);
+
+    const host = req.get('host') || '127.0.0.1:5000';
+    const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
+    return `${protocol}://${host}/uploads/channels/${fileName}`;
+};
 
 // @route   POST /api/channels
 // @desc    채널 생성 (관리자 전용)
@@ -226,7 +253,7 @@ router.put('/:id', protect, async (req, res) => {
 // @route   POST /api/channels/upload
 // @desc    채널 아이콘 업로드 (Cloudinary)
 // @access  Private
-router.post('/upload', protect, upload.single('file'), (req, res) => {
+router.post('/upload', protect, upload.single('file'), async (req, res) => {
     try {
         console.log('[Channel Upload] Request received.');
         if (!req.file) {
@@ -235,28 +262,38 @@ router.post('/upload', protect, upload.single('file'), (req, res) => {
         }
         console.log('[Channel Upload] File received:', req.file.originalname, 'Size:', req.file.size);
 
-        const uploadStream = cloudinary.uploader.upload_stream(
-            {
-                folder: 'channel_icons',
-                resource_type: 'auto'
-            },
-            (error, result) => {
-                if (error) {
-                    console.error('[Channel Upload] Cloudinary upload error:', error);
-                    return res.status(500).json({
-                        message: 'Cloudinary 업로드 중 오류가 발생했습니다.',
-                        error: error.message
-                    });
-                }
-                console.log('[Channel Upload] Cloudinary upload success:', result.secure_url);
-                res.json({ imageUrl: result.secure_url });
-            }
+        const hasCloudinaryConfig = Boolean(
+            process.env.CLOUDINARY_CLOUD_NAME &&
+            process.env.CLOUDINARY_API_KEY &&
+            process.env.CLOUDINARY_API_SECRET
         );
 
-        streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+        if (hasCloudinaryConfig) {
+            const uploadStream = cloudinary.uploader.upload_stream(
+                {
+                    folder: 'channel_icons',
+                    resource_type: 'auto'
+                },
+                async (error, result) => {
+                    if (error) {
+                        console.error('[Channel Upload] Cloudinary upload error. Falling back to local:', error.message);
+                        const localUrl = await saveChannelImageLocally(req, req.file);
+                        return res.json({ imageUrl: localUrl });
+                    }
+                    console.log('[Channel Upload] Cloudinary upload success:', result.secure_url);
+                    return res.json({ imageUrl: result.secure_url });
+                }
+            );
+
+            streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
+            return;
+        }
+
+        const localUrl = await saveChannelImageLocally(req, req.file);
+        return res.json({ imageUrl: localUrl });
     } catch (error) {
         console.error('[Channel Upload] Global exception:', error);
-        res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.' });
+        res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.', detail: error.message });
     }
 });
 

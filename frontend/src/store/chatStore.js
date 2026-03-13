@@ -149,9 +149,7 @@ const useChatStore = create((set, get) => ({
         const formData = new FormData();
         formData.append('file', file);
         try {
-            const response = await axios.post('/chat/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await axios.post('/chat/upload', formData);
             return response.data;
         } catch (error) {
             console.error('파일 업로드 실패:', error);

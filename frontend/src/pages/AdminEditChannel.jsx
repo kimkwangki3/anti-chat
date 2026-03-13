@@ -52,12 +52,11 @@ const AdminEditChannel = () => {
 
         setUploading(true);
         try {
-            const response = await axios.post('/channels/upload', uploadFormData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const response = await axios.post('/channels/upload', uploadFormData);
             setFormData({ ...formData, profileImage: response.data.imageUrl });
         } catch (error) {
-            alert('이미지 업로드에 실패했습니다.');
+            const message = error.response?.data?.detail || error.response?.data?.message || error.message;
+            alert(`이미지 업로드에 실패했습니다.\n${message}`);
         } finally {
             setUploading(false);
         }
