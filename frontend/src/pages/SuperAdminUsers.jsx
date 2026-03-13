@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 
@@ -14,12 +14,30 @@ const statusLabelMap = {
     withdrawn: '탈퇴'
 };
 
+const genderLabelMap = {
+    none: '미선택',
+    male: '남성',
+    female: '여성',
+    other: '기타'
+};
+
+const emptyEditForm = {
+    name: '',
+    nickname: '',
+    phone: '',
+    birthdate: '',
+    gender: 'none'
+};
+
 const SuperAdminUsers = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
+    const [editingUser, setEditingUser] = useState(null);
+    const [editForm, setEditForm] = useState(emptyEditForm);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -38,9 +56,7 @@ const SuperAdminUsers = () => {
 
     const handleStatusChange = async (userId, newStatus) => {
         const statusLabel = statusLabelMap[newStatus] || newStatus;
-        if (!window.confirm(`사용자 상태를 "${statusLabel}"로 변경하시겠습니까?`)) {
-            return;
-        }
+        if (!window.confirm(`사용자 상태를 "${statusLabel}"로 변경하시겠습니까?`)) return;
 
         try {
             await axios.put(`/superadmin/users/${userId}/status`, { status: newStatus });
@@ -50,14 +66,50 @@ const SuperAdminUsers = () => {
         }
     };
 
-    const filteredUsers = users.filter((user) => {
-        const query = searchTerm.toLowerCase();
-        const safeName = user.name?.toLowerCase() || '';
-        const safeUsername = user.username?.toLowerCase() || '';
-        const matchesSearch = safeName.includes(query) || safeUsername.includes(query);
-        const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-        return matchesSearch && matchesRole;
-    });
+    const openEditModal = (user) => {
+        setEditingUser(user);
+        setEditForm({
+            name: user.name || '',
+            nickname: user.nickname || '',
+            phone: user.phone || '',
+            birthdate: user.birthdate || '',
+            gender: user.gender || 'none'
+        });
+    };
+
+    const closeEditModal = () => {
+        setEditingUser(null);
+        setEditForm(emptyEditForm);
+        setIsSaving(false);
+    };
+
+    const submitEdit = async (e) => {
+        e.preventDefault();
+        if (!editingUser) return;
+
+        setIsSaving(true);
+        try {
+            await axios.put(`/superadmin/users/${editingUser._id}`, editForm);
+            await fetchUsers();
+            closeEditModal();
+            alert('회원 정보가 수정되었습니다.');
+        } catch (error) {
+            alert(error.response?.data?.message || '회원 정보 수정에 실패했습니다.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const filteredUsers = useMemo(() => {
+        return users.filter((user) => {
+            const query = searchTerm.toLowerCase();
+            const safeName = user.name?.toLowerCase() || '';
+            const safeUsername = user.username?.toLowerCase() || '';
+            const matchesSearch = safeName.includes(query) || safeUsername.includes(query);
+            const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+            return matchesSearch && matchesRole;
+        });
+    }, [users, searchTerm, roleFilter]);
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] p-8 text-[#e8e8f0]">
@@ -109,7 +161,7 @@ const SuperAdminUsers = () => {
             </header>
 
             <div className="mb-6 rounded-2xl border border-[#FF8C69]/10 bg-[#12121a] p-5">
-                <p className="text-sm font-semibold text-white">이 화면은 전체 사용자 조회와 상태 변경용입니다.</p>
+                <p className="text-sm font-semibold text-white">회원 정보 수정, 상태 변경, 계정 검색을 이 화면에서 처리합니다.</p>
                 <p className="mt-2 text-xs leading-6 text-[#8b8ba7]">
                     관리자 계정 생성은 별도의 최고관리자 전용 페이지에서만 가능합니다. 로그인 화면에는 관리자 가입 기능을 노출하지 않습니다.
                 </p>
@@ -131,6 +183,7 @@ const SuperAdminUsers = () => {
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[#6b6b8a]">권한</th>
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[#6b6b8a]">가입일</th>
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[#6b6b8a]">상태</th>
+                                    <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[#6b6b8a]">정보</th>
                                     <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-[#6b6b8a]">관리</th>
                                 </tr>
                             </thead>
@@ -179,8 +232,21 @@ const SuperAdminUsers = () => {
                                                 {statusLabelMap[user.status || 'active']}
                                             </span>
                                         </td>
+                                        <td className="px-8 py-6 text-xs text-[#8b8ba7]">
+                                            <p>닉네임: {user.nickname || '-'}</p>
+                                            <p>연락처: {user.phone || '-'}</p>
+                                            <p>성별: {genderLabelMap[user.gender || 'none']}</p>
+                                        </td>
                                         <td className="px-8 py-6">
                                             <div className="flex flex-wrap items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => openEditModal(user)}
+                                                    className="rounded-lg border border-[#5ba7ff]/30 bg-[#5ba7ff]/10 px-3 py-1.5 text-[10px] font-black text-[#8bc1ff] transition hover:bg-[#5ba7ff] hover:text-white"
+                                                >
+                                                    정보 수정
+                                                </button>
+
                                                 {user.role !== 'superadmin' && (
                                                     <>
                                                         {user.status !== 'active' && (
@@ -218,6 +284,86 @@ const SuperAdminUsers = () => {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            )}
+
+            {editingUser && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                    <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl">
+                        <h2 className="text-xl font-black text-white">회원 정보 수정</h2>
+                        <p className="mt-1 text-xs text-[#8b8ba7]">{editingUser.username}</p>
+
+                        <form className="mt-6 space-y-4" onSubmit={submitEdit}>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <label className="space-y-2">
+                                    <span className="text-xs font-bold text-[#8b8ba7]">이름</span>
+                                    <input
+                                        value={editForm.name}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
+                                        className="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                    />
+                                </label>
+                                <label className="space-y-2">
+                                    <span className="text-xs font-bold text-[#8b8ba7]">닉네임</span>
+                                    <input
+                                        value={editForm.nickname}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, nickname: e.target.value }))}
+                                        className="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="grid gap-4 md:grid-cols-3">
+                                <label className="space-y-2">
+                                    <span className="text-xs font-bold text-[#8b8ba7]">연락처</span>
+                                    <input
+                                        value={editForm.phone}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                                        className="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                    />
+                                </label>
+                                <label className="space-y-2">
+                                    <span className="text-xs font-bold text-[#8b8ba7]">생년월일</span>
+                                    <input
+                                        type="date"
+                                        value={editForm.birthdate}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, birthdate: e.target.value }))}
+                                        className="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                    />
+                                </label>
+                                <label className="space-y-2">
+                                    <span className="text-xs font-bold text-[#8b8ba7]">성별</span>
+                                    <select
+                                        value={editForm.gender}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, gender: e.target.value }))}
+                                        className="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                    >
+                                        <option value="none">미선택</option>
+                                        <option value="male">남성</option>
+                                        <option value="female">여성</option>
+                                        <option value="other">기타</option>
+                                    </select>
+                                </label>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={closeEditModal}
+                                    className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-[#b8b8c8] transition hover:border-white/30 hover:text-white"
+                                >
+                                    취소
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSaving}
+                                    className="rounded-xl border border-[#FF8C69]/30 bg-[#FF8C69]/10 px-4 py-2 text-sm font-bold text-[#FF8C69] transition hover:bg-[#FF8C69] hover:text-white disabled:opacity-50"
+                                >
+                                    {isSaving ? '저장 중...' : '저장'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

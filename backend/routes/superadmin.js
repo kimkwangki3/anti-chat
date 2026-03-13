@@ -16,6 +16,7 @@ router.use(protect, superAdmin);
 const usernamePattern = /^(?=.{4,20}$)[a-z0-9._-]+$/;
 const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,20}$/;
 const birthdatePattern = /^\d{4}-\d{2}-\d{2}$/;
+const phonePattern = /^[0-9-+()\s]{8,20}$/;
 
 const validateAdminPayload = ({ username, password, name, nickname, gender, birthdate, phone }) => {
     if (!username || !password || !name) {
@@ -47,7 +48,7 @@ const validateAdminPayload = ({ username, password, name, nickname, gender, birt
         return '생년월일 형식이 올바르지 않습니다.';
     }
 
-    if (trimmedPhone && !/^[0-9-+()\s]{8,20}$/.test(trimmedPhone)) {
+    if (trimmedPhone && !phonePattern.test(trimmedPhone)) {
         return '연락처 형식이 올바르지 않습니다.';
     }
 
@@ -161,6 +162,64 @@ router.get('/users', async (req, res) => {
     try {
         const users = await User.find({}).select('-password').sort({ createdAt: -1 });
         res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   PUT /api/superadmin/users/:id
+// @desc    사용자 기본 정보 수정 (최고관리자 전용)
+router.put('/users/:id', async (req, res) => {
+    const { name, nickname, phone, birthdate, gender } = req.body;
+
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+
+        if (typeof name === 'string') {
+            const trimmed = name.trim();
+            if (trimmed.length < 2 || trimmed.length > 20) {
+                return res.status(400).json({ message: '이름은 2자 이상 20자 이하로 입력해 주세요.' });
+            }
+            user.name = trimmed;
+        }
+
+        if (typeof nickname === 'string') {
+            const trimmed = nickname.trim();
+            if (trimmed.length > 20) {
+                return res.status(400).json({ message: '닉네임은 20자 이하로 입력해 주세요.' });
+            }
+            user.nickname = trimmed;
+        }
+
+        if (typeof phone === 'string') {
+            const trimmed = phone.trim();
+            if (trimmed && !phonePattern.test(trimmed)) {
+                return res.status(400).json({ message: '연락처 형식이 올바르지 않습니다.' });
+            }
+            user.phone = trimmed;
+        }
+
+        if (typeof birthdate === 'string') {
+            const trimmed = birthdate.trim();
+            if (trimmed && !birthdatePattern.test(trimmed)) {
+                return res.status(400).json({ message: '생년월일 형식이 올바르지 않습니다.' });
+            }
+            user.birthdate = trimmed;
+        }
+
+        if (typeof gender === 'string') {
+            if (!['male', 'female', 'other', 'none'].includes(gender)) {
+                return res.status(400).json({ message: '성별 값이 올바르지 않습니다.' });
+            }
+            user.gender = gender;
+        }
+
+        await user.save();
+        const result = user.toObject();
+        delete result.password;
+
+        res.json({ message: '회원 정보가 수정되었습니다.', user: result });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
