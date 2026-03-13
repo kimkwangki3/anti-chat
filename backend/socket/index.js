@@ -108,13 +108,15 @@ const socketHandler = (io) => {
                 // 채팅방의 멤버 ID (사용자 ID)
                 const chatMemberId = room.memberId;
 
+                const roomAdmin = await User.findById(room.adminId).select('role');
+                const isSuperAdminDirectRoom = roomAdmin?.role === 'superadmin';
                 const channelMember = await ChannelMember.findOne({
                     channelId: targetChannelId,
                     userId: chatMemberId
                 });
 
                 // 멤버가 아예 없거나 휴정 상태이면 전송 차단
-                if (!channelMember || channelMember.status === 'suspended') {
+                if (!isSuperAdminDirectRoom && (!channelMember || channelMember.status === 'suspended')) {
                     socket.emit('chat_error', {
                         message: '해당 회원은 현재 휴정 상태이므로 메시지를 주고받을 수 없습니다.'
                     });

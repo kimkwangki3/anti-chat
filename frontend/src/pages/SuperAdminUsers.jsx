@@ -73,6 +73,13 @@ const SuperAdminUsers = () => {
                 <div className="flex flex-col gap-4 md:flex-row">
                     <button
                         type="button"
+                        onClick={() => navigate('/superadmin/direct-chat')}
+                        className="rounded-xl border border-[#06d6a0]/30 bg-[#06d6a0]/10 px-5 py-3 text-xs font-black tracking-[0.2em] text-[#7df0ce] transition hover:bg-[#06d6a0] hover:text-[#0b1f1a]"
+                    >
+                        1:1 梨꾪똿
+                    </button>
+                    <button
+                        type="button"
                         onClick={() => navigate('/superadmin/admins')}
                         className="rounded-xl border border-[#FF8C69]/30 bg-[#FF8C69]/10 px-5 py-3 text-xs font-black tracking-[0.2em] text-[#FF8C69] transition hover:bg-[#FF8C69] hover:text-white"
                     >

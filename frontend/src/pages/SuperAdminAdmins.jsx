@@ -172,6 +172,14 @@ const SuperAdminAdmins = () => {
 
                 <button
                     type="button"
+                    onClick={() => navigate('/superadmin/direct-chat')}
+                    className="rounded-xl border border-[#06d6a0]/30 bg-[#06d6a0]/10 px-5 py-3 text-xs font-black tracking-[0.2em] text-[#7df0ce] transition hover:bg-[#06d6a0] hover:text-[#0b1f1a]"
+                >
+                    1:1 梨꾪똿
+                </button>
+
+                <button
+                    type="button"
                     onClick={() => navigate('/superadmin/users')}
                     className="rounded-xl border border-white/10 px-5 py-3 text-xs font-black tracking-[0.2em] text-[#8b8ba7] transition hover:border-white/20 hover:text-white"
                 >

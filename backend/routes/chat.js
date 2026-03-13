@@ -12,6 +12,22 @@ const streamifier = require('streamifier'); // npm install streamifier might be 
 
 // Multer Storage 설정 (메모리 스토리지 사용)
 const storage = multer.memoryStorage();
+const SUPERADMIN_DM_CHANNEL_NAME = '__SUPERADMIN_DM__';
+
+const ensureSuperAdminDmChannel = async (ownerId) => {
+    let channel = await Channel.findOne({ name: SUPERADMIN_DM_CHANNEL_NAME });
+    if (!channel) {
+        channel = await Channel.create({
+            ownerId,
+            name: SUPERADMIN_DM_CHANNEL_NAME,
+            description: 'Superadmin direct message channel',
+            cardColor: '#FF8C69',
+            status: 'active'
+        });
+    }
+    return channel;
+};
+
 const upload = multer({
     storage: storage,
     limits: { fileSize: 10 * 1024 * 1024 } // 10MB 제한
@@ -121,6 +137,62 @@ router.post('/rooms', protect, async (req, res) => {
 // @route   GET /api/chat/rooms
 // @desc    사용자의 채팅방 목록 조회 (채널별 필터링 가능)
 // @access  Private
+// @route   POST /api/chat/rooms/superadmin
+// @desc    Superadmin direct 1:1 room create/get
+// @access  Private/Superadmin
+router.post('/rooms/superadmin', protect, async (req, res) => {
+    const { memberId } = req.body;
+
+    try {
+        if (req.user.role !== 'superadmin') {
+            return res.status(403).json({ message: '최고관리자만 사용할 수 있습니다.' });
+        }
+
+        if (!memberId) {
+            return res.status(400).json({ message: '대화할 사용자 ID가 필요합니다.' });
+        }
+
+        if (memberId.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: '자기 자신과는 대화할 수 없습니다.' });
+        }
+
+        const targetUser = await User.findById(memberId).select('_id');
+        if (!targetUser) {
+            return res.status(404).json({ message: '대상 사용자를 찾을 수 없습니다.' });
+        }
+
+        const dmChannel = await ensureSuperAdminDmChannel(req.user._id);
+
+        let room = await ChatRoom.findOne({
+            adminId: req.user._id,
+            memberId,
+            channelId: dmChannel._id
+        });
+
+        if (!room) {
+            room = await ChatRoom.create({
+                adminId: req.user._id,
+                memberId,
+                channelId: dmChannel._id
+            });
+        } else {
+            room.adminVisible = true;
+            room.memberVisible = true;
+            await room.save();
+        }
+
+        const populatedRoom = await ChatRoom.findById(room._id)
+            .populate('adminId', 'name username isOnline profileImage role')
+            .populate('memberId', 'name username isOnline profileImage role status')
+            .populate('channelId', 'name profileImage cardColor');
+
+        res.status(200).json(populatedRoom);
+    } catch (error) {
+        console.error('Superadmin room create error:', error);
+        res.status(500).json({ message: '최고관리자 채팅방 생성에 실패했습니다.' });
+    }
+});
+
 router.get('/rooms', protect, async (req, res) => {
     const { channelId } = req.query;
     try {

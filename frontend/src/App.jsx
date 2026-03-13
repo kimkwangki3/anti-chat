@@ -23,6 +23,7 @@ const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const SuperAdminUsers = lazy(() => import('./pages/SuperAdminUsers'));
 const SuperAdminAdmins = lazy(() => import('./pages/SuperAdminAdmins'));
+const SuperAdminDirectChat = lazy(() => import('./pages/SuperAdminDirectChat'));
 const SuperAdminChannels = lazy(() => import('./pages/SuperAdminChannels'));
 const SuperAdminChannelDetail = lazy(() => import('./pages/SuperAdminChannelDetail'));
 const SuperAdminChats = lazy(() => import('./pages/SuperAdminChats'));
@@ -84,6 +85,7 @@ function App() {
           <Route path="/polls" element={<ProtectedLayout><PollPage /></ProtectedLayout>} />
           <Route path="/superadmin/users" element={<ProtectedLayout><SuperAdminUsers /></ProtectedLayout>} />
           <Route path="/superadmin/admins" element={<ProtectedLayout><SuperAdminAdmins /></ProtectedLayout>} />
+          <Route path="/superadmin/direct-chat" element={<ProtectedLayout><SuperAdminDirectChat /></ProtectedLayout>} />
           <Route path="/superadmin/channels" element={<ProtectedLayout><SuperAdminChannels /></ProtectedLayout>} />
           <Route path="/superadmin/channels/:id" element={<ProtectedLayout><SuperAdminChannelDetail /></ProtectedLayout>} />
           <Route path="/superadmin/chats" element={<ProtectedLayout><SuperAdminChats /></ProtectedLayout>} />
