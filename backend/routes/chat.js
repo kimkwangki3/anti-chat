@@ -189,7 +189,7 @@ router.post('/rooms/superadmin', protect, async (req, res) => {
         res.status(200).json(populatedRoom);
     } catch (error) {
         console.error('Superadmin room create error:', error);
-        res.status(500).json({ message: '최고관리자 채팅방 생성에 실패했습니다.' });
+        res.status(500).json({ message: `최고관리자 채팅방 생성에 실패했습니다. (${error.message})` });
     }
 });
 

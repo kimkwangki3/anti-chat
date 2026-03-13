@@ -109,7 +109,7 @@ const SuperAdminAdmins = () => {
         }
 
         if (!isPasswordValid) {
-            return '비밀번호 규칙을 모두 충족해야 합니다.';
+            return '비밀번호 규칙을 모두 만족해야 합니다.';
         }
 
         if (form.password !== form.confirmPassword) {
@@ -175,7 +175,7 @@ const SuperAdminAdmins = () => {
                     onClick={() => navigate('/superadmin/direct-chat')}
                     className="rounded-xl border border-[#06d6a0]/30 bg-[#06d6a0]/10 px-5 py-3 text-xs font-black tracking-[0.2em] text-[#7df0ce] transition hover:bg-[#06d6a0] hover:text-[#0b1f1a]"
                 >
-                    1:1 梨꾪똿
+                    1:1 채팅
                 </button>
 
                 <button
@@ -335,7 +335,7 @@ const SuperAdminAdmins = () => {
                                     onChange={handleChange}
                                     className="w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-4 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
                                 >
-                                    <option value="none">미지정</option>
+                                    <option value="none">미선택</option>
                                     <option value="male">남성</option>
                                     <option value="female">여성</option>
                                     <option value="other">기타</option>

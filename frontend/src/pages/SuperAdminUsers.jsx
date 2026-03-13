@@ -37,7 +37,8 @@ const SuperAdminUsers = () => {
     };
 
     const handleStatusChange = async (userId, newStatus) => {
-        if (!window.confirm(`이 사용자의 상태를 "${statusLabelMap[newStatus] || newStatus}"로 변경하시겠습니까?`)) {
+        const statusLabel = statusLabelMap[newStatus] || newStatus;
+        if (!window.confirm(`사용자 상태를 "${statusLabel}"로 변경하시겠습니까?`)) {
             return;
         }
 
@@ -76,7 +77,7 @@ const SuperAdminUsers = () => {
                         onClick={() => navigate('/superadmin/direct-chat')}
                         className="rounded-xl border border-[#06d6a0]/30 bg-[#06d6a0]/10 px-5 py-3 text-xs font-black tracking-[0.2em] text-[#7df0ce] transition hover:bg-[#06d6a0] hover:text-[#0b1f1a]"
                     >
-                        1:1 梨꾪똿
+                        1:1 채팅
                     </button>
                     <button
                         type="button"
@@ -108,7 +109,7 @@ const SuperAdminUsers = () => {
             </header>
 
             <div className="mb-6 rounded-2xl border border-[#FF8C69]/10 bg-[#12121a] p-5">
-                <p className="text-sm font-semibold text-white">이 화면은 전체 사용자 조회와 상태 변경 전용입니다.</p>
+                <p className="text-sm font-semibold text-white">이 화면은 전체 사용자 조회와 상태 변경용입니다.</p>
                 <p className="mt-2 text-xs leading-6 text-[#8b8ba7]">
                     관리자 계정 생성은 별도의 최고관리자 전용 페이지에서만 가능합니다. 로그인 화면에는 관리자 가입 기능을 노출하지 않습니다.
                 </p>
@@ -188,7 +189,7 @@ const SuperAdminUsers = () => {
                                                                 onClick={() => handleStatusChange(user._id, 'active')}
                                                                 className="rounded-lg border border-[#06d6a0]/20 bg-[#06d6a0]/10 px-3 py-1.5 text-[10px] font-black text-[#06d6a0] transition hover:bg-[#06d6a0] hover:text-white"
                                                             >
-                                                                활성화
+                                                                활성
                                                             </button>
                                                         )}
                                                         {user.status !== 'suspended' && (
