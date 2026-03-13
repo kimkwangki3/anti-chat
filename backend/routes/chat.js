@@ -169,6 +169,7 @@ router.post('/rooms/superadmin', protect, async (req, res) => {
             channelId: dmChannel._id
         });
 
+        const wasCreatedNow = !room;
         if (!room) {
             try {
                 room = await ChatRoom.create({
@@ -204,6 +205,22 @@ router.post('/rooms/superadmin', protect, async (req, res) => {
             .populate('adminId', 'name username isOnline profileImage role')
             .populate('memberId', 'name username isOnline profileImage role status')
             .populate('channelId', 'name profileImage cardColor');
+
+        // 최고관리자가 새 1:1 방을 만든 순간 상대방에게 실시간으로 방 노출/알림 전달
+        if (wasCreatedNow) {
+            const io = req.app.get('io');
+            if (io) {
+                io.to(req.user._id.toString()).emit('room_updated', populatedRoom);
+                io.to(memberId.toString()).emit('room_updated', populatedRoom);
+
+                io.to(memberId.toString()).emit('chat_notification', {
+                    roomId: populatedRoom._id,
+                    senderName: req.user.name || req.user.username || '최고관리자',
+                    content: '최고관리자가 1:1 대화를 시작했습니다.',
+                    channelId: populatedRoom.channelId?._id || populatedRoom.channelId
+                });
+            }
+        }
 
         res.status(200).json(populatedRoom);
     } catch (error) {

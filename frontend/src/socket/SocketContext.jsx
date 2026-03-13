@@ -68,7 +68,11 @@ export const SocketProvider = ({ children }) => {
         */
 
         // 3. 채팅: 해당 채널의 특정 채팅방에 있는 경우에만 억제 (중복 방지)
-        if (targetType === 'chat' && pathname === '/chat' && currentChannelId === targetChannelId && currentRoomId === targetRoomId) {
+        if (targetType === 'chat' && pathname === '/chat' && currentRoomId === targetRoomId) {
+            return true;
+        }
+
+        if (targetType === 'chat' && pathname === '/chat' && !currentRoomId && currentChannelId === targetChannelId) {
             return true;
         }
 
@@ -76,13 +80,37 @@ export const SocketProvider = ({ children }) => {
     };
 
     // 알림음 재생 함수
+    const playFallbackBeep = () => {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 880;
+            gain.gain.value = Math.max(0.05, Math.min(0.25, Number(volume || 0.15)));
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.08);
+            setTimeout(() => ctx.close(), 200);
+        } catch (e) {
+            console.log('[SOUND] Fallback beep failed:', e);
+        }
+    };
+
     const playNotificationSound = () => {
         try {
             const audio = new Audio(sounds[soundType]);
             audio.volume = volume;
-            audio.play().catch(e => console.log('[SOUND] Audio play blocked:', e));
+            audio.play().catch(e => {
+                console.log('[SOUND] Audio play blocked:', e);
+                playFallbackBeep();
+            });
         } catch (error) {
             console.error('[SOUND] Audio play error:', error);
+            playFallbackBeep();
         }
     };
 
@@ -241,7 +269,7 @@ export const SocketProvider = ({ children }) => {
                     title: '새 메시지',
                     message: `${data.senderName}: ${data.content}`,
                     channelId,
-                    path: `/chat?channelId=${channelId}&roomId=${roomId}`
+                    path: (channelId ? `/chat?channelId=${channelId}&roomId=${roomId}` : `/chat?roomId=${roomId}`)
                 });
                 playNotificationSound();
             }
