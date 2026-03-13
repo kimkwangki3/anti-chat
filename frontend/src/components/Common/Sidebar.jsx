@@ -55,6 +55,7 @@ const Sidebar = () => {
 
     const superAdminMenuItems = [
         { id: 'sa-users', label: '전체 회원', icon: 'crown', path: '/superadmin/users' },
+        { id: 'sa-admins', label: '관리자 계정', icon: 'users', path: '/superadmin/admins' },
         { id: 'sa-channels', label: '전체 채널', icon: 'globe', path: '/superadmin/channels' },
         { id: 'sa-chats', label: '채팅 로그', icon: 'log', path: '/superadmin/chats' },
         { id: 'sa-polls', label: '전체 투표', icon: 'vote', path: '/superadmin/polls' },

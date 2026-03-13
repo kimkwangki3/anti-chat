@@ -192,6 +192,7 @@ const BottomNav = () => {
                                     <div className="bg-[#2c2c2e]/80 rounded-2xl overflow-hidden border border-[#FF8C69]/10">
                                         {[
                                             { label: '전체 회원 관리', icon: '👑', path: '/superadmin/users' },
+                                            { label: '관리자 계정 관리', icon: '🛡️', path: '/superadmin/admins' },
                                             { label: '전체 채널 관리', icon: '🌐', path: '/superadmin/channels' },
                                             { label: '채팅 로그 열람', icon: '🔍', path: '/superadmin/chats' },
                                         ].map((item, i, arr) => (

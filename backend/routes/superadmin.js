@@ -13,6 +13,115 @@ const { protect, superAdmin } = require('../middleware/authMiddleware');
 // 모든 라우트에 최고관리자 권한 적용
 router.use(protect, superAdmin);
 
+const usernamePattern = /^(?=.{4,20}$)[a-z0-9._-]+$/;
+const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,20}$/;
+const birthdatePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+const validateAdminPayload = ({ username, password, name, nickname, gender, birthdate, phone }) => {
+    if (!username || !password || !name) {
+        return '아이디, 비밀번호, 이름은 필수입니다.';
+    }
+
+    const normalizedUsername = username.trim().toLowerCase();
+    const trimmedName = name.trim();
+    const trimmedNickname = nickname?.trim() || '';
+    const trimmedPhone = phone?.trim() || '';
+
+    if (!usernamePattern.test(normalizedUsername)) {
+        return '아이디는 4~20자의 영문 소문자, 숫자, 점(.), 밑줄(_), 하이픈(-)만 사용할 수 있습니다.';
+    }
+
+    if (!passwordPattern.test(password)) {
+        return '비밀번호는 8~20자이며 영문, 숫자, 특수문자를 각각 1개 이상 포함해야 합니다.';
+    }
+
+    if (trimmedName.length < 2 || trimmedName.length > 20) {
+        return '이름은 2자 이상 20자 이하로 입력해 주세요.';
+    }
+
+    if (trimmedNickname && trimmedNickname.length > 20) {
+        return '닉네임은 20자 이하로 입력해 주세요.';
+    }
+
+    if (birthdate && !birthdatePattern.test(birthdate)) {
+        return '생년월일 형식이 올바르지 않습니다.';
+    }
+
+    if (trimmedPhone && !/^[0-9-+()\s]{8,20}$/.test(trimmedPhone)) {
+        return '연락처 형식이 올바르지 않습니다.';
+    }
+
+    if (gender && !['male', 'female', 'other', 'none'].includes(gender)) {
+        return '성별 값이 올바르지 않습니다.';
+    }
+
+    return null;
+};
+
+router.get('/admins/check-username', async (req, res) => {
+    const username = req.query.username?.trim().toLowerCase();
+
+    if (!username) {
+        return res.status(400).json({ message: '아이디를 입력해 주세요.' });
+    }
+
+    if (!usernamePattern.test(username)) {
+        return res.status(400).json({ message: '아이디 형식이 올바르지 않습니다.' });
+    }
+
+    const existingUser = await User.findOne({ username }).select('_id');
+    res.json({
+        available: !existingUser,
+        message: existingUser ? '이미 사용 중인 아이디입니다.' : '사용 가능한 아이디입니다.'
+    });
+});
+
+router.post('/admins', async (req, res) => {
+    const { username, password, name, nickname, gender, birthdate, phone } = req.body;
+    const validationError = validateAdminPayload({ username, password, name, nickname, gender, birthdate, phone });
+
+    if (validationError) {
+        return res.status(400).json({ message: validationError });
+    }
+
+    try {
+        const normalizedUsername = username.trim().toLowerCase();
+        const existingUser = await User.findOne({ username: normalizedUsername });
+
+        if (existingUser) {
+            return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
+        }
+
+        const adminUser = await User.create({
+            username: normalizedUsername,
+            password,
+            name: name.trim(),
+            nickname: nickname?.trim() || '',
+            gender: gender || 'none',
+            birthdate: birthdate || '',
+            phone: phone?.trim() || '',
+            role: 'admin',
+            status: 'active'
+        });
+
+        res.status(201).json({
+            _id: adminUser._id,
+            username: adminUser.username,
+            name: adminUser.name,
+            nickname: adminUser.nickname,
+            role: adminUser.role,
+            status: adminUser.status,
+            createdAt: adminUser.createdAt
+        });
+    } catch (error) {
+        console.error('Admin creation failed:', error);
+        if (error.code === 11000) {
+            return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
+        }
+        res.status(500).json({ message: '관리자 계정 생성에 실패했습니다.' });
+    }
+});
+
 // @route   GET /api/superadmin/stats
 // @desc    금일 주요 통계 조회 (신규 회원, 채널, 게시글)
 router.get('/stats', async (req, res) => {
