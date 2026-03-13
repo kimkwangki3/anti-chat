@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import useAuthStore from '../store/authStore';
@@ -11,10 +12,13 @@ const Dashboard = () => {
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { myChannels, fetchMyChannels, isLoading, setCurrentChannel } = useChannelStore();
+    const { rooms, fetchRooms } = useChatStore();
     const { notifications, pendingCounts, unreadCounts, fetchUnreadCounts } = useNotificationStore();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [stats, setStats] = useState(null);
     const [isStatsLoading, setIsStatsLoading] = useState(false);
+    const location = useLocation();
+    const autoOpenedDmRef = useRef(false);
 
     const totalPending = Object.values(pendingCounts || {}).reduce((s, n) => s + n, 0);
     const totalUnread = Object.values(unreadCounts || {}).reduce((acc, counts) => {
@@ -28,10 +32,37 @@ const Dashboard = () => {
             fetchUnreadCounts();
             if (user.role === 'superadmin') {
                 fetchStats();
+            } else {
+                fetchRooms();
             }
         }
         setCurrentChannel(null);
-    }, [user?._id, fetchMyChannels, setCurrentChannel, user?.role, fetchUnreadCounts]);
+    }, [user?._id, fetchMyChannels, setCurrentChannel, user?.role, fetchUnreadCounts, fetchRooms]);
+
+    const superAdminRoom = useMemo(() => {
+        if (user?.role === 'superadmin') return null;
+        return rooms.find((room) => {
+            const isSuperAdminDm = room?.channelId?.name === '__SUPERADMIN_DM__';
+            const hasSuperAdminAsOtherSide = room?.adminId?.role === 'superadmin';
+            return isSuperAdminDm && hasSuperAdminAsOtherSide;
+        }) || null;
+    }, [rooms, user?.role]);
+
+    useEffect(() => {
+        if (!superAdminRoom || user?.role === 'superadmin') return;
+        if (location.pathname !== '/') return;
+
+        const isUserAdminInRoom =
+            user?._id === superAdminRoom.adminId?._id || user?._id === superAdminRoom.adminId;
+        const unread = isUserAdminInRoom
+            ? Number(superAdminRoom.unreadCountAdmin || 0)
+            : Number(superAdminRoom.unreadCountMember || 0);
+
+        if (unread > 0 && !autoOpenedDmRef.current) {
+            autoOpenedDmRef.current = true;
+            navigate(`/chat?roomId=${superAdminRoom._id}`);
+        }
+    }, [superAdminRoom, user?._id, user?.role, navigate, location.pathname]);
 
     const fetchStats = async () => {
         setIsStatsLoading(true);
@@ -124,6 +155,29 @@ const Dashboard = () => {
                 </section>
             ) : (
                 <div className="space-y-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                    {superAdminRoom && (
+                        <section>
+                            <h2 className="text-[11px] font-black tracking-[0.4em] uppercase text-slate-500 flex items-center gap-3 mb-6">
+                                <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full animate-pulse shadow-[0_0_10px_#FF8C69]"></span> 관리자 전용 채팅
+                            </h2>
+                            <div
+                                onClick={() => navigate(`/chat?roomId=${superAdminRoom._id}`)}
+                                className="glass-card p-8 cursor-pointer group border border-[#FF8C69]/20"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#FF8C69]">SUPERADMIN DIRECT CHAT</p>
+                                        <h3 className="mt-3 text-2xl font-black text-white">최고관리자 대화 요청이 도착했습니다</h3>
+                                        <p className="mt-2 text-sm text-[#8b8ba7]">
+                                            채널 가입 여부와 상관없이 이 화면에서 바로 대화를 확인할 수 있습니다.
+                                        </p>
+                                    </div>
+                                    <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
                     {(notifications.length > 0 || totalPending > 0 || totalUnread > 0) && (
                         <section>
                             <h2 className="text-[11px] font-black tracking-[0.4em] uppercase text-slate-500 flex items-center gap-3 mb-6">

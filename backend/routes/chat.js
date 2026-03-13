@@ -215,18 +215,55 @@ router.post('/rooms/superadmin', protect, async (req, res) => {
 router.get('/rooms', protect, async (req, res) => {
     const { channelId } = req.query;
     try {
-        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
-        let query = {};
-        if (isAdmin) {
-            query.adminId = req.user._id;
-            query.adminVisible = { $ne: false };
-        } else {
-            query.memberId = req.user._id;
-            query.memberVisible = { $ne: false };
-        }
+        const isSuperAdmin = req.user.role === 'superadmin';
+        const isAdmin = req.user.role === 'admin';
 
-        if (channelId) {
-            query.channelId = channelId;
+        const addChannelFilter = (condition) => {
+            if (channelId) condition.channelId = channelId;
+            return condition;
+        };
+
+        let query;
+
+        if (isSuperAdmin) {
+            query = addChannelFilter({
+                adminId: req.user._id,
+                adminVisible: { $ne: false }
+            });
+        } else if (isAdmin) {
+            // 일반 채널 관리자 대화: adminId 기준
+            // 최고관리자 1:1 대화: memberId 기준(채널 가입 여부와 무관하게 수신 가능)
+            const dmChannel = await Channel.findOne({ name: SUPERADMIN_DM_CHANNEL_NAME }).select('_id');
+
+            const adminOwnedCondition = addChannelFilter({
+                adminId: req.user._id,
+                adminVisible: { $ne: false }
+            });
+
+            const memberSideDmCondition = {
+                memberId: req.user._id,
+                memberVisible: { $ne: false }
+            };
+            if (dmChannel?._id) {
+                memberSideDmCondition.channelId = dmChannel._id;
+            } else {
+                memberSideDmCondition.channelId = null;
+            }
+            if (channelId) {
+                memberSideDmCondition.channelId = channelId;
+            }
+
+            query = {
+                $or: [
+                    adminOwnedCondition,
+                    memberSideDmCondition
+                ]
+            };
+        } else {
+            query = addChannelFilter({
+                memberId: req.user._id,
+                memberVisible: { $ne: false }
+            });
         }
 
         const threshold = getChatThreshold();
