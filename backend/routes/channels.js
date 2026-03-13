@@ -5,8 +5,6 @@ const Channel = require('../models/Channel');
 const ChannelMember = require('../models/ChannelMember');
 const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
-const cloudinary = require('../config/cloudinary');
-const streamifier = require('streamifier');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -262,33 +260,7 @@ router.post('/upload', protect, upload.single('file'), async (req, res) => {
         }
         console.log('[Channel Upload] File received:', req.file.originalname, 'Size:', req.file.size);
 
-        const hasCloudinaryConfig = Boolean(
-            process.env.CLOUDINARY_CLOUD_NAME &&
-            process.env.CLOUDINARY_API_KEY &&
-            process.env.CLOUDINARY_API_SECRET
-        );
-
-        if (hasCloudinaryConfig) {
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'channel_icons',
-                    resource_type: 'auto'
-                },
-                async (error, result) => {
-                    if (error) {
-                        console.error('[Channel Upload] Cloudinary upload error. Falling back to local:', error.message);
-                        const localUrl = await saveChannelImageLocally(req, req.file);
-                        return res.json({ imageUrl: localUrl });
-                    }
-                    console.log('[Channel Upload] Cloudinary upload success:', result.secure_url);
-                    return res.json({ imageUrl: result.secure_url });
-                }
-            );
-
-            streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
-            return;
-        }
-
+        // Channel icon uploads are served from local storage to avoid external upload dependency failures.
         const localUrl = await saveChannelImageLocally(req, req.file);
         return res.json({ imageUrl: localUrl });
     } catch (error) {
