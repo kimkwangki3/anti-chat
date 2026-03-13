@@ -9,6 +9,29 @@ if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir | Out-Null
 }
 
+function Resolve-ExecutablePath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CommandName,
+
+        [Parameter(Mandatory = $true)]
+        [string[]]$CandidatePaths
+    )
+
+    foreach ($candidate in $CandidatePaths) {
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    $command = Get-Command $CommandName -ErrorAction SilentlyContinue
+    if ($command -and $command.Source) {
+        return $command.Source
+    }
+
+    throw "Executable not found: $CommandName"
+}
+
 function Stop-PortProcess {
     param(
         [Parameter(Mandatory = $true)]
@@ -32,6 +55,16 @@ function Stop-PortProcess {
 
 Set-Location $repoRoot
 
+$nodeExe = Resolve-ExecutablePath -CommandName "node" -CandidatePaths @(
+    "$env:ProgramFiles\nodejs\node.exe",
+    "${env:ProgramFiles(x86)}\nodejs\node.exe"
+)
+
+$npmCmd = Resolve-ExecutablePath -CommandName "npm" -CandidatePaths @(
+    "$env:ProgramFiles\nodejs\npm.cmd",
+    "${env:ProgramFiles(x86)}\nodejs\npm.cmd"
+)
+
 git config --global --add safe.directory $repoRoot
 
 git fetch origin main
@@ -42,23 +75,23 @@ Stop-PortProcess -Port 5000
 Stop-PortProcess -Port 3000
 
 Set-Location $backendDir
-npm install --no-package-lock
+& $npmCmd install --no-package-lock
 
 Set-Location $frontendDir
-npm install --no-package-lock
-npm run build
+& $npmCmd install --no-package-lock
+& $npmCmd run build
 
 $backendLog = Join-Path $logsDir "backend.log"
 $frontendLog = Join-Path $logsDir "frontend.log"
 
 Start-Process -FilePath "cmd.exe" `
     -WorkingDirectory $backendDir `
-    -ArgumentList "/c node server.js >> `"$backendLog`" 2>&1" `
+    -ArgumentList "/c `"$nodeExe`" server.js >> `"$backendLog`" 2>&1" `
     -WindowStyle Hidden
 
 Start-Process -FilePath "cmd.exe" `
     -WorkingDirectory $frontendDir `
-    -ArgumentList "/c node scripts\serve-dist.cjs >> `"$frontendLog`" 2>&1" `
+    -ArgumentList "/c `"$nodeExe`" scripts\serve-dist.cjs >> `"$frontendLog`" 2>&1" `
     -WindowStyle Hidden
 
 Write-Host "Deployment completed."
