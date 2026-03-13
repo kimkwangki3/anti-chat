@@ -32,19 +32,21 @@ function Stop-PortProcess {
 
 Set-Location $repoRoot
 
+git config --global --add safe.directory $repoRoot
+
 git fetch origin main
 git checkout main
 git pull --ff-only origin main
 
-Set-Location $backendDir
-npm install
-
-Set-Location $frontendDir
-npm install
-npm run build
-
 Stop-PortProcess -Port 5000
 Stop-PortProcess -Port 3000
+
+Set-Location $backendDir
+npm install --no-package-lock
+
+Set-Location $frontendDir
+npm install --no-package-lock
+npm run build
 
 $backendLog = Join-Path $logsDir "backend.log"
 $frontendLog = Join-Path $logsDir "frontend.log"
