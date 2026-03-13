@@ -14,8 +14,11 @@ jobs:
       - anti
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Run deployment script on server
         shell: powershell
         run: |
           Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-          & "C:\apps\anti\scripts\deploy-windows.ps1"
+          & "${{ github.workspace }}\scripts\deploy-windows.ps1"
