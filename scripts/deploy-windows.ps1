@@ -81,17 +81,11 @@ Set-Location $frontendDir
 & $npmCmd install --no-package-lock
 & $npmCmd run build
 
-$backendLog = Join-Path $logsDir "backend.log"
-$frontendLog = Join-Path $logsDir "frontend.log"
+$startScript = Join-Path $repoRoot "scripts\start-services.ps1"
+if (-not (Test-Path $startScript)) {
+    throw "Start script not found: $startScript"
+}
 
-Start-Process -FilePath "cmd.exe" `
-    -WorkingDirectory $backendDir `
-    -ArgumentList "/c `"$nodeExe`" server.js >> `"$backendLog`" 2>&1" `
-    -WindowStyle Hidden
-
-Start-Process -FilePath "cmd.exe" `
-    -WorkingDirectory $frontendDir `
-    -ArgumentList "/c `"$nodeExe`" scripts\serve-dist.cjs >> `"$frontendLog`" 2>&1" `
-    -WindowStyle Hidden
+& $startScript
 
 Write-Host "Deployment completed."
