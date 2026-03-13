@@ -13,6 +13,7 @@ const SuperAdminDirectChat = () => {
     const [input, setInput] = useState('');
     const [selectedFile, setSelectedFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+
     const dmRooms = rooms.filter((room) => room.channelId?.name === '__SUPERADMIN_DM__');
 
     useEffect(() => {
@@ -48,7 +49,9 @@ const SuperAdminDirectChat = () => {
             await setCurrentRoom(data);
         } catch (error) {
             console.error('Create superadmin room failed:', error?.response?.data || error);
-            alert(error.response?.data?.message || '채팅방 생성에 실패했습니다.');
+            const status = error.response?.status;
+            const message = error.response?.data?.message || `채팅방 생성에 실패했습니다. (HTTP ${status || 'N/A'})`;
+            alert(message);
         }
     };
 
@@ -92,7 +95,7 @@ const SuperAdminDirectChat = () => {
     }
 
     return (
-        <div className="page-container p-6 pb-24 text-white md:p-8 md:pb-8 h-full">
+        <div className="page-container h-full p-6 pb-24 text-white md:p-8 md:pb-8">
             <h1 className="mb-6 text-3xl font-black tracking-tight">최고관리자 1:1 채팅</h1>
 
             <div className="grid h-[calc(100vh-180px)] grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
@@ -141,7 +144,7 @@ const SuperAdminDirectChat = () => {
                     <div className="border-b border-white/10 p-4">
                         <p className="font-bold">
                             {currentRoom
-                                ? `${currentRoom.memberId?.name || currentRoom.memberId?.username}와 대화`
+                                ? `${currentRoom.memberId?.name || currentRoom.memberId?.username}와 대화 중`
                                 : '대화 상대를 선택하세요'}
                         </p>
                     </div>

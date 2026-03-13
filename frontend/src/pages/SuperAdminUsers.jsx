@@ -101,7 +101,7 @@ const SuperAdminUsers = () => {
             try {
                 const primary = await axios.get(`/superadmin/users/${editingUser._id}/password`);
                 data = primary.data;
-            } catch (primaryError) {
+            } catch {
                 const fallback = await axios.get(`/superadmin/users-password/${editingUser._id}`);
                 data = fallback.data;
             }
@@ -216,7 +216,7 @@ const SuperAdminUsers = () => {
 
             <div className="mb-6 rounded-2xl border border-[#FF8C69]/10 bg-[#12121a] p-5">
                 <p className="text-sm font-semibold text-white">
-                    회원 정보 수정, 비밀번호 변경, 메모 관리, 상태 변경을 이 화면에서 처리합니다.
+                    회원 정보 수정, 비밀번호 변경, 메모 관리, 상태 변경을 모두 이 화면에서 처리합니다.
                 </p>
             </div>
 
@@ -287,7 +287,7 @@ const SuperAdminUsers = () => {
                                             <p>닉네임: {user.nickname || '-'}</p>
                                             <p>연락처: {user.phone || '-'}</p>
                                             <p>성별: {genderLabelMap[user.gender || 'none']}</p>
-                                            <p className="truncate max-w-[260px]">메모: {user.memo || '-'}</p>
+                                            <p className="max-w-[260px] truncate">메모: {user.memo || '-'}</p>
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex flex-wrap items-center gap-2">
@@ -399,7 +399,7 @@ const SuperAdminUsers = () => {
                                 </label>
                             </div>
 
-                            <label className="space-y-2 block">
+                            <label className="block space-y-2">
                                 <span className="text-xs font-bold text-[#8b8ba7]">메모</span>
                                 <textarea
                                     value={editForm.memo}
