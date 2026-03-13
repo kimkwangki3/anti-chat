@@ -190,6 +190,7 @@ const ChatSidebar = () => {
                         const channelName = room.channelId?.name || '알 수 없는 채널';
                         const channelColor = room.channelId?.cardColor || '#FF8C69';
                         const channelImage = room.channelId?.profileImage;
+                        const displayName = isUserAdmin ? (otherUser?.name || '사용자') : channelName;
 
                         return (
                             <div
@@ -241,7 +242,7 @@ const ChatSidebar = () => {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <h3 className={`text-[15px] font-black truncate transition-colors ${isActive ? 'text-white' : 'text-[#e8e8f0]'}`}>
-                                                    {otherUser?.name}
+                                                    {displayName}
                                                 </h3>
                                                 {unreadCount > 0 && !isActive && (
                                                     <span className="bg-[#FF8C69] text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-[#FF8C69]/20 min-w-[20px] text-center border border-white/10"

@@ -143,6 +143,8 @@ const ChatPage = () => {
 
     const themeColor = currentChannel?.cardColor || '#FF8C69';
     const channelName = currentChannel?.name || '알 수 없는 채널';
+    const isUserAdminInRoom = user?._id === currentRoom?.adminId?._id || user?._id === currentRoom?.adminId;
+    const roomTitle = isUserAdminInRoom ? currentRoom?.memberId?.name : channelName;
 
     return (
         <div className="flex h-full bg-[#1a1a24] overflow-hidden relative text-[#e8e8f0]">
@@ -181,9 +183,7 @@ const ChatPage = () => {
 
                                 <div>
                                     <h2 className="text-lg md:text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                                        {(user?._id === currentRoom.adminId?._id || user?._id === currentRoom.adminId)
-                                            ? currentRoom.memberId?.name
-                                            : currentRoom.adminId?.name}
+                                        {roomTitle}
                                         <span
                                             className="px-2 py-0.5 text-[9px] rounded-lg font-black uppercase tracking-widest border border-white/5"
                                             style={{ backgroundColor: `${currentChannel?.cardColor || '#FF8C69'}15`, color: currentChannel?.cardColor || '#FF8C69' }}

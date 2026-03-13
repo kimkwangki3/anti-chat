@@ -34,6 +34,8 @@ const ChannelSearchPage = () => {
         return membership ? membership.status : null;
     };
 
+    const visibleResults = searchResults.filter((channel) => channel.name !== '__SUPERADMIN_DM__');
+
     return (
         <div className="page-container p-6 md:p-10 pb-24 md:pb-10 pt-safe">
             <header className="mb-12 animate-slide-up">
@@ -76,13 +78,13 @@ const ChannelSearchPage = () => {
             <div className="bento-grid !p-0 gap-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
                 {isLoading ? (
                     [1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-64 glass-card animate-pulse"></div>)
-                ) : searchResults.length === 0 ? (
+                ) : visibleResults.length === 0 ? (
                     <div className="col-span-full py-40 glass-card text-center border-dashed border-white/10">
                         <span className="text-6xl block mb-8 opacity-20">📡</span>
                         <p className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-600">일치하는 채널 데이터를 찾을 수 없습니다</p>
                     </div>
                 ) : (
-                    searchResults.map((channel) => {
+                    visibleResults.map((channel) => {
                         const status = getMembershipStatus(channel._id);
                         const isOwner = user?._id === (channel.ownerId?._id || channel.ownerId);
 
@@ -95,12 +97,12 @@ const ChannelSearchPage = () => {
 
                                 <div className="flex justify-between items-start mb-6 relative z-10">
                                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
-                                        {isOwner ? 'System Admin' : 'Public Node'}
+                                        {isOwner ? 'My Node' : 'Public Node'}
                                     </span>
                                     <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
-                                        <div className={`w-1.5 h-1.5 rounded-full ${channel.ownerId?.isOnline ? 'bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]' : 'bg-slate-700'}`}></div>
-                                        <span className={`text-[8px] font-black uppercase tracking-widest ${channel.ownerId?.isOnline ? 'text-[#06d6a0]' : 'text-slate-600'}`}>
-                                            MASTER {channel.ownerId?.isOnline ? 'ONLINE' : 'OFFLINE'}
+                                        <div className="w-1.5 h-1.5 rounded-full bg-[#06d6a0] shadow-[0_0_8px_#06d6a0]"></div>
+                                        <span className="text-[8px] font-black uppercase tracking-widest text-[#06d6a0]">
+                                            CHANNEL OPEN
                                         </span>
                                     </div>
                                 </div>
@@ -121,11 +123,11 @@ const ChannelSearchPage = () => {
                                 <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between relative z-10">
                                     <div className="flex items-center gap-3">
                                         <div className="w-8 h-8 rounded-xl glass-card !p-0 flex items-center justify-center text-[10px] font-black border border-white/5">
-                                            {channel.ownerId?.name?.[0]?.toUpperCase() || 'U'}
+                                            {channel.name?.[0]?.toUpperCase() || 'C'}
                                         </div>
                                         <div>
-                                            <p className="text-[11px] font-bold text-white leading-none">{channel.ownerId?.name}</p>
-                                            <p className="text-[8px] text-slate-600 font-black leading-none mt-1 uppercase tracking-tighter">Owner</p>
+                                            <p className="text-[11px] font-bold text-white leading-none">{channel.name}</p>
+                                            <p className="text-[8px] text-slate-600 font-black leading-none mt-1 uppercase tracking-tighter">Channel</p>
                                         </div>
                                     </div>
 
