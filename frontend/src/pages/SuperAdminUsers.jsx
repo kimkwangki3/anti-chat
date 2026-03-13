@@ -146,7 +146,9 @@ const SuperAdminUsers = () => {
             closeEditModal();
             alert('회원 정보가 수정되었습니다.');
         } catch (error) {
-            alert(error.response?.data?.message || '회원 정보 수정에 실패했습니다.');
+            const serverMessage = error.response?.data?.message;
+            const status = error.response?.status;
+            alert(serverMessage || `회원 정보 수정에 실패했습니다. (HTTP ${status || 'N/A'})`);
         } finally {
             setIsSaving(false);
         }
