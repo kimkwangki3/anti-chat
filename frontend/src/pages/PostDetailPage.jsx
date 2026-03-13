@@ -4,7 +4,7 @@ import usePostStore from '../store/postStore';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import useChannelStore from '../store/channelStore';
-import { getFileUrl } from '../utils/fileUtils';
+import { getFileUrl, normalizeDisplayFileName } from '../utils/fileUtils';
 
 const PostDetailPage = () => {
     const { id } = useParams();
@@ -97,7 +97,7 @@ const PostDetailPage = () => {
                                     rel="noreferrer"
                                     className="block text-sm text-[#9bb4ff] hover:underline truncate"
                                 >
-                                    📎 {file.fileName}
+                                    📎 {normalizeDisplayFileName(file.fileName)}
                                 </a>
                             ))}
                         </div>

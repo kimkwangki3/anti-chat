@@ -9,6 +9,7 @@ const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier'); // npm install streamifier might be needed or use simplified approach
+const { normalizeUploadedFileName } = require('../utils/filename');
 
 // Multer Storage 설정 (메모리 스토리지 사용)
 const storage = multer.memoryStorage();
@@ -433,7 +434,7 @@ router.post('/upload', protect, upload.single('file'), (req, res) => {
                 res.json({
                     fileUrl: result.secure_url,
                     fileType: req.file.mimetype,
-                    fileName: req.file.originalname,
+                    fileName: normalizeUploadedFileName(req.file.originalname || 'file'),
                     size: req.file.size
                 });
             }

@@ -7,6 +7,7 @@ const multer = require('multer');
 const Post = require('../models/Post');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { sendPushToChannelMembers } = require('../utils/pushService');
+const { normalizeUploadedFileName } = require('../utils/filename');
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -30,9 +31,10 @@ const savePostFileLocally = async (req, file) => {
     const uploadDir = path.join(__dirname, '..', 'uploads', 'posts');
     await fs.promises.mkdir(uploadDir, { recursive: true });
 
-    const ext = path.extname(file.originalname || '');
+    const normalizedOriginalName = normalizeUploadedFileName(file.originalname || 'file');
+    const ext = path.extname(normalizedOriginalName || '');
     const safeBase = path
-        .basename(file.originalname || 'file', ext)
+        .basename(normalizedOriginalName || 'file', ext)
         .replace(/[^a-zA-Z0-9._-]/g, '_')
         .slice(0, 80);
     const fileName = `post_${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${safeBase}${ext}`;
@@ -56,9 +58,10 @@ router.post('/', protect, admin, postFileUploadMiddleware, async (req, res) => {
         const attachments = [];
         if (Array.isArray(req.files) && req.files.length > 0) {
             for (const file of req.files) {
+                const normalizedOriginalName = normalizeUploadedFileName(file.originalname || 'file');
                 const fileUrl = await savePostFileLocally(req, file);
                 attachments.push({
-                    fileName: file.originalname || 'file',
+                    fileName: normalizedOriginalName,
                     fileUrl,
                     mimeType: file.mimetype || '',
                     size: file.size || 0

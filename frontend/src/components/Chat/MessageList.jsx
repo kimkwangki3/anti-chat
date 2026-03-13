@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useChatStore from '../../store/chatStore';
 import useAuthStore from '../../store/authStore';
-import { getFileUrl } from '../../utils/fileUtils';
+import { getFileUrl, normalizeDisplayFileName } from '../../utils/fileUtils';
 import UserAvatar from '../Common/UserAvatar';
 
 const MessageList = () => {
@@ -113,7 +113,7 @@ const MessageList = () => {
                                                 <div className="group/img relative">
                                                     <img
                                                         src={getFileUrl(msg.fileUrl)}
-                                                        alt={msg.fileName}
+                                                        alt={normalizeDisplayFileName(msg.fileName)}
                                                         className="max-w-full max-h-[300px] object-cover rounded-xl md:rounded-[1.5rem] cursor-pointer hover:scale-[1.02] transition-transform"
                                                         onClick={() => window.open(getFileUrl(msg.fileUrl), '_blank')}
                                                     />
@@ -127,7 +127,7 @@ const MessageList = () => {
                                                 >
                                                     <span className="text-2xl">📄</span>
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="text-[11px] font-bold truncate">{msg.fileName || '다운로드'}</span>
+                                                        <span className="text-[11px] font-bold truncate">{normalizeDisplayFileName(msg.fileName || '다운로드')}</span>
                                                         <span className={`text-[9px] font-mono ${isMe ? 'text-white/50' : 'text-[#444466]'}`}>파일 다운로드</span>
                                                     </div>
                                                 </a>

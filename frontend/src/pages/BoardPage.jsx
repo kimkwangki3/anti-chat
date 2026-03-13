@@ -4,7 +4,7 @@ import usePostStore from '../store/postStore';
 import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
-import { getFileUrl } from '../utils/fileUtils';
+import { getFileUrl, normalizeDisplayFileName } from '../utils/fileUtils';
 
 const BoardPage = () => {
     const navigate = useNavigate();
@@ -230,7 +230,7 @@ const BoardPage = () => {
                                                     onClick={(e) => e.stopPropagation()}
                                                     className="block text-xs text-[#9bb4ff] hover:underline truncate"
                                                 >
-                                                    📎 {file.fileName}
+                                                    📎 {normalizeDisplayFileName(file.fileName)}
                                                 </a>
                                             ))}
                                         </div>
