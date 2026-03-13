@@ -3,7 +3,6 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Channel = require('../models/Channel');
 const ChannelMember = require('../models/ChannelMember');
-const User = require('../models/User');
 const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
@@ -45,9 +44,6 @@ router.post('/', protect, admin, async (req, res) => {
             userId: req.user._id,
             status: 'approved'
         });
-
-        // 관리자 대화명 자동 변경: 채널명과 동일하게
-        await User.findByIdAndUpdate(req.user._id, { name: name });
 
         res.status(201).json(channel);
     } catch (error) {

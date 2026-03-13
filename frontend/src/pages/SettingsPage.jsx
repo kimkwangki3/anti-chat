@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
@@ -7,7 +7,7 @@ import useChannelStore from '../store/channelStore';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
-    const { user, logout, uploadProfileImage } = useAuthStore();
+    const { user, logout, uploadProfileImage, updateProfile } = useAuthStore();
     const { myChannels } = useChannelStore();
     const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
 
@@ -22,6 +22,14 @@ const SettingsPage = () => {
     const [previewImage, setPreviewImage] = useState(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
+    const [profileName, setProfileName] = useState(user?.name || '');
+    const [profileNickname, setProfileNickname] = useState(user?.nickname || '');
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+    useEffect(() => {
+        setProfileName(user?.name || '');
+        setProfileNickname(user?.nickname || '');
+    }, [user?.name, user?.nickname]);
 
     const urlBase64ToUint8Array = (base64String) => {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -96,6 +104,23 @@ const SettingsPage = () => {
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
+    const handleSaveProfile = async () => {
+        if (!profileName.trim()) {
+            alert('이름을 입력해주세요.');
+            return;
+        }
+
+        setIsSavingProfile(true);
+        const ok = await updateProfile(profileName, profileNickname);
+        setIsSavingProfile(false);
+
+        if (ok) {
+            alert('이름 설정이 저장되었습니다.');
+        } else {
+            alert('이름 설정 저장에 실패했습니다.');
+        }
+    };
+
     const playPreview = (type) => {
         const audio = new Audio(sounds[type || soundType]);
         audio.volume = volume;
@@ -159,7 +184,7 @@ const SettingsPage = () => {
 
                 <div className="bento-grid !p-0 gap-8">
                     {/* Profile Section */}
-                    {!(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    {user && (
                         <section className="glass-card p-8 md:col-span-2 relative overflow-hidden">
                             <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mb-8 font-mono">신원 인증 데이터</h3>
                             <div className="flex flex-col md:flex-row items-center gap-10">
@@ -207,6 +232,39 @@ const SettingsPage = () => {
                                     ) : (
                                         <p className="text-[10px] text-slate-600 font-medium">네트워크에 표시될 신원 데이터를 업데이트 하세요.</p>
                                     )}
+                                    <div className="pt-2 space-y-3">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                                                Display Name
+                                            </label>
+                                            <input
+                                                value={profileName}
+                                                onChange={(e) => setProfileName(e.target.value)}
+                                                maxLength={20}
+                                                className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-[#FF8C69]/40"
+                                                placeholder="관리자 이름"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                                                Nickname
+                                            </label>
+                                            <input
+                                                value={profileNickname}
+                                                onChange={(e) => setProfileNickname(e.target.value)}
+                                                maxLength={20}
+                                                className="w-full px-4 py-3 rounded-xl bg-black/30 border border-white/10 text-sm text-white focus:outline-none focus:border-[#FF8C69]/40"
+                                                placeholder="닉네임"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleSaveProfile}
+                                            disabled={isSavingProfile}
+                                            className="px-6 py-3 bg-[#FF8C69] text-white text-[10px] font-black rounded-xl hover:bg-[#E8735A] transition-all disabled:opacity-50 uppercase tracking-widest"
+                                        >
+                                            {isSavingProfile ? 'SAVING...' : '이름 저장'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
