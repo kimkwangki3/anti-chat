@@ -37,6 +37,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    memo: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     recommender: {
         type: String,
         trim: true

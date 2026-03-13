@@ -26,7 +26,10 @@ const emptyEditForm = {
     nickname: '',
     phone: '',
     birthdate: '',
-    gender: 'none'
+    gender: 'none',
+    memo: '',
+    newPassword: '',
+    confirmPassword: ''
 };
 
 const SuperAdminUsers = () => {
@@ -38,6 +41,8 @@ const SuperAdminUsers = () => {
     const [editingUser, setEditingUser] = useState(null);
     const [editForm, setEditForm] = useState(emptyEditForm);
     const [isSaving, setIsSaving] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [isLoadingPassword, setIsLoadingPassword] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -68,28 +73,66 @@ const SuperAdminUsers = () => {
 
     const openEditModal = (user) => {
         setEditingUser(user);
+        setCurrentPassword('');
         setEditForm({
             name: user.name || '',
             nickname: user.nickname || '',
             phone: user.phone || '',
             birthdate: user.birthdate || '',
-            gender: user.gender || 'none'
+            gender: user.gender || 'none',
+            memo: user.memo || '',
+            newPassword: '',
+            confirmPassword: ''
         });
     };
 
     const closeEditModal = () => {
         setEditingUser(null);
         setEditForm(emptyEditForm);
+        setCurrentPassword('');
         setIsSaving(false);
+    };
+
+    const loadCurrentPassword = async () => {
+        if (!editingUser) return;
+        setIsLoadingPassword(true);
+        try {
+            const { data } = await axios.get(`/superadmin/users/${editingUser._id}/password`);
+            setCurrentPassword(data.password || '');
+        } catch (error) {
+            alert(error.response?.data?.message || '현재 비밀번호 조회에 실패했습니다.');
+        } finally {
+            setIsLoadingPassword(false);
+        }
     };
 
     const submitEdit = async (e) => {
         e.preventDefault();
         if (!editingUser) return;
 
+        if (editForm.newPassword || editForm.confirmPassword) {
+            if (editForm.newPassword !== editForm.confirmPassword) {
+                alert('새 비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+                return;
+            }
+        }
+
         setIsSaving(true);
         try {
-            await axios.put(`/superadmin/users/${editingUser._id}`, editForm);
+            const payload = {
+                name: editForm.name,
+                nickname: editForm.nickname,
+                phone: editForm.phone,
+                birthdate: editForm.birthdate,
+                gender: editForm.gender,
+                memo: editForm.memo
+            };
+
+            if (editForm.newPassword.trim()) {
+                payload.password = editForm.newPassword.trim();
+            }
+
+            await axios.put(`/superadmin/users/${editingUser._id}`, payload);
             await fetchUsers();
             closeEditModal();
             alert('회원 정보가 수정되었습니다.');
@@ -161,9 +204,8 @@ const SuperAdminUsers = () => {
             </header>
 
             <div className="mb-6 rounded-2xl border border-[#FF8C69]/10 bg-[#12121a] p-5">
-                <p className="text-sm font-semibold text-white">회원 정보 수정, 상태 변경, 계정 검색을 이 화면에서 처리합니다.</p>
-                <p className="mt-2 text-xs leading-6 text-[#8b8ba7]">
-                    관리자 계정 생성은 별도의 최고관리자 전용 페이지에서만 가능합니다. 로그인 화면에는 관리자 가입 기능을 노출하지 않습니다.
+                <p className="text-sm font-semibold text-white">
+                    회원 정보 수정, 비밀번호 변경, 메모 관리, 상태 변경을 이 화면에서 처리합니다.
                 </p>
             </div>
 
@@ -196,9 +238,7 @@ const SuperAdminUsers = () => {
                                                     {(user.name || '?').slice(0, 1).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-white transition-colors group-hover:text-[#FF8C69]">
-                                                        {user.name}
-                                                    </p>
+                                                    <p className="text-sm font-bold text-white transition-colors group-hover:text-[#FF8C69]">{user.name}</p>
                                                     <p className="font-mono text-[10px] uppercase text-[#444466]">{user.username}</p>
                                                 </div>
                                             </div>
@@ -236,6 +276,7 @@ const SuperAdminUsers = () => {
                                             <p>닉네임: {user.nickname || '-'}</p>
                                             <p>연락처: {user.phone || '-'}</p>
                                             <p>성별: {genderLabelMap[user.gender || 'none']}</p>
+                                            <p className="truncate max-w-[260px]">메모: {user.memo || '-'}</p>
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex flex-wrap items-center gap-2">
@@ -290,7 +331,7 @@ const SuperAdminUsers = () => {
 
             {editingUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                    <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl">
+                    <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl">
                         <h2 className="text-xl font-black text-white">회원 정보 수정</h2>
                         <p className="mt-1 text-xs text-[#8b8ba7]">{editingUser.username}</p>
 
@@ -346,6 +387,54 @@ const SuperAdminUsers = () => {
                                     </select>
                                 </label>
                             </div>
+
+                            <label className="space-y-2 block">
+                                <span className="text-xs font-bold text-[#8b8ba7]">메모</span>
+                                <textarea
+                                    value={editForm.memo}
+                                    onChange={(e) => setEditForm((prev) => ({ ...prev, memo: e.target.value }))}
+                                    rows={3}
+                                    maxLength={500}
+                                    className="w-full resize-none rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                />
+                                <span className="text-[11px] text-[#6b6b8a]">{editForm.memo.length}/500</span>
+                            </label>
+
+                            <div className="grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+                                <label className="space-y-2">
+                                    <span className="text-xs font-bold text-[#8b8ba7]">새 비밀번호</span>
+                                    <input
+                                        type="text"
+                                        value={editForm.newPassword}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+                                        placeholder="변경할 때만 입력"
+                                        className="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                    />
+                                </label>
+                                <label className="space-y-2">
+                                    <span className="text-xs font-bold text-[#8b8ba7]">비밀번호 확인</span>
+                                    <input
+                                        type="text"
+                                        value={editForm.confirmPassword}
+                                        onChange={(e) => setEditForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                                        placeholder="새 비밀번호 재입력"
+                                        className="w-full rounded-xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white focus:border-[#FF8C69]/50 focus:outline-none"
+                                    />
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={loadCurrentPassword}
+                                    className="self-end rounded-xl border border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-xs font-black text-yellow-300 transition hover:bg-yellow-500 hover:text-white"
+                                >
+                                    {isLoadingPassword ? '조회 중...' : '현재 비밀번호 확인'}
+                                </button>
+                            </div>
+
+                            {currentPassword && (
+                                <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-100">
+                                    현재 비밀번호: <span className="font-bold">{currentPassword}</span>
+                                </div>
+                            )}
 
                             <div className="flex justify-end gap-3 pt-2">
                                 <button

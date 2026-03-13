@@ -167,10 +167,23 @@ router.get('/users', async (req, res) => {
     }
 });
 
+// @route   GET /api/superadmin/users/:id/password
+// @desc    사용자 현재 비밀번호 조회 (최고관리자 전용)
+router.get('/users/:id/password', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id).select('password username');
+        if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+
+        res.json({ username: user.username, password: user.password });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @route   PUT /api/superadmin/users/:id
 // @desc    사용자 기본 정보 수정 (최고관리자 전용)
 router.put('/users/:id', async (req, res) => {
-    const { name, nickname, phone, birthdate, gender } = req.body;
+    const { name, nickname, phone, birthdate, gender, password, memo } = req.body;
 
     try {
         const user = await User.findById(req.params.id);
@@ -213,6 +226,21 @@ router.put('/users/:id', async (req, res) => {
                 return res.status(400).json({ message: '성별 값이 올바르지 않습니다.' });
             }
             user.gender = gender;
+        }
+
+        if (typeof memo === 'string') {
+            const trimmed = memo.trim();
+            if (trimmed.length > 500) {
+                return res.status(400).json({ message: '메모는 500자 이하로 입력해 주세요.' });
+            }
+            user.memo = trimmed;
+        }
+
+        if (typeof password === 'string' && password.trim() !== '') {
+            if (!passwordPattern.test(password)) {
+                return res.status(400).json({ message: '비밀번호는 8~20자, 영문/숫자/특수문자를 각각 1개 이상 포함해야 합니다.' });
+            }
+            user.password = password;
         }
 
         await user.save();
