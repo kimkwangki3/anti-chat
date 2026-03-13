@@ -44,11 +44,11 @@ function Stop-PortProcess {
     }
 
     $pids = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-    foreach ($pid in $pids) {
+    foreach ($processId in $pids) {
         try {
-            Stop-Process -Id $pid -Force -ErrorAction Stop
+            Stop-Process -Id $processId -Force -ErrorAction Stop
         } catch {
-            Write-Warning "Failed to stop PID ${pid} on port ${Port}: $($_.Exception.Message)"
+            Write-Warning "Failed to stop PID ${processId} on port ${Port}: $($_.Exception.Message)"
         }
     }
 }
