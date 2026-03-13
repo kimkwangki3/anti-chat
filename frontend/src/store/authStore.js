@@ -111,7 +111,10 @@ const useAuthStore = create((set) => ({
             return { success: true, profileImage: profileImageUrl };
         } catch (error) {
             console.error('프로필 이미지 업로드 에러:', error);
-            return { success: false };
+            return {
+                success: false,
+                message: error.response?.data?.detail || error.response?.data?.message || error.message
+            };
         }
     },
 

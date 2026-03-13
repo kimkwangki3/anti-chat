@@ -6,6 +6,9 @@ const { protect } = require('../middleware/authMiddleware');
 const { writeAuthLog } = require('../utils/logService');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
 
@@ -29,6 +32,30 @@ const upload = multer({
         }
     }
 });
+
+const getFileExtension = (file) => {
+    const extByMime = {
+        'image/jpeg': '.jpg',
+        'image/png': '.png',
+        'image/webp': '.webp',
+        'image/gif': '.gif'
+    };
+    return extByMime[file.mimetype] || path.extname(file.originalname || '').toLowerCase() || '.jpg';
+};
+
+const saveProfileImageLocally = async (req, file) => {
+    const uploadDir = path.join(__dirname, '..', 'uploads', 'profiles');
+    await fs.promises.mkdir(uploadDir, { recursive: true });
+
+    const ext = getFileExtension(file);
+    const fileName = `profile_${req.user._id}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+    const filePath = path.join(uploadDir, fileName);
+    await fs.promises.writeFile(filePath, file.buffer);
+
+    const host = req.get('host') || '127.0.0.1:5000';
+    const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
+    return `${protocol}://${host}/uploads/profiles/${fileName}`;
+};
 
 // @route   POST /api/auth/register
 // @desc    회원가입
@@ -203,18 +230,37 @@ router.post('/profile/image', protect, upload.single('profileImage'), async (req
             });
         };
 
-        const result = await streamUpload(req.file.buffer);
+        const hasCloudinaryConfig = Boolean(
+            process.env.CLOUDINARY_CLOUD_NAME &&
+            process.env.CLOUDINARY_API_KEY &&
+            process.env.CLOUDINARY_API_SECRET
+        );
+
+        let profileImageUrl = null;
+
+        if (hasCloudinaryConfig) {
+            try {
+                const result = await streamUpload(req.file.buffer);
+                profileImageUrl = result.secure_url;
+            } catch (cloudinaryError) {
+                console.error('[Profile Image] Cloudinary upload failed, fallback to local upload:', cloudinaryError.message);
+            }
+        }
+
+        if (!profileImageUrl) {
+            profileImageUrl = await saveProfileImageLocally(req, req.file);
+        }
 
         const updatedUser = await User.findByIdAndUpdate(
             req.user._id,
-            { profileImage: result.secure_url },
+            { profileImage: profileImageUrl },
             { new: true }
         ).select('-password');
 
-        res.json({ profileImage: result.secure_url, user: updatedUser });
+        res.json({ profileImage: profileImageUrl, user: updatedUser });
     } catch (error) {
         console.error('프로필 이미지 업로드 에러:', error);
-        res.status(500).json({ message: '이미지 업로드에 실패했습니다.' });
+        res.status(500).json({ message: '이미지 업로드에 실패했습니다.', detail: error.message });
     }
 });
 

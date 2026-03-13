@@ -93,7 +93,7 @@ const SettingsPage = () => {
             setPreviewImage(null);
             setSelectedFile(null);
         } else {
-            alert('이미지 업로드에 실패했습니다.');
+            alert(result.message ? `이미지 업로드에 실패했습니다.\n${result.message}` : '이미지 업로드에 실패했습니다.');
         }
         setIsUploadingImage(false);
     };

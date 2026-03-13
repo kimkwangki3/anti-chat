@@ -14,7 +14,8 @@ const PostDetailPage = () => {
     const { currentChannel } = useChannelStore();
     const [comment, setComment] = useState('');
 
-    const themeColor = currentChannel?.cardColor || '#FF8C69';
+    const themeColor = currentPost?.channelId?.cardColor || currentChannel?.cardColor || '#FF8C69';
+    const detailChannelName = currentPost?.channelId?.name || currentChannel?.name || '채널';
 
     useEffect(() => {
         fetchPostById(id).then(post => {
@@ -64,10 +65,10 @@ const PostDetailPage = () => {
                                 className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-white shadow-lg uppercase"
                                 style={{ backgroundColor: themeColor, boxShadow: `0 10px 15px -3px ${themeColor}40` }}
                             >
-                                {currentPost.authorId?.name?.[0]}
+                                {detailChannelName?.[0]}
                             </div>
                             <div>
-                                <h3 className="text-sm font-bold text-[#e8e8f0]">{currentPost.authorId?.name}</h3>
+                                <h3 className="text-sm font-bold text-[#e8e8f0]">{detailChannelName}</h3>
                                 <div className="flex items-center gap-2 mt-1">
                                     <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: themeColor }}></span>
                                     <p className="text-[10px] font-bold text-[#444466] uppercase tracking-widest leading-none pt-0.5">{new Date(currentPost.createdAt).toLocaleString()}</p>

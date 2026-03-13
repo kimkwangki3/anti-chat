@@ -99,6 +99,7 @@ router.get('/:id', protect, async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
             .populate('authorId', 'name')
+            .populate('channelId', 'name cardColor')
             .populate('comments.authorId', 'name');
 
         if (!post) return res.status(404).json({ message: 'Post not found' });
