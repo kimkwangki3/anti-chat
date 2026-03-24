@@ -35,18 +35,20 @@ const socketHandler = (io) => {
                 socket.userId = userIdStr;
                 socket.sessionId = userData.sessionId;
 
-                try {
-                    const latestUser = await queryOne('SELECT id, name, currentSessionId FROM Users WHERE id=@id', { id: userData._id });
-                    if (latestUser && latestUser.currentSessionId && latestUser.currentSessionId !== userData.sessionId) {
-                        console.log(`[SOCKET] Session mismatch for ${userData.name}. Enforcing logout.`);
-                        socket.emit('force_logout', { message: '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.' });
-                    } else {
-                        socket.emit('connected');
+                // 슈퍼어드민만 마스터 DB 세션 체크
+                if (userData.isMaster) {
+                    try {
+                        const latestUser = await queryOne('SELECT id, name, currentSessionId FROM Users WHERE id=@id', { id: userData._id });
+                        if (latestUser && latestUser.currentSessionId && latestUser.currentSessionId !== userData.sessionId) {
+                            console.log(`[SOCKET] Session mismatch for ${userData.name}. Enforcing logout.`);
+                            socket.emit('force_logout', { message: '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.' });
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('[SOCKET] setup 세션 체크 에러:', error);
                     }
-                } catch (error) {
-                    console.error('[SOCKET] setup 세션 체크 에러:', error);
-                    socket.emit('connected');
                 }
+                socket.emit('connected');
             }
         });
 
