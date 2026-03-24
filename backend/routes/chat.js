@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
 const { protect, admin } = require('../middleware/authMiddleware');
+const { getChannelDbName, populateRoom, populateRoomById, formatRoom, getChannelAdminId, getChannelMembers } = require('../utils/chatUtils');
 const multer = require('multer');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
@@ -32,37 +33,10 @@ const ensureSuperAdminDmChannel = async (ownerId) => {
     return channel;
 };
 
-const populateRoom = async (roomId) => {
-    return queryOne(
-        `SELECT r.*,
-            a.id as admin_id, a.name as admin_name, a.username as admin_username, a.isOnline as admin_isOnline, a.profileImage as admin_profileImage, a.role as admin_role,
-            m.id as member_id, m.name as member_name, m.username as member_username, m.isOnline as member_isOnline, m.profileImage as member_profileImage, m.role as member_role, m.status as member_status,
-            c.name as channel_name, c.profileImage as channel_profileImage, c.cardColor as channel_cardColor
-         FROM ChatRooms r
-         JOIN Users a ON r.adminId = a.id
-         JOIN Users m ON r.memberId = m.id
-         JOIN Channels c ON r.channelId = c.id
-         WHERE r.id = @id`,
-        { id: roomId }
-    );
-};
-
-const formatRoom = (r) => ({
-    ...r,
-    adminId: { _id: r.admin_id, id: r.admin_id, name: r.admin_name, username: r.admin_username, isOnline: r.admin_isOnline, profileImage: r.admin_profileImage, role: r.admin_role },
-    memberId: { _id: r.member_id, id: r.member_id, name: r.member_name, username: r.member_username, isOnline: r.member_isOnline, profileImage: r.member_profileImage, role: r.member_role, status: r.member_status },
-    channelId: { _id: r.channelId, id: r.channelId, name: r.channel_name, profileImage: r.channel_profileImage, cardColor: r.channel_cardColor }
-});
-
-// GET /api/chat/users/:channelId
+// GET /api/chat/users/:channelId — 채널 DB에서 멤버 목록 조회
 router.get('/users/:channelId', protect, admin, async (req, res) => {
     try {
-        const members = await query(
-            `SELECT u.id, u.name, u.username, u.isOnline, u.profileImage
-             FROM ChannelMembers cm JOIN Users u ON cm.userId = u.id
-             WHERE cm.channelId = @channelId AND cm.status = 'approved'`,
-            { channelId: req.params.channelId }
-        );
+        const members = await getChannelMembers(req.params.channelId);
         res.json(members.map(u => ({ ...u, _id: u.id })));
     } catch (error) {
         res.status(500).json({ message: '멤버 목록을 불러오는데 실패했습니다.' });
@@ -73,7 +47,7 @@ router.get('/users/:channelId', protect, admin, async (req, res) => {
 router.post('/rooms/superadmin', protect, async (req, res) => {
     const { memberId } = req.body;
     try {
-        if (req.user.role !== 'superadmin') return res.status(403).json({ message: '최고관리자만 사용할 수 있습니다.' });
+        if (!req.user.isMaster) return res.status(403).json({ message: '최고관리자만 사용할 수 있습니다.' });
         if (!memberId) return res.status(400).json({ message: '대화할 사용자 ID가 필요합니다.' });
         if (String(memberId) === String(req.user.id)) return res.status(400).json({ message: '자기 자신과는 대화할 수 없습니다.' });
 
@@ -98,7 +72,7 @@ router.post('/rooms/superadmin', protect, async (req, res) => {
             await execute('UPDATE ChatRooms SET adminVisible=1, memberVisible=1, updatedAt=GETDATE() WHERE id=@id', { id: room.id });
         }
 
-        const populated = await populateRoom(room.id);
+        const populated = await populateRoom(room.id, null); // 슈퍼어드민 DM은 마스터 DB 유저
         const formatted = formatRoom(populated);
 
         if (wasCreatedNow) {
@@ -131,22 +105,29 @@ router.post('/rooms', protect, async (req, res) => {
         const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
 
+        const dbName = await getChannelDbName(channelId);
         let adminId, memberId;
-        if (req.user.role === 'admin') {
-            if (channel.ownerId !== req.user.id) return res.status(403).json({ message: '채널 관리자만 멤버에게 채팅을 시작할 수 있습니다.' });
+
+        if (req.user.role === 'admin' || req.user.isMaster) {
+            // 채널 관리자 or 슈퍼어드민: 특정 멤버에게 채팅 시작
             adminId = req.user.id;
             memberId = requestedMemberId;
         } else {
-            const membership = await queryOne('SELECT id FROM ChannelMembers WHERE channelId=@channelId AND userId=@userId AND status=\'approved\'', { channelId, userId: req.user.id });
-            if (!membership) return res.status(403).json({ message: '해당 채널의 승인된 멤버만 관리자에게 채팅할 수 있습니다.' });
-            adminId = channel.ownerId;
+            // 일반 멤버: 채널 DB에서 관리자 찾아 채팅 시작
+            if (req.user.isChatBlocked) return res.status(403).json({ message: '채팅이 차단된 계정입니다.' });
+            const channelAdminId = await getChannelAdminId(channelId);
+            if (!channelAdminId) return res.status(404).json({ message: '채널 관리자를 찾을 수 없습니다.' });
+            adminId = channelAdminId;
             memberId = req.user.id;
         }
 
-        let room = await queryOne('SELECT * FROM ChatRooms WHERE adminId=@adminId AND memberId=@memberId AND channelId=@channelId', { adminId, memberId, channelId });
+        let room = await queryOne(
+            'SELECT * FROM ChatRooms WHERE adminId=@adminId AND memberId=@memberId AND channelId=@channelId',
+            { adminId, memberId, channelId }
+        );
         if (room) {
             await execute('UPDATE ChatRooms SET adminVisible=1, memberVisible=1, updatedAt=GETDATE() WHERE id=@id', { id: room.id });
-            const populated = await populateRoom(room.id);
+            const populated = await populateRoom(room.id, dbName);
             return res.status(200).json(formatRoom(populated));
         }
 
@@ -154,7 +135,7 @@ router.post('/rooms', protect, async (req, res) => {
             'INSERT INTO ChatRooms (channelId, adminId, memberId) VALUES (@channelId, @adminId, @memberId)',
             { channelId, adminId, memberId }
         );
-        const populated = await populateRoom(roomId);
+        const populated = await populateRoom(roomId, dbName);
         res.status(201).json(formatRoom(populated));
     } catch (error) {
         console.error('채팅방 생성 오류:', error);
@@ -166,7 +147,10 @@ router.post('/rooms', protect, async (req, res) => {
 router.get('/rooms', protect, async (req, res) => {
     const { channelId } = req.query;
     try {
-        const isSuperAdmin = req.user.role === 'superadmin';
+        const dbName = channelId ? await getChannelDbName(channelId) : null;
+        const usersRef = dbName ? `[${dbName}].dbo.Users` : 'Users';
+
+        const isSuperAdmin = req.user.isMaster;
         const isAdmin = req.user.role === 'admin';
         const channelFilter = channelId ? 'AND r.channelId = @channelId' : '';
         const params = { userId: req.user.id };
@@ -194,8 +178,8 @@ router.get('/rooms', protect, async (req, res) => {
                 m.id as member_id, m.name as member_name, m.username as member_username, m.isOnline as member_isOnline, m.profileImage as member_profileImage, m.role as member_role, m.status as member_status,
                 c.name as channel_name, c.profileImage as channel_profileImage, c.cardColor as channel_cardColor
              FROM ChatRooms r
-             JOIN Users a ON r.adminId = a.id
-             JOIN Users m ON r.memberId = m.id
+             LEFT JOIN ${usersRef} a ON r.adminId = a.id
+             LEFT JOIN ${usersRef} m ON r.memberId = m.id
              JOIN Channels c ON r.channelId = c.id
              WHERE ${whereClause}
              ORDER BY r.lastMessageAt DESC`,
@@ -216,10 +200,10 @@ router.get('/rooms', protect, async (req, res) => {
 // PUT /api/chat/rooms/:id/read
 router.put('/rooms/:id/read', protect, async (req, res) => {
     try {
-        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const isAdmin = req.user.role === 'admin' || req.user.isMaster;
         const field = isAdmin ? 'unreadCountAdmin=0' : 'unreadCountMember=0';
         await execute(`UPDATE ChatRooms SET ${field}, updatedAt=GETDATE() WHERE id=@id`, { id: req.params.id });
-        const room = await populateRoom(req.params.id);
+        const room = await populateRoomById(req.params.id);
         res.json(formatRoom(room));
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -229,10 +213,10 @@ router.put('/rooms/:id/read', protect, async (req, res) => {
 // PUT /api/chat/rooms/:id/hide
 router.put('/rooms/:id/hide', protect, async (req, res) => {
     try {
-        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const isAdmin = req.user.role === 'admin' || req.user.isMaster;
         const field = isAdmin ? 'adminVisible=0' : 'memberVisible=0';
         await execute(`UPDATE ChatRooms SET ${field}, updatedAt=GETDATE() WHERE id=@id`, { id: req.params.id });
-        const room = await populateRoom(req.params.id);
+        const room = await populateRoomById(req.params.id);
         res.json(formatRoom(room));
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -242,14 +226,14 @@ router.put('/rooms/:id/hide', protect, async (req, res) => {
 // PUT /api/chat/rooms/:id/clear
 router.put('/rooms/:id/clear', protect, async (req, res) => {
     try {
-        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const isAdmin = req.user.role === 'admin' || req.user.isMaster;
         const now = new Date();
         const clearFields = isAdmin
             ? 'lastMessage=\'\', lastMessageAt=@now, clearedAtAdmin=@now, clearedAtMember=@now'
             : 'lastMessage=\'\', lastMessageAt=@now, clearedAtMember=@now';
         await execute(`UPDATE ChatRooms SET ${clearFields}, updatedAt=GETDATE() WHERE id=@id`, { now, id: req.params.id });
 
-        const room = await populateRoom(req.params.id);
+        const room = await populateRoomById(req.params.id);
         const formatted = formatRoom(room);
 
         const io = req.app.get('io');
@@ -268,7 +252,7 @@ router.get('/rooms/:id/messages', protect, async (req, res) => {
         const room = await queryOne('SELECT * FROM ChatRooms WHERE id = @id', { id: req.params.id });
         if (!room) return res.status(404).json({ message: '채팅방을 찾을 수 없습니다.' });
 
-        const isAdmin = req.user.role === 'admin' || req.user.role === 'superadmin';
+        const isAdmin = req.user.role === 'admin' || req.user.isMaster;
         const clearedAt = isAdmin ? room.clearedAtAdmin : room.clearedAtMember;
         const threshold = getChatThreshold();
         const effectiveThreshold = clearedAt && new Date(clearedAt) > threshold ? new Date(clearedAt) : threshold;

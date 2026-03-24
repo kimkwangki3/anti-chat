@@ -1,28 +1,10 @@
 const { queryOne, execute, insertAndGetId } = require('../db/mssql');
 const { writeChatLog, writeAuthLog } = require('../utils/logService');
 const { sendPushNotification, sendPushToChannelMembers } = require('../utils/pushService');
+const { populateRoomById, formatRoom: _formatRoom } = require('../utils/chatUtils');
 
-const populateRoom = async (roomId) => {
-    return queryOne(
-        `SELECT r.*,
-            a.id as admin_id, a.name as admin_name, a.username as admin_username, a.isOnline as admin_isOnline, a.profileImage as admin_profileImage, a.role as admin_role,
-            m.id as member_id, m.name as member_name, m.username as member_username, m.isOnline as member_isOnline, m.profileImage as member_profileImage, m.role as member_role, m.status as member_status,
-            c.name as channel_name, c.profileImage as channel_profileImage, c.cardColor as channel_cardColor
-         FROM ChatRooms r
-         JOIN Users a ON r.adminId = a.id
-         JOIN Users m ON r.memberId = m.id
-         JOIN Channels c ON r.channelId = c.id
-         WHERE r.id = @id`,
-        { id: roomId }
-    );
-};
-
-const formatRoom = (r) => ({
-    ...r,
-    adminId: { _id: r.admin_id, id: r.admin_id, name: r.admin_name, username: r.admin_username, isOnline: r.admin_isOnline, profileImage: r.admin_profileImage, role: r.admin_role },
-    memberId: { _id: r.member_id, id: r.member_id, name: r.member_name, username: r.member_username, isOnline: r.member_isOnline, profileImage: r.member_profileImage, role: r.member_role, status: r.member_status },
-    channelId: { _id: r.channelId, id: r.channelId, name: r.channel_name, profileImage: r.channel_profileImage, cardColor: r.channel_cardColor }
-});
+const populateRoom = populateRoomById;
+const formatRoom = _formatRoom;
 
 const socketHandler = (io) => {
     io.on('connection', (socket) => {
