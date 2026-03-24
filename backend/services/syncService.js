@@ -27,18 +27,18 @@ const syncChannel = async (channel) => {
         const masterPool = await getPool();
 
         // 마지막 동기화 이후 변경된 레코드만 (첫 실행이면 전체)
-        let innerWhere = '';
+        // USER_GRADE = 2 인 유저만 동기화
+        let innerWhere = 'WHERE USER_GRADE = 2';
         if (lastSyncAt) {
             const d = new Date(lastSyncAt);
             const dateStr = d.getFullYear().toString()
                 + String(d.getMonth() + 1).padStart(2, '0')
                 + String(d.getDate()).padStart(2, '0');
-            // UPDATE_DT 또는 REG_DT 가 마지막 동기화 날짜 이후인 것
-            innerWhere = ` WHERE REG_DT >= ''${dateStr}'' OR (UPDATE_DT IS NOT NULL AND UPDATE_DT >= ''${dateStr}'')`;
+            innerWhere += ` AND (REG_DT >= ''${dateStr}'' OR (UPDATE_DT IS NOT NULL AND UPDATE_DT >= ''${dateStr}''))`;
         }
 
         const cols = 'USER_ID, USER_NM, USER_NICK_NM, USER_PWD, USER_HP, USER_TEL, BIRTH_DT, USER_CREATE_IP, RECOMM_NM, USER_BIGO, USER_BLACK, USER_GRADE, UPDATE_DT, REG_DT';
-        const innerSql = `SELECT ${cols} FROM ${linkedDb}.dbo.USER_MST${innerWhere}`;
+        const innerSql = `SELECT ${cols} FROM ${linkedDb}.dbo.USER_MST ${innerWhere}`;
         const outerSql = `SELECT * FROM OPENQUERY([${linkedServer}], '${innerSql}')`;
 
         const result = await masterPool.request().query(outerSql);
