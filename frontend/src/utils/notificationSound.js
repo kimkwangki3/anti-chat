@@ -1,5 +1,6 @@
 let audioContext = null;
 let unlockInstalled = false;
+let audioUnlocked = false;
 
 const getAudioContext = () => {
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -14,6 +15,8 @@ const getAudioContext = () => {
     return audioContext;
 };
 
+const getAudioCtor = () => window.AudioContext || window.webkitAudioContext || null;
+
 const resumeAudioContext = async () => {
     const ctx = getAudioContext();
     if (!ctx) {
@@ -23,6 +26,9 @@ const resumeAudioContext = async () => {
     if (ctx.state === 'suspended') {
         try {
             await ctx.resume();
+            if (ctx.state === 'running') {
+                audioUnlocked = true;
+            }
         } catch (_) {
             return ctx;
         }
@@ -37,8 +43,24 @@ export const installAudioUnlock = () => {
     }
 
     unlockInstalled = true;
-    const unlock = async () => {
-        await resumeAudioContext();
+    const unlock = () => {
+        const ctx = getAudioContext();
+        if (!ctx) {
+            return;
+        }
+
+        if (ctx.state === 'running') {
+            audioUnlocked = true;
+            return;
+        }
+
+        ctx.resume()
+            .then(() => {
+                if (ctx.state === 'running') {
+                    audioUnlocked = true;
+                }
+            })
+            .catch(() => {});
     };
 
     window.addEventListener('pointerdown', unlock, { passive: true });
@@ -63,15 +85,7 @@ const scheduleTone = (ctx, { start, duration, frequency, type, gainValue }) => {
     oscillator.stop(start + duration + 0.02);
 };
 
-export const playNotificationTone = async (soundType = 'peach', volume = 0.5) => {
-    const ctx = await resumeAudioContext();
-    if (!ctx) {
-        return false;
-    }
-
-    const baseGain = Math.max(0.02, Math.min(0.2, Number(volume || 0.5) * 0.25));
-    const now = ctx.currentTime + 0.01;
-
+const getPattern = (soundType, baseGain, now) => {
     const patterns = {
         peach: [
             { start: now, duration: 0.09, frequency: 740, type: 'sine', gainValue: baseGain },
@@ -88,7 +102,53 @@ export const playNotificationTone = async (soundType = 'peach', volume = 0.5) =>
         ]
     };
 
-    const pattern = patterns[soundType] || patterns.peach;
+    return patterns[soundType] || patterns.peach;
+};
+
+const playOnContext = (ctx, soundType, volume) => {
+    const baseGain = Math.max(0.02, Math.min(0.2, Number(volume || 0.5) * 0.25));
+    const now = ctx.currentTime + 0.01;
+    const pattern = getPattern(soundType, baseGain, now);
     pattern.forEach((tone) => scheduleTone(ctx, tone));
     return true;
+};
+
+const playWithFreshContext = (soundType, volume) => {
+    const AudioCtx = getAudioCtor();
+    if (!AudioCtx) {
+        return false;
+    }
+
+    const freshContext = new AudioCtx();
+    playOnContext(freshContext, soundType, volume);
+    audioUnlocked = true;
+
+    window.setTimeout(() => {
+        freshContext.close().catch(() => {});
+    }, 1000);
+
+    return true;
+};
+
+export const playNotificationTone = async (soundType = 'peach', volume = 0.5, options = {}) => {
+    const { forceFreshContext = false } = options;
+
+    if (forceFreshContext) {
+        return playWithFreshContext(soundType, volume);
+    }
+
+    if (!audioUnlocked) {
+        return false;
+    }
+
+    const ctx = await resumeAudioContext();
+    if (!ctx) {
+        return false;
+    }
+
+    if (ctx.state !== 'running') {
+        return false;
+    }
+
+    return playOnContext(ctx, soundType, volume);
 };

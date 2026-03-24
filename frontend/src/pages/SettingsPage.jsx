@@ -145,7 +145,7 @@ const SettingsPage = () => {
     };
 
     const playPreview = (type) => {
-        playNotificationTone(type || soundType, volume).catch((e) => console.log('Preview blocked:', e));
+        playNotificationTone(type || soundType, volume, { forceFreshContext: true }).catch((e) => console.log('Preview blocked:', e));
     };
 
     const soundOptions = [
