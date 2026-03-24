@@ -1,42 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const Notice = require('../models/Notice');
+const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
 const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
-const path = require('path');
-
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
 
-// Multer 설정 (메모리 스토리지 사용)
 const storage = multer.memoryStorage();
-const upload = multer({
-    storage,
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB 제한
-});
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-// @route   POST /api/notices
-// @desc    공지사항 생성 (관리자 전용)
-// @access  Private/Admin
+// POST /api/notices
 router.post('/', protect, admin, async (req, res) => {
     const { title, content, channelId, imageUrl } = req.body;
     try {
-        if (!channelId) {
-            return res.status(400).json({ message: '채널 ID가 필요합니다.' });
-        }
-        const notice = await Notice.create({
-            title,
-            content,
-            channelId,
-            imageUrl,
-            authorId: req.user._id
-        });
+        if (!channelId) return res.status(400).json({ message: '채널 ID가 필요합니다.' });
+
+        const id = await insertAndGetId(
+            'INSERT INTO Notices (channelId, authorId, title, content, imageUrl) VALUES (@channelId, @authorId, @title, @content, @imageUrl)',
+            { channelId, authorId: req.user.id, title, content, imageUrl: imageUrl || null }
+        );
+
+        const notice = await queryOne('SELECT * FROM Notices WHERE id = @id', { id });
 
         if (req.io) {
-            req.io.to(`channel_${channelId}`).emit('notice_received', {
-                ...notice.toObject(),
-                authorName: req.user.name
-            });
+            req.io.to(`channel_${channelId}`).emit('notice_received', { ...notice, authorName: req.user.name });
         }
 
         res.status(201).json(notice);
@@ -45,71 +32,47 @@ router.post('/', protect, admin, async (req, res) => {
     }
 });
 
-// @route   POST /api/notices/upload
-// @desc    Upload an image for notice (Cloudinary 이용)
-// @access  Private
+// POST /api/notices/upload
 router.post('/upload', protect, upload.single('file'), (req, res) => {
     try {
-        console.log('[Notice Upload] Request received. Body:', req.body);
-        console.log('[Notice Upload] File received:', req.file ? req.file.originalname : 'NONE');
-        if (!req.file) {
-            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
-        }
-
-        // Cloudinary 업로드 스트림 생성
+        if (!req.file) return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
         const uploadStream = cloudinary.uploader.upload_stream(
-            {
-                folder: 'notices',
-                resource_type: 'auto'
-            },
+            { folder: 'notices', resource_type: 'auto' },
             (error, result) => {
-                if (error) {
-                    console.error('Cloudinary 업로드 에러:', error);
-                    return res.status(500).json({
-                        message: 'Cloudinary 업로드 중 오류가 발생했습니다.',
-                        error: error.message
-                    });
-                }
-
-                // 업로드 성공 시 안전한 URL 반환
+                if (error) return res.status(500).json({ message: 'Cloudinary 업로드 중 오류가 발생했습니다.', error: error.message });
                 res.json({ imageUrl: result.secure_url });
             }
         );
-
-        // 버퍼를 스트림으로 변환하여 업로드
         streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
-
     } catch (error) {
-        console.error('파일 업로드 에러:', error);
         res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.' });
     }
 });
 
-// @route   GET /api/notices/channel/:channelId
-// @desc    채널별 공지사항 조회
-// @access  Private
+// GET /api/notices/channel/:channelId
 router.get('/channel/:channelId', protect, async (req, res) => {
     try {
-        const notices = await Notice.find({ channelId: req.params.channelId })
-            .populate('authorId', 'name')
-            .sort({ createdAt: -1 });
-        res.json(notices);
+        const notices = await query(
+            `SELECT n.*, u.name as authorName FROM Notices n
+             JOIN Users u ON n.authorId = u.id
+             WHERE n.channelId = @channelId ORDER BY n.createdAt DESC`,
+            { channelId: req.params.channelId }
+        );
+        res.json(notices.map(n => ({ ...n, authorId: { _id: n.authorId, id: n.authorId, name: n.authorName } })));
     } catch (error) {
         res.status(500).json({ message: '공지사항 조회 오류' });
     }
 });
 
-// @route   PATCH /api/notices/:id/read
-// @desc    공지사항 읽음 표시
-// @access  Private
+// PATCH /api/notices/:id/read
 router.patch('/:id/read', protect, async (req, res) => {
     try {
-        const notice = await Notice.findById(req.params.id);
+        const notice = await queryOne('SELECT * FROM Notices WHERE id = @id', { id: req.params.id });
         if (!notice) return res.status(404).json({ message: '공지사항을 찾을 수 없습니다.' });
 
-        if (!notice.readBy.includes(req.user._id)) {
-            notice.readBy.push(req.user._id);
-            await notice.save();
+        const already = await queryOne('SELECT id FROM NoticeReadBy WHERE noticeId = @noticeId AND userId = @userId', { noticeId: notice.id, userId: req.user.id });
+        if (!already) {
+            await execute('INSERT INTO NoticeReadBy (noticeId, userId) VALUES (@noticeId, @userId)', { noticeId: notice.id, userId: req.user.id });
         }
         res.json(notice);
     } catch (error) {
@@ -117,39 +80,33 @@ router.patch('/:id/read', protect, async (req, res) => {
     }
 });
 
-// @route   PATCH /api/notices/channel/:channelId/read-all
-// @desc    채널 내 모든 공지사항 읽음 처리
-// @access  Private
+// PATCH /api/notices/channel/:channelId/read-all
 router.patch('/channel/:channelId/read-all', protect, async (req, res) => {
     try {
-        const userId = req.user._id;
-        const channelId = req.params.channelId;
-
-        await Notice.updateMany(
-            { channelId, readBy: { $ne: userId } },
-            { $addToSet: { readBy: userId } }
+        await execute(
+            `INSERT INTO NoticeReadBy (noticeId, userId)
+             SELECT n.id, @userId FROM Notices n
+             WHERE n.channelId = @channelId
+             AND NOT EXISTS (SELECT 1 FROM NoticeReadBy WHERE noticeId = n.id AND userId = @userId)`,
+            { channelId: req.params.channelId, userId: req.user.id }
         );
-
         res.json({ message: '모든 공지사항을 읽음 처리했습니다.' });
     } catch (error) {
         res.status(500).json({ message: '읽음 처리 오류' });
     }
 });
 
-// @route   DELETE /api/notices/:id
-// @desc    공지사항 삭제 (관리자 전용)
-// @access  Private/Admin
+// DELETE /api/notices/:id
 router.delete('/:id', protect, admin, async (req, res) => {
     try {
-        const notice = await Notice.findById(req.params.id).populate('channelId');
+        const notice = await queryOne(
+            `SELECT n.*, c.ownerId FROM Notices n JOIN Channels c ON n.channelId = c.id WHERE n.id = @id`,
+            { id: req.params.id }
+        );
         if (!notice) return res.status(404).json({ message: '공지사항을 찾을 수 없습니다.' });
+        if (notice.ownerId !== req.user.id) return res.status(401).json({ message: '권한이 없습니다.' });
 
-        // 채널 소유자이거나 관리자인지 확인
-        if (notice.channelId.ownerId.toString() !== req.user._id.toString()) {
-            return res.status(401).json({ message: '권한이 없습니다.' });
-        }
-
-        await notice.deleteOne();
+        await execute('DELETE FROM Notices WHERE id = @id', { id: notice.id });
         res.json({ message: '공지사항이 삭제되었습니다.' });
     } catch (error) {
         res.status(500).json({ message: '공지사항 삭제 오류' });

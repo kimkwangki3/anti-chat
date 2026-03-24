@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
-const Channel = require('../models/Channel');
-const ChannelMember = require('../models/ChannelMember');
+const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
 const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const fs = require('fs');
@@ -11,8 +9,7 @@ const crypto = require('crypto');
 
 const slugifyChannelName = (value) => {
     return String(value || '')
-        .trim()
-        .toLowerCase()
+        .trim().toLowerCase()
         .replace(/[^a-z0-9가-힣]+/g, '-')
         .replace(/^-+|-+$/g, '')
         .replace(/-{2,}/g, '-')
@@ -23,217 +20,159 @@ const buildUniqueChannelSlug = async (name, excludeChannelId = null) => {
     const baseSlug = slugifyChannelName(name) || `channel-${Date.now()}`;
     let candidate = baseSlug;
     let suffix = 1;
-
     while (true) {
-        const existingChannel = await Channel.findOne({
-            slug: candidate,
-            ...(excludeChannelId ? { _id: { $ne: excludeChannelId } } : {})
-        }).select('_id');
-
-        if (!existingChannel) {
-            return candidate;
-        }
-
-        suffix += 1;
+        const existing = excludeChannelId
+            ? await queryOne('SELECT id FROM Channels WHERE slug = @slug AND id != @excludeId', { slug: candidate, excludeId: excludeChannelId })
+            : await queryOne('SELECT id FROM Channels WHERE slug = @slug', { slug: candidate });
+        if (!existing) return candidate;
+        suffix++;
         candidate = `${baseSlug}-${suffix}`;
     }
 };
 
-const ensureChannelSlug = async (channel) => {
-    if (!channel || channel.slug) {
-        return channel;
-    }
-
-    channel.slug = await buildUniqueChannelSlug(channel.name, channel._id);
-    await channel.save();
-    return channel;
-};
-
-// Multer 설정 (메모리 스토리지)
 const storage = multer.memoryStorage();
-const upload = multer({
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 } // 5MB 제한
-});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 const getChannelImageExtension = (file) => {
-    const extByMime = {
-        'image/jpeg': '.jpg',
-        'image/png': '.png',
-        'image/webp': '.webp',
-        'image/gif': '.gif'
-    };
+    const extByMime = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
     return extByMime[file.mimetype] || path.extname(file.originalname || '').toLowerCase() || '.jpg';
 };
 
 const saveChannelImageLocally = async (req, file) => {
     const uploadDir = path.join(__dirname, '..', 'uploads', 'channels');
     await fs.promises.mkdir(uploadDir, { recursive: true });
-
     const ext = getChannelImageExtension(file);
-    const fileName = `channel_${req.user._id}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
-    const filePath = path.join(uploadDir, fileName);
-    await fs.promises.writeFile(filePath, file.buffer);
-
+    const fileName = `channel_${req.user.id}_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+    await fs.promises.writeFile(path.join(uploadDir, fileName), file.buffer);
     const host = req.get('host') || '127.0.0.1:5000';
     const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
     return `${protocol}://${host}/uploads/channels/${fileName}`;
 };
 
-// @route   POST /api/channels
-// @desc    채널 생성 (관리자 전용)
-// @access  Private/Admin
+// POST /api/channels
 router.post('/', protect, admin, async (req, res) => {
     const { name, description, slug } = req.body;
-
     try {
-        const ownedChannelsCount = await Channel.countDocuments({ ownerId: req.user._id });
-        if (ownedChannelsCount >= 4) {
-            return res.status(400).json({ message: '관리자는 최대 4개의 채널까지 개설할 수 있습니다.' });
-        }
+        const countRow = await queryOne('SELECT COUNT(*) as cnt FROM Channels WHERE ownerId = @ownerId', { ownerId: req.user.id });
+        if (countRow.cnt >= 4) return res.status(400).json({ message: '관리자는 최대 4개의 채널까지 개설할 수 있습니다.' });
 
-        const channelExists = await Channel.findOne({ name });
-        if (channelExists) {
-            return res.status(400).json({ message: '이미 존재하는 채널 이름입니다.' });
-        }
+        const existing = await queryOne('SELECT id FROM Channels WHERE name = @name', { name });
+        if (existing) return res.status(400).json({ message: '이미 존재하는 채널 이름입니다.' });
 
-        const channel = await Channel.create({
-            ownerId: req.user._id,
-            name,
-            description,
-            slug: await buildUniqueChannelSlug(slug || name)
-        });
+        const channelSlug = await buildUniqueChannelSlug(slug || name);
+        const channelId = await insertAndGetId(
+            'INSERT INTO Channels (ownerId, name, description, slug) VALUES (@ownerId, @name, @description, @slug)',
+            { ownerId: req.user.id, name, description, slug: channelSlug }
+        );
 
-        // 생성한 관리자는 자동으로 approved 멤버로 등록
-        await ChannelMember.create({
-            channelId: channel._id,
-            userId: req.user._id,
-            status: 'approved'
-        });
+        await execute(
+            'INSERT INTO ChannelMembers (channelId, userId, status) VALUES (@channelId, @userId, \'approved\')',
+            { channelId, userId: req.user.id }
+        );
 
-        res.status(201).json(channel);
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
+        return res.status(201).json(channel);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// @route   GET /api/channels/search
-// @desc    채널 검색
-// @access  Private
+// GET /api/channels/search
 router.get('/search', protect, async (req, res) => {
     const { q } = req.query;
     try {
-        const query = {
-            name: { $regex: q || '', $options: 'i' },
-            status: 'active' // 활성화된 채널만 검색 허용
-        };
-        const channels = await Channel.find(query).populate('ownerId', 'name username');
-        await Promise.all(channels.map((channel) => ensureChannelSlug(channel)));
-        res.json(channels);
+        const channels = await query(
+            `SELECT c.*, u.name as ownerName, u.username as ownerUsername
+             FROM Channels c JOIN Users u ON c.ownerId = u.id
+             WHERE c.name LIKE @q AND c.status = 'active'`,
+            { q: `%${q || ''}%` }
+        );
+        res.json(channels.map(c => ({
+            ...c,
+            ownerId: { _id: c.ownerId, id: c.ownerId, name: c.ownerName, username: c.ownerUsername }
+        })));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// @route   GET /api/channels/my-channels
-// @desc    내가 가입했거나 관리하는 채널 목록
-// @access  Private
+// GET /api/channels/my-channels
 router.get('/my-channels', protect, async (req, res) => {
     try {
-        const memberships = await ChannelMember.find({ userId: req.user._id })
-            .populate({
-                path: 'channelId',
-                match: { status: 'active' }, // 활성화된 채널만 매칭
-                populate: { path: 'ownerId', select: 'name username isOnline' }
-            });
-
-        // channelId가 null인 것(비활성화된 채널)과 membership 상태가 'approved'가 아닌 것 제외
-        const activeMemberships = memberships.filter(m => m.channelId !== null && m.status === 'approved');
-        await Promise.all(activeMemberships.map((membership) => ensureChannelSlug(membership.channelId)));
-        res.json(activeMemberships);
+        const memberships = await query(
+            `SELECT cm.*, c.id as c_id, c.name as c_name, c.slug, c.description, c.profileImage,
+                    c.status as c_status, c.cardColor, c.ownerId,
+                    u.id as owner_id, u.name as owner_name, u.username as owner_username, u.isOnline as owner_isOnline
+             FROM ChannelMembers cm
+             JOIN Channels c ON cm.channelId = c.id
+             JOIN Users u ON c.ownerId = u.id
+             WHERE cm.userId = @userId AND cm.status = 'approved' AND c.status = 'active'`,
+            { userId: req.user.id }
+        );
+        res.json(memberships.map(m => ({
+            _id: m.id, id: m.id,
+            channelId: {
+                _id: m.c_id, id: m.c_id, name: m.c_name, slug: m.slug,
+                description: m.description, profileImage: m.profileImage,
+                status: m.c_status, cardColor: m.cardColor, ownerId: m.ownerId,
+                owner: { _id: m.owner_id, name: m.owner_name, username: m.owner_username, isOnline: m.owner_isOnline }
+            },
+            status: m.status, isChatBlocked: m.isChatBlocked
+        })));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// @route   GET /api/channels/unread-counts
-// @desc    모든 채널의 읽지 않은 소식(공지, 게시글, 채팅, 투표) 개수 조회
-// @access  Private
+// GET /api/channels/unread-counts
 router.get('/unread-counts', protect, async (req, res) => {
     try {
-        console.log('[Unread API] Starting query for user:', req.user._id);
-        const userId = req.user._id;
+        const userId = req.user.id;
+        console.log('[Unread API] Starting query for user:', userId);
 
-        console.log('[Unread API] Fetching memberships...');
-        const memberships = await ChannelMember.find({ userId });
+        const memberships = await query(
+            `SELECT cm.channelId FROM ChannelMembers cm
+             JOIN Channels c ON cm.channelId = c.id
+             WHERE cm.userId = @userId AND cm.status = 'approved' AND c.status = 'active'`,
+            { userId }
+        );
         console.log('[Unread API] Fetched memberships:', memberships.length);
 
-        const channelIds = memberships
-            .filter(m => {
-                const hasChannel = m.status === 'approved' && m.channelId;
-                return hasChannel;
-            })
-            .map(m => {
-                if (m.channelId._id) return m.channelId._id.toString();
-                return m.channelId.toString();
-            });
-
-        console.log(`[Unread API] User ${userId} active channels: ${channelIds.length}`);
-
         const counts = {};
+        const channelIds = memberships.map(m => m.channelId);
+        console.log(`[Unread API] User ${userId} active channels: ${channelIds.length}`);
 
         for (const channelId of channelIds) {
             try {
-                const validChannelId = new mongoose.Types.ObjectId(channelId);
-                const validUserId = new mongoose.Types.ObjectId(userId);
+                const noticeRow = await queryOne(
+                    `SELECT COUNT(*) as cnt FROM Notices n WHERE n.channelId = @channelId
+                     AND NOT EXISTS (SELECT 1 FROM NoticeReadBy WHERE noticeId = n.id AND userId = @userId)`,
+                    { channelId, userId }
+                );
+                const postRow = await queryOne(
+                    `SELECT COUNT(*) as cnt FROM Posts p WHERE p.channelId = @channelId
+                     AND NOT EXISTS (SELECT 1 FROM PostReadBy WHERE postId = p.id AND userId = @userId)`,
+                    { channelId, userId }
+                );
+                const pollRow = await queryOne(
+                    `SELECT COUNT(*) as cnt FROM Polls p WHERE p.channelId = @channelId
+                     AND p.status = 'active' AND p.expiresAt > GETDATE()
+                     AND NOT EXISTS (SELECT 1 FROM PollReadBy WHERE pollId = p.id AND userId = @userId)`,
+                    { channelId, userId }
+                );
+                const chatRow = await queryOne(
+                    `SELECT ISNULL(SUM(CASE WHEN adminId = @userId THEN unreadCountAdmin ELSE unreadCountMember END), 0) as cnt
+                     FROM ChatRooms WHERE channelId = @channelId AND (adminId = @userId OR memberId = @userId)`,
+                    { channelId, userId }
+                );
 
-                // 1. 공지사항 안 읽은 개수
-                const noticeCount = await Notice.countDocuments({
-                    channelId: validChannelId,
-                    readBy: { $ne: validUserId }
-                });
-
-                // 2. 게시글 안 읽은 개수
-                const postCount = await Post.countDocuments({
-                    channelId: validChannelId,
-                    readBy: { $ne: validUserId }
-                });
-
-                // 3. 투표 안 읽은 개수
-                const pollCount = await Poll.countDocuments({
-                    channelId: validChannelId,
-                    status: 'active',
-                    expiresAt: { $gt: new Date() },
-                    readBy: { $ne: validUserId }
-                });
-
-                // 4. 채팅 안 읽은 개수
-                let chatCount = 0;
-                const chatRooms = await ChatRoom.find({
-                    channelId: validChannelId,
-                    $or: [{ adminId: validUserId }, { memberId: validUserId }]
-                });
-
-                chatRooms.forEach(room => {
-                    const isRoomAdmin = room.adminId?.toString() === userId.toString();
-                    if (isRoomAdmin) {
-                        chatCount += (room.unreadCountAdmin || 0);
-                    } else {
-                        chatCount += (room.unreadCountMember || 0);
-                    }
-                });
-
-                counts[channelId.toString()] = {
-                    notice: noticeCount,
-                    post: postCount,
-                    poll: pollCount,
-                    chat: chatCount
+                counts[String(channelId)] = {
+                    notice: noticeRow.cnt, post: postRow.cnt,
+                    poll: pollRow.cnt, chat: chatRow.cnt
                 };
-                console.log(`[Unread API] Channel ${channelId}: notice=${noticeCount}, post=${postCount}, poll=${pollCount}, chat=${chatCount}`);
+                console.log(`[Unread API] Channel ${channelId}: notice=${noticeRow.cnt}, post=${postRow.cnt}, poll=${pollRow.cnt}, chat=${chatRow.cnt}`);
             } catch (err) {
                 console.error(`[Unread API] Error processing channel ${channelId}:`, err.message);
-                // 해당 채널 계산을 건너뛰고 나머지 채널 계속 진행
-                continue;
             }
         }
 
@@ -244,85 +183,74 @@ router.get('/unread-counts', protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/channels/slug/:slug
-// @desc    Find channel by slug
-// @access  Private
+// GET /api/channels/slug/:slug
 router.get('/slug/:slug', protect, async (req, res) => {
     try {
-        const channel = await Channel.findOne({ slug: req.params.slug }).populate('ownerId', 'name username');
+        const channel = await queryOne(
+            `SELECT c.*, u.name as ownerName, u.username as ownerUsername
+             FROM Channels c JOIN Users u ON c.ownerId = u.id WHERE c.slug = @slug`,
+            { slug: req.params.slug }
+        );
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
-
-        if (channel.status === 'suspended' && req.user.role !== 'superadmin' && channel.ownerId._id.toString() !== req.user._id.toString()) {
+        if (channel.status === 'suspended' && req.user.role !== 'superadmin' && channel.ownerId !== req.user.id) {
             return res.status(403).json({ message: '이 채널은 현재 정지된 상태입니다.' });
         }
-
-        res.json(await ensureChannelSlug(channel));
+        res.json({ ...channel, ownerId: { _id: channel.ownerId, id: channel.ownerId, name: channel.ownerName, username: channel.ownerUsername } });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-
-// @route   GET /api/channels/:id
-// @desc    특정 채널 상세 정보 조회
-// @access  Private
+// GET /api/channels/:id
 router.get('/:id', protect, async (req, res) => {
     try {
-        const channel = await Channel.findById(req.params.id).populate('ownerId', 'name username');
+        const channel = await queryOne(
+            `SELECT c.*, u.name as ownerName, u.username as ownerUsername
+             FROM Channels c JOIN Users u ON c.ownerId = u.id WHERE c.id = @id`,
+            { id: req.params.id }
+        );
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
-
-        // 정지된 채널은 최고관리자만 접근 가능하도록 제한 (또는 소유자)
-        if (channel.status === 'suspended' && req.user.role !== 'superadmin' && channel.ownerId._id.toString() !== req.user._id.toString()) {
+        if (channel.status === 'suspended' && req.user.role !== 'superadmin' && channel.ownerId !== req.user.id) {
             return res.status(403).json({ message: '이 채널은 현재 정지된 상태입니다.' });
         }
-
-        res.json(await ensureChannelSlug(channel));
+        res.json({ ...channel, ownerId: { _id: channel.ownerId, id: channel.ownerId, name: channel.ownerName, username: channel.ownerUsername } });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// @route   PUT /api/channels/:id
-// @desc    채널 정보 수정 (소유자 전용)
-// @access  Private
+// PUT /api/channels/:id
 router.put('/:id', protect, async (req, res) => {
     const { name, description, profileImage, cardColor, slug } = req.body;
-
     try {
-        const channel = await Channel.findById(req.params.id);
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: req.params.id });
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        if (channel.ownerId !== req.user.id) return res.status(401).json({ message: '채널 정보를 수정할 권한이 없습니다.' });
 
-        // 소유자 확인
-        if (channel.ownerId.toString() !== req.user._id.toString()) {
-            return res.status(401).json({ message: '채널 정보를 수정할 권한이 없습니다.' });
-        }
-
-        channel.name = name || channel.name;
-        channel.description = description || channel.description;
-        channel.profileImage = profileImage !== undefined ? profileImage : channel.profileImage;
-        channel.cardColor = cardColor || channel.cardColor;
-        channel.slug = await buildUniqueChannelSlug(slug || name || channel.name, channel._id);
-
-        const updatedChannel = await channel.save();
-        res.json(updatedChannel);
+        const newSlug = await buildUniqueChannelSlug(slug || name || channel.name, channel.id);
+        await execute(
+            `UPDATE Channels SET name=@name, description=@description, profileImage=@profileImage,
+             cardColor=@cardColor, slug=@slug, updatedAt=GETDATE() WHERE id=@id`,
+            {
+                name: name || channel.name,
+                description: description || channel.description,
+                profileImage: profileImage !== undefined ? profileImage : channel.profileImage,
+                cardColor: cardColor || channel.cardColor,
+                slug: newSlug,
+                id: channel.id
+            }
+        );
+        const updated = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channel.id });
+        res.json(updated);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// @route   POST /api/channels/upload
-// @desc    채널 아이콘 업로드 (Cloudinary)
-// @access  Private
+// POST /api/channels/upload
 router.post('/upload', protect, upload.single('file'), async (req, res) => {
     try {
-        console.log('[Channel Upload] Request received.');
-        if (!req.file) {
-            console.warn('[Channel Upload] No file received in request.');
-            return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
-        }
-        console.log('[Channel Upload] File received:', req.file.originalname, 'Size:', req.file.size);
-
-        // Channel icon uploads are served from local storage to avoid external upload dependency failures.
+        if (!req.file) return res.status(400).json({ message: '파일이 업로드되지 않았습니다.' });
         const localUrl = await saveChannelImageLocally(req, req.file);
         return res.json({ imageUrl: localUrl });
     } catch (error) {
@@ -330,10 +258,5 @@ router.post('/upload', protect, upload.single('file'), async (req, res) => {
         res.status(500).json({ message: '파일 업로드 중 오류가 발생했습니다.', detail: error.message });
     }
 });
-
-const Notice = require('../models/Notice');
-const Post = require('../models/Post');
-const ChatRoom = require('../models/ChatRoom');
-const Poll = require('../models/Poll');
 
 module.exports = router;

@@ -1,59 +1,51 @@
 const express = require('express');
 const router = express.Router();
-const ChannelMember = require('../models/ChannelMember');
-const Channel = require('../models/Channel');
+const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { sendPushNotification } = require('../utils/pushService');
 
-// @route   POST /api/channel-members/join
-// @desc    채널 가입 신청
-// @access  Private
+// POST /api/channel-members/join
 router.post('/join', protect, async (req, res) => {
     const { channelId } = req.body;
-
     try {
-        const existing = await ChannelMember.findOne({ channelId, userId: req.user._id });
+        const existing = await queryOne(
+            'SELECT * FROM ChannelMembers WHERE channelId = @channelId AND userId = @userId',
+            { channelId, userId: req.user.id }
+        );
+
+        let member;
         if (existing) {
             if (existing.status === 'withdrawn') {
-                const hoursSinceWithdrawal = (Date.now() - new Date(existing.updatedAt).getTime()) / (1000 * 60 * 60);
-                if (hoursSinceWithdrawal < 48) {
+                const hoursElapsed = (Date.now() - new Date(existing.updatedAt).getTime()) / (1000 * 60 * 60);
+                if (hoursElapsed < 48) {
                     return res.status(403).json({ message: '채널 탈퇴 후 2일(48시간) 내에는 재가입할 수 없습니다.' });
                 }
-                // Update existing record
-                existing.status = 'pending';
-                await existing.save();
-
-                member = existing;
+                await execute(
+                    'UPDATE ChannelMembers SET status=\'pending\', updatedAt=GETDATE() WHERE id=@id',
+                    { id: existing.id }
+                );
+                member = { ...existing, status: 'pending' };
             } else {
                 return res.status(400).json({ message: '이미 가입 신청하셨거나 멤버입니다.' });
             }
         } else {
-            member = await ChannelMember.create({
-                channelId,
-                userId: req.user._id,
-                status: 'pending'
-            });
+            const newId = await insertAndGetId(
+                'INSERT INTO ChannelMembers (channelId, userId, status) VALUES (@channelId, @userId, \'pending\')',
+                { channelId, userId: req.user.id }
+            );
+            member = { id: newId, _id: newId, channelId, userId: req.user.id, status: 'pending' };
         }
 
-
-
-        // 채널 관리자에게 실시간 알림 emit
-        const channel = await Channel.findById(channelId);
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
         if (channel?.ownerId) {
-            req.io.to(channel.ownerId.toString()).emit('new_member_request', {
-                channelId,
-                channelName: channel.name,
-                userId: req.user._id,
-                userName: req.user.name,
-                memberId: member._id
+            req.io.to(String(channel.ownerId)).emit('new_member_request', {
+                channelId, channelName: channel.name,
+                userId: req.user.id, userName: req.user.name, memberId: member.id
             });
-
-            // 관리자에게 웹 푸시 발송
             await sendPushNotification(channel.ownerId, {
                 title: '👥 신규 가입 신청',
                 body: `${channel.name} 채널에 ${req.user.name}님이 가입을 신청했습니다.`,
-                url: `/admin/members?channelId=${channelId}`,
-                tag: 'member'
+                url: `/admin/members?channelId=${channelId}`, tag: 'member'
             });
         }
 
@@ -63,60 +55,48 @@ router.post('/join', protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/channel-members/role/:channelId
-// @desc    해당 채널에서의 유저 역할 조회
-// @access  Private
+// GET /api/channel-members/role/:channelId
 router.get('/role/:channelId', protect, async (req, res) => {
     try {
-        const channel = await Channel.findById(req.params.channelId);
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: req.params.channelId });
         if (!channel) return res.status(404).json({ message: '채널 없음' });
 
-        if (channel.ownerId.toString() === req.user._id.toString()) {
+        if (channel.ownerId === req.user.id) {
             return res.json({ role: 'admin', isOwner: true });
         }
 
-        const member = await ChannelMember.findOne({
-            channelId: req.params.channelId,
-            userId: req.user._id
-        });
-
-        res.json({
-            role: member ? member.role : 'none',
-            status: member ? member.status : 'none'
-        });
+        const member = await queryOne(
+            'SELECT * FROM ChannelMembers WHERE channelId = @channelId AND userId = @userId',
+            { channelId: req.params.channelId, userId: req.user.id }
+        );
+        res.json({ role: member ? member.role : 'none', status: member ? member.status : 'none' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// @route   POST /api/channel-members/leave
-// @desc    채널 탈퇴
-// @access  Private
+// POST /api/channel-members/leave
 router.post('/leave', protect, async (req, res) => {
     const { channelId } = req.body;
-
     try {
-        const channel = await Channel.findById(channelId);
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
         if (!channel) return res.status(404).json({ message: '채널 정보를 찾을 수 없습니다.' });
+        if (channel.ownerId === req.user.id) return res.status(400).json({ message: '채널 관리자는 채널을 탈퇴할 수 없습니다.' });
 
-        if (channel.ownerId.toString() === req.user._id.toString()) {
-            return res.status(400).json({ message: '채널 관리자는 채널을 탈퇴할 수 없습니다.' });
-        }
+        const member = await queryOne(
+            'SELECT * FROM ChannelMembers WHERE channelId = @channelId AND userId = @userId',
+            { channelId, userId: req.user.id }
+        );
+        if (!member || member.status !== 'approved') return res.status(400).json({ message: '채널의 멤버가 아닙니다.' });
 
-        const member = await ChannelMember.findOne({ channelId, userId: req.user._id });
-
-        if (!member || member.status !== 'approved') {
-            return res.status(400).json({ message: '채널의 멤버가 아닙니다.' });
-        }
-
-        member.status = 'withdrawn';
-        await member.save();
+        await execute(
+            'UPDATE ChannelMembers SET status=\'withdrawn\', updatedAt=GETDATE() WHERE id=@id',
+            { id: member.id }
+        );
 
         if (channel.ownerId) {
-            req.io.to(channel.ownerId.toString()).emit('member_left', {
-                channelId,
-                userId: req.user._id,
-                userName: req.user.name
+            req.io.to(String(channel.ownerId)).emit('member_left', {
+                channelId, userId: req.user.id, userName: req.user.name
             });
         }
 
@@ -126,74 +106,63 @@ router.post('/leave', protect, async (req, res) => {
     }
 });
 
-// @route   GET /api/channel-members/management/:channelId
-// @desc    특정 채널의 멤버 관리 (관리자 전용)
-// @access  Private/Admin
+// GET /api/channel-members/management/:channelId
 router.get('/management/:channelId', protect, admin, async (req, res) => {
     try {
-        const channel = await Channel.findById(req.params.channelId);
-        if (!channel) {
-            return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
-        }
-        if (channel.ownerId.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: '해당 채널의 관리자가 아닙니다.' });
-        }
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: req.params.channelId });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        if (channel.ownerId !== req.user.id) return res.status(403).json({ message: '해당 채널의 관리자가 아닙니다.' });
 
-        const members = await ChannelMember.find({ channelId: req.params.channelId })
-            .populate('userId', 'name username nickname gender birthdate region recommender registrationIp registrationMac isOnline');
-        res.json(members);
+        const members = await query(
+            `SELECT cm.*, u.id as u_id, u.name, u.username, u.nickname, u.gender, u.birthdate,
+                    u.phone, u.recommender, u.registrationIp, u.registrationMac, u.isOnline
+             FROM ChannelMembers cm JOIN Users u ON cm.userId = u.id
+             WHERE cm.channelId = @channelId`,
+            { channelId: req.params.channelId }
+        );
+        res.json(members.map(m => ({
+            ...m, _id: m.id,
+            userId: { _id: m.u_id, id: m.u_id, name: m.name, username: m.username, nickname: m.nickname, gender: m.gender, birthdate: m.birthdate, phone: m.phone, recommender: m.recommender, registrationIp: m.registrationIp, registrationMac: m.registrationMac, isOnline: m.isOnline }
+        })));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// @route   PUT /api/channel-members/:id/status
-// @desc    멤버 상태 변경 (승인/탈퇴/거부 등)
-// @access  Private/Admin
+// PUT /api/channel-members/:id/status
 router.put('/:id/status', protect, admin, async (req, res) => {
     const { status, isChatBlocked } = req.body;
     try {
-        const member = await ChannelMember.findById(req.params.id);
+        const member = await queryOne('SELECT * FROM ChannelMembers WHERE id = @id', { id: req.params.id });
         if (!member) return res.status(404).json({ message: '멤버 정보를 찾을 수 없습니다.' });
 
-        const channel = await Channel.findById(member.channelId);
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: member.channelId });
         if (!channel) return res.status(404).json({ message: '채널 정보를 찾을 수 없습니다.' });
+        if (channel.ownerId !== req.user.id) return res.status(403).json({ message: '권한이 없습니다.' });
 
-        if (channel.ownerId.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: '권한이 없습니다.' });
+        const updates = [];
+        const params = { id: member.id };
+        if (status) { updates.push('status=@status'); params.status = status; }
+        if (typeof isChatBlocked === 'boolean') { updates.push('isChatBlocked=@isChatBlocked'); params.isChatBlocked = isChatBlocked ? 1 : 0; }
+        if (updates.length) {
+            await execute(`UPDATE ChannelMembers SET ${updates.join(',')}, updatedAt=GETDATE() WHERE id=@id`, params);
         }
 
-        if (status) member.status = status;
-        if (typeof isChatBlocked === 'boolean') member.isChatBlocked = isChatBlocked;
-
-        await member.save();
-
-        // 승인 또는 거절 시 해당 멤버에게 실시간 알림 전송
         if (status === 'approved' || status === 'rejected') {
-            const targetUserId = member.userId.toString();
-            const channelName = channel.name;
-
-            // 소켓 실시간 알림
-            req.io.to(targetUserId).emit('member_status_updated', {
-                channelId: member.channelId,
-                channelName,
-                status
+            req.io.to(String(member.userId)).emit('member_status_updated', {
+                channelId: member.channelId, channelName: channel.name, status
             });
-
-            // 웹 푸시 알림 (오프라인 사용자용)
-            const pushTitle = status === 'approved' ? '✅ 채널 가입 승인' : '❌ 채널 가입 거절';
-            const pushBody = status === 'approved'
-                ? `${channelName} 채널 가입이 승인되었습니다! 이제 채널에 접속해보세요.`
-                : `${channelName} 채널 가입이 거절되었습니다.`;
-
-            await sendPushNotification(targetUserId, {
-                title: pushTitle,
-                body: pushBody,
+            await sendPushNotification(member.userId, {
+                title: status === 'approved' ? '✅ 채널 가입 승인' : '❌ 채널 가입 거절',
+                body: status === 'approved'
+                    ? `${channel.name} 채널 가입이 승인되었습니다! 이제 채널에 접속해보세요.`
+                    : `${channel.name} 채널 가입이 거절되었습니다.`,
                 url: '/search-channels'
             });
         }
 
-        res.json(member);
+        const updated = await queryOne('SELECT * FROM ChannelMembers WHERE id = @id', { id: member.id });
+        res.json(updated);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

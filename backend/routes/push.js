@@ -1,29 +1,35 @@
 const express = require('express');
 const router = express.Router();
-const PushSubscription = require('../models/PushSubscription');
+const { queryOne, execute, insertAndGetId } = require('../db/mssql');
 const { protect } = require('../middleware/authMiddleware');
 
-// VAPID 공개키 조회
+// GET /api/push/vapid-key
 router.get('/vapid-key', (req, res) => {
     res.json({ publicKey: process.env.PUBLIC_VAPID_KEY });
 });
 
-// 구독 정보 저장
+// POST /api/push/subscribe
 router.post('/subscribe', protect, async (req, res) => {
     try {
         const { subscription } = req.body;
+        const endpoint = subscription.endpoint;
 
-        await PushSubscription.findOneAndUpdate(
-            {
-                userId: req.user._id,
-                'subscription.endpoint': subscription.endpoint
-            },
-            {
-                userId: req.user._id,
-                subscription: subscription
-            },
-            { upsert: true, new: true }
+        const existing = await queryOne(
+            'SELECT id FROM PushSubscriptions WHERE userId=@userId AND subscription LIKE @endpoint',
+            { userId: req.user.id, endpoint: `%${endpoint}%` }
         );
+
+        if (existing) {
+            await execute(
+                'UPDATE PushSubscriptions SET subscription=@subscription WHERE id=@id',
+                { subscription: JSON.stringify(subscription), id: existing.id }
+            );
+        } else {
+            await insertAndGetId(
+                'INSERT INTO PushSubscriptions (userId, subscription) VALUES (@userId, @subscription)',
+                { userId: req.user.id, subscription: JSON.stringify(subscription) }
+            );
+        }
 
         res.status(201).json({ message: 'Push subscription saved.' });
     } catch (error) {
@@ -32,10 +38,10 @@ router.post('/subscribe', protect, async (req, res) => {
     }
 });
 
-// 현재 유저의 만료된 구독 정보 삭제 후 재구독 유도 (VAPID 키 변경 후 사용)
+// DELETE /api/push/subscribe
 router.delete('/subscribe', protect, async (req, res) => {
     try {
-        await PushSubscription.deleteMany({ userId: req.user._id });
+        await execute('DELETE FROM PushSubscriptions WHERE userId=@userId', { userId: req.user.id });
         res.json({ message: 'Subscriptions cleared. Please resubscribe.' });
     } catch (error) {
         console.error('[PUSH] Clear subscription error:', error);
@@ -44,4 +50,3 @@ router.delete('/subscribe', protect, async (req, res) => {
 });
 
 module.exports = router;
-
