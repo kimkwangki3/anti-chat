@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
+const { query, queryOne, execute, insertAndGetId, initChannelDb } = require('../db/mssql');
 const { protect, admin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const fs = require('fs');
@@ -60,15 +60,17 @@ router.post('/', protect, admin, async (req, res) => {
         if (existing) return res.status(400).json({ message: '이미 존재하는 채널 이름입니다.' });
 
         const channelSlug = await buildUniqueChannelSlug(slug || name);
+
+        // 채널 전용 DB 이름 생성 (영문/숫자 안전 형식)
+        const dbName = 'ch_' + channelSlug.replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').slice(0, 50) + '_' + Date.now().toString().slice(-6);
+
         const channelId = await insertAndGetId(
-            'INSERT INTO Channels (ownerId, name, description, slug) VALUES (@ownerId, @name, @description, @slug)',
-            { ownerId: req.user.id, name, description, slug: channelSlug }
+            'INSERT INTO Channels (ownerId, name, description, slug, databaseName) VALUES (@ownerId, @name, @description, @slug, @databaseName)',
+            { ownerId: req.user.id, name, description, slug: channelSlug, databaseName: dbName }
         );
 
-        await execute(
-            'INSERT INTO ChannelMembers (channelId, userId, status) VALUES (@channelId, @userId, \'approved\')',
-            { channelId, userId: req.user.id }
-        );
+        // 채널 전용 DB 생성 및 스키마 초기화
+        await initChannelDb(dbName);
 
         const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
         return res.status(201).json(channel);
@@ -99,26 +101,56 @@ router.get('/search', protect, async (req, res) => {
 // GET /api/channels/my-channels
 router.get('/my-channels', protect, async (req, res) => {
     try {
-        const memberships = await query(
-            `SELECT cm.*, c.id as c_id, c.name as c_name, c.slug, c.description, c.profileImage,
-                    c.status as c_status, c.cardColor, c.ownerId,
-                    u.id as owner_id, u.name as owner_name, u.username as owner_username, u.isOnline as owner_isOnline
-             FROM ChannelMembers cm
-             JOIN Channels c ON cm.channelId = c.id
-             JOIN Users u ON c.ownerId = u.id
-             WHERE cm.userId = @userId AND cm.status = 'approved' AND c.status = 'active'`,
-            { userId: req.user.id }
+        if (req.user.isMaster) {
+            // 슈퍼어드민 — 전체 활성 채널 반환
+            const channels = await query(
+                `SELECT c.*, u.id as owner_id, u.name as owner_name, u.username as owner_username, u.isOnline as owner_isOnline
+                 FROM Channels c JOIN Users u ON c.ownerId = u.id WHERE c.status = 'active'`
+            );
+            return res.json(channels.map(c => ({
+                _id: c.id, id: c.id,
+                channelId: {
+                    _id: c.id, id: c.id, name: c.name, slug: c.slug,
+                    description: c.description, profileImage: c.profileImage,
+                    status: c.status, cardColor: c.cardColor, ownerId: c.ownerId,
+                    owner: { _id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline }
+                },
+                status: 'approved', isChatBlocked: 0
+            })));
+        }
+
+        // 일반 유저 — JWT channels 배열로 해당 채널 상세정보 조회
+        const userChannels = req.user.channels || [];
+        if (!userChannels.length) return res.json([]);
+
+        const channelIds = userChannels.map(c => c.channelId);
+        const placeholders = channelIds.map((_, i) => `@id${i}`).join(',');
+        const params = Object.fromEntries(channelIds.map((id, i) => [`id${i}`, id]));
+
+        const channelRows = await query(
+            `SELECT c.*, u.id as owner_id, u.name as owner_name, u.username as owner_username, u.isOnline as owner_isOnline
+             FROM Channels c JOIN Users u ON c.ownerId = u.id
+             WHERE c.id IN (${placeholders}) AND c.status = 'active'`,
+            params
         );
-        res.json(memberships.map(m => ({
-            _id: m.id, id: m.id,
-            channelId: {
-                _id: m.c_id, id: m.c_id, name: m.c_name, slug: m.slug,
-                description: m.description, profileImage: m.profileImage,
-                status: m.c_status, cardColor: m.cardColor, ownerId: m.ownerId,
-                owner: { _id: m.owner_id, name: m.owner_name, username: m.owner_username, isOnline: m.owner_isOnline }
-            },
-            status: m.status, isChatBlocked: m.isChatBlocked
-        })));
+
+        const channelMap = Object.fromEntries(channelRows.map(c => [c.id, c]));
+        const result = userChannels
+            .filter(uc => channelMap[uc.channelId])
+            .map(uc => {
+                const c = channelMap[uc.channelId];
+                return {
+                    _id: uc.channelId, id: uc.channelId,
+                    channelId: {
+                        _id: c.id, id: c.id, name: c.name, slug: c.slug,
+                        description: c.description, profileImage: c.profileImage,
+                        status: c.status, cardColor: c.cardColor, ownerId: c.ownerId,
+                        owner: { _id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline }
+                    },
+                    status: 'approved', isChatBlocked: 0, role: uc.role
+                };
+            });
+        res.json(result);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -127,52 +159,56 @@ router.get('/my-channels', protect, async (req, res) => {
 // GET /api/channels/unread-counts
 router.get('/unread-counts', protect, async (req, res) => {
     try {
-        const userId = req.user.id;
-        console.log('[Unread API] Starting query for user:', userId);
-
-        const memberships = await query(
-            `SELECT cm.channelId FROM ChannelMembers cm
-             JOIN Channels c ON cm.channelId = c.id
-             WHERE cm.userId = @userId AND cm.status = 'approved' AND c.status = 'active'`,
-            { userId }
-        );
-        console.log('[Unread API] Fetched memberships:', memberships.length);
-
         const counts = {};
-        const channelIds = memberships.map(m => m.channelId);
-        console.log(`[Unread API] User ${userId} active channels: ${channelIds.length}`);
 
-        for (const channelId of channelIds) {
+        // 채널별 userId 매핑 구성
+        // 슈퍼어드민: 마스터 DB userId 사용
+        // 채널 유저: JWT channels 배열에서 채널별 userId 사용
+        let channelUserMap = {}; // { channelId: userId }
+
+        if (req.user.isMaster) {
+            const memberships = await query(
+                `SELECT cm.channelId FROM ChannelMembers cm
+                 JOIN Channels c ON cm.channelId = c.id
+                 WHERE cm.userId = @userId AND cm.status = 'approved' AND c.status = 'active'`,
+                { userId: req.user.id }
+            );
+            memberships.forEach(m => { channelUserMap[m.channelId] = req.user.id; });
+        } else {
+            const userChannels = req.user.channels || [];
+            userChannels.forEach(c => { channelUserMap[c.channelId] = c.userId; });
+        }
+
+        for (const [channelId, userId] of Object.entries(channelUserMap)) {
             try {
+                const cid = parseInt(channelId);
                 const noticeRow = await queryOne(
                     `SELECT COUNT(*) as cnt FROM Notices n WHERE n.channelId = @channelId
                      AND NOT EXISTS (SELECT 1 FROM NoticeReadBy WHERE noticeId = n.id AND userId = @userId)`,
-                    { channelId, userId }
+                    { channelId: cid, userId }
                 );
                 const postRow = await queryOne(
                     `SELECT COUNT(*) as cnt FROM Posts p WHERE p.channelId = @channelId
                      AND NOT EXISTS (SELECT 1 FROM PostReadBy WHERE postId = p.id AND userId = @userId)`,
-                    { channelId, userId }
+                    { channelId: cid, userId }
                 );
                 const pollRow = await queryOne(
                     `SELECT COUNT(*) as cnt FROM Polls p WHERE p.channelId = @channelId
                      AND p.status = 'active' AND p.expiresAt > GETDATE()
                      AND NOT EXISTS (SELECT 1 FROM PollReadBy WHERE pollId = p.id AND userId = @userId)`,
-                    { channelId, userId }
+                    { channelId: cid, userId }
                 );
                 const chatRow = await queryOne(
                     `SELECT ISNULL(SUM(CASE WHEN adminId = @userId THEN unreadCountAdmin ELSE unreadCountMember END), 0) as cnt
                      FROM ChatRooms WHERE channelId = @channelId AND (adminId = @userId OR memberId = @userId)`,
-                    { channelId, userId }
+                    { channelId: cid, userId }
                 );
-
-                counts[String(channelId)] = {
+                counts[channelId] = {
                     notice: noticeRow.cnt, post: postRow.cnt,
                     poll: pollRow.cnt, chat: chatRow.cnt
                 };
-                console.log(`[Unread API] Channel ${channelId}: notice=${noticeRow.cnt}, post=${postRow.cnt}, poll=${pollRow.cnt}, chat=${chatRow.cnt}`);
             } catch (err) {
-                console.error(`[Unread API] Error processing channel ${channelId}:`, err.message);
+                console.error(`[Unread API] Channel ${channelId} 오류:`, err.message);
             }
         }
 

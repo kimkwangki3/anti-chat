@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 
 const Login = () => {
@@ -69,14 +69,6 @@ const Login = () => {
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-500">
-                            계정이 없으신가요?{' '}
-                            <Link to="/register" className="text-[#FF8C69] hover:text-[#FFB5A0] transition-colors font-medium">
-                                회원가입
-                            </Link>
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>

@@ -1,168 +1,158 @@
 const express = require('express');
 const router = express.Router();
-const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
+const { queryOne, getChannelPool, queryInPool, queryOneInPool, executeInPool, insertAndGetIdInPool } = require('../db/mssql');
 const { protect, admin } = require('../middleware/authMiddleware');
-const { sendPushNotification } = require('../utils/pushService');
-
-// POST /api/channel-members/join
-router.post('/join', protect, async (req, res) => {
-    const { channelId } = req.body;
-    try {
-        const existing = await queryOne(
-            'SELECT * FROM ChannelMembers WHERE channelId = @channelId AND userId = @userId',
-            { channelId, userId: req.user.id }
-        );
-
-        let member;
-        if (existing) {
-            if (existing.status === 'withdrawn') {
-                const hoursElapsed = (Date.now() - new Date(existing.updatedAt).getTime()) / (1000 * 60 * 60);
-                if (hoursElapsed < 48) {
-                    return res.status(403).json({ message: '채널 탈퇴 후 2일(48시간) 내에는 재가입할 수 없습니다.' });
-                }
-                await execute(
-                    'UPDATE ChannelMembers SET status=\'pending\', updatedAt=GETDATE() WHERE id=@id',
-                    { id: existing.id }
-                );
-                member = { ...existing, status: 'pending' };
-            } else {
-                return res.status(400).json({ message: '이미 가입 신청하셨거나 멤버입니다.' });
-            }
-        } else {
-            const newId = await insertAndGetId(
-                'INSERT INTO ChannelMembers (channelId, userId, status) VALUES (@channelId, @userId, \'pending\')',
-                { channelId, userId: req.user.id }
-            );
-            member = { id: newId, _id: newId, channelId, userId: req.user.id, status: 'pending' };
-        }
-
-        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
-        if (channel?.ownerId) {
-            req.io.to(String(channel.ownerId)).emit('new_member_request', {
-                channelId, channelName: channel.name,
-                userId: req.user.id, userName: req.user.name, memberId: member.id
-            });
-            await sendPushNotification(channel.ownerId, {
-                title: '👥 신규 가입 신청',
-                body: `${channel.name} 채널에 ${req.user.name}님이 가입을 신청했습니다.`,
-                url: `/admin/members?channelId=${channelId}`, tag: 'member'
-            });
-        }
-
-        res.status(201).json(member);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
+const { v4: uuidv4 } = require('uuid');
 
 // GET /api/channel-members/role/:channelId
+// 현재 유저의 채널 내 역할 조회
 router.get('/role/:channelId', protect, async (req, res) => {
     try {
-        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: req.params.channelId });
-        if (!channel) return res.status(404).json({ message: '채널 없음' });
+        const channelId = parseInt(req.params.channelId);
 
-        if (channel.ownerId === req.user.id) {
-            return res.json({ role: 'admin', isOwner: true });
+        if (req.user.isMaster) {
+            const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
+            if (!channel) return res.status(404).json({ message: '채널 없음' });
+            return res.json({ role: channel.ownerId === req.user.id ? 'admin' : 'superadmin', isOwner: true });
         }
 
-        const member = await queryOne(
-            'SELECT * FROM ChannelMembers WHERE channelId = @channelId AND userId = @userId',
-            { channelId: req.params.channelId, userId: req.user.id }
-        );
-        res.json({ role: member ? member.role : 'none', status: member ? member.status : 'none' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// POST /api/channel-members/leave
-router.post('/leave', protect, async (req, res) => {
-    const { channelId } = req.body;
-    try {
-        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
-        if (!channel) return res.status(404).json({ message: '채널 정보를 찾을 수 없습니다.' });
-        if (channel.ownerId === req.user.id) return res.status(400).json({ message: '채널 관리자는 채널을 탈퇴할 수 없습니다.' });
-
-        const member = await queryOne(
-            'SELECT * FROM ChannelMembers WHERE channelId = @channelId AND userId = @userId',
-            { channelId, userId: req.user.id }
-        );
-        if (!member || member.status !== 'approved') return res.status(400).json({ message: '채널의 멤버가 아닙니다.' });
-
-        await execute(
-            'UPDATE ChannelMembers SET status=\'withdrawn\', updatedAt=GETDATE() WHERE id=@id',
-            { id: member.id }
-        );
-
-        if (channel.ownerId) {
-            req.io.to(String(channel.ownerId)).emit('member_left', {
-                channelId, userId: req.user.id, userName: req.user.name
-            });
-        }
-
-        res.json({ message: '성공적으로 채널에서 탈퇴했습니다.' });
+        const channelEntry = (req.user.channels || []).find(c => c.channelId === channelId);
+        if (!channelEntry) return res.json({ role: 'none', status: 'none' });
+        return res.json({ role: channelEntry.role, status: 'approved' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
 // GET /api/channel-members/management/:channelId
+// 채널 관리자 — 채널 DB의 전체 회원 목록
 router.get('/management/:channelId', protect, admin, async (req, res) => {
     try {
-        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: req.params.channelId });
+        const channelId = parseInt(req.params.channelId);
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
-        if (channel.ownerId !== req.user.id) return res.status(403).json({ message: '해당 채널의 관리자가 아닙니다.' });
 
-        const members = await query(
-            `SELECT cm.*, u.id as u_id, u.name, u.username, u.nickname, u.gender, u.birthdate,
-                    u.phone, u.recommender, u.registrationIp, u.registrationMac, u.isOnline
-             FROM ChannelMembers cm JOIN Users u ON cm.userId = u.id
-             WHERE cm.channelId = @channelId`,
-            { channelId: req.params.channelId }
+        // 관리자 권한 확인 (슈퍼어드민 또는 해당 채널 admin)
+        if (!req.user.isMaster) {
+            const entry = (req.user.channels || []).find(c => c.channelId === channelId && c.role === 'admin');
+            if (!entry) return res.status(403).json({ message: '해당 채널의 관리자가 아닙니다.' });
+        }
+
+        if (!channel.databaseName) {
+            return res.json([]); // DB 아직 미생성
+        }
+
+        const pool = await getChannelPool(channel.databaseName);
+        const members = await queryInPool(pool,
+            'SELECT id, name, username, nickname, gender, birthdate, phone, recommender, registrationIp, role, isOnline, status, isChatBlocked, lastLoginAt, createdAt FROM Users ORDER BY createdAt DESC'
         );
+
         res.json(members.map(m => ({
-            ...m, _id: m.id,
-            userId: { _id: m.u_id, id: m.u_id, name: m.name, username: m.username, nickname: m.nickname, gender: m.gender, birthdate: m.birthdate, phone: m.phone, recommender: m.recommender, registrationIp: m.registrationIp, registrationMac: m.registrationMac, isOnline: m.isOnline }
+            _id: m.id, id: m.id,
+            channelId,
+            status: m.status === 'approved' ? 'approved' : m.status,
+            isChatBlocked: m.isChatBlocked,
+            userId: { _id: m.id, id: m.id, name: m.name, username: m.username, nickname: m.nickname, gender: m.gender, birthdate: m.birthdate, phone: m.phone, recommender: m.recommender, registrationIp: m.registrationIp, isOnline: m.isOnline, role: m.role, status: m.status, lastLoginAt: m.lastLoginAt }
         })));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// PUT /api/channel-members/:id/status
-router.put('/:id/status', protect, admin, async (req, res) => {
-    const { status, isChatBlocked } = req.body;
+// POST /api/channel-members/create
+// 채널 관리자 — 채널 DB에 새 회원 직접 생성
+router.post('/create', protect, admin, async (req, res) => {
+    const { channelId, username, password, name, nickname, gender, birthdate, phone, recommender, role } = req.body;
     try {
-        const member = await queryOne('SELECT * FROM ChannelMembers WHERE id = @id', { id: req.params.id });
-        if (!member) return res.status(404).json({ message: '멤버 정보를 찾을 수 없습니다.' });
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        if (!channel.databaseName) return res.status(400).json({ message: '채널 DB가 초기화되지 않았습니다.' });
 
-        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: member.channelId });
-        if (!channel) return res.status(404).json({ message: '채널 정보를 찾을 수 없습니다.' });
-        if (channel.ownerId !== req.user.id) return res.status(403).json({ message: '권한이 없습니다.' });
+        if (!req.user.isMaster) {
+            const entry = (req.user.channels || []).find(c => c.channelId === parseInt(channelId) && c.role === 'admin');
+            if (!entry) return res.status(403).json({ message: '해당 채널의 관리자가 아닙니다.' });
+        }
 
+        const pool = await getChannelPool(channel.databaseName);
+
+        const existing = await queryOneInPool(pool, 'SELECT id FROM Users WHERE username = @username', { username });
+        if (existing) return res.status(400).json({ message: '이미 존재하는 아이디입니다.' });
+
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const sessionId = uuidv4();
+
+        const newId = await insertAndGetIdInPool(pool,
+            `INSERT INTO Users (name, username, password, nickname, gender, birthdate, phone, recommender, registrationIp, role, status, currentSessionId, agreedToPrivacy)
+             VALUES (@name, @username, @password, @nickname, @gender, @birthdate, @phone, @recommender, @registrationIp, @role, 'approved', @sessionId, 1)`,
+            {
+                name: name || nickname || username,
+                username, password,
+                nickname: nickname || null,
+                gender: gender || 'none',
+                birthdate: birthdate || null,
+                phone: phone || null,
+                recommender: recommender || null,
+                registrationIp: clientIp,
+                role: role || 'member',
+                sessionId
+            }
+        );
+
+        return res.status(201).json({ id: newId, _id: newId, username, name: name || nickname || username, role: role || 'member', channelId });
+    } catch (error) {
+        console.error('[Channel Member Create]', error);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// PUT /api/channel-members/:channelId/users/:userId/status
+// 채널 회원 상태/권한 변경 (채널 DB 기준)
+router.put('/:channelId/users/:userId/status', protect, admin, async (req, res) => {
+    const { status, isChatBlocked, role } = req.body;
+    const channelId = parseInt(req.params.channelId);
+    const userId = parseInt(req.params.userId);
+    try {
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
+        if (!channel || !channel.databaseName) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+
+        if (!req.user.isMaster) {
+            const entry = (req.user.channels || []).find(c => c.channelId === channelId && c.role === 'admin');
+            if (!entry) return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+
+        const pool = await getChannelPool(channel.databaseName);
         const updates = [];
-        const params = { id: member.id };
+        const params = { id: userId };
         if (status) { updates.push('status=@status'); params.status = status; }
         if (typeof isChatBlocked === 'boolean') { updates.push('isChatBlocked=@isChatBlocked'); params.isChatBlocked = isChatBlocked ? 1 : 0; }
-        if (updates.length) {
-            await execute(`UPDATE ChannelMembers SET ${updates.join(',')}, updatedAt=GETDATE() WHERE id=@id`, params);
-        }
+        if (role) { updates.push('role=@role'); params.role = role; }
+        if (!updates.length) return res.status(400).json({ message: '변경할 내용이 없습니다.' });
 
-        if (status === 'approved' || status === 'rejected') {
-            req.io.to(String(member.userId)).emit('member_status_updated', {
-                channelId: member.channelId, channelName: channel.name, status
-            });
-            await sendPushNotification(member.userId, {
-                title: status === 'approved' ? '✅ 채널 가입 승인' : '❌ 채널 가입 거절',
-                body: status === 'approved'
-                    ? `${channel.name} 채널 가입이 승인되었습니다! 이제 채널에 접속해보세요.`
-                    : `${channel.name} 채널 가입이 거절되었습니다.`,
-                url: '/search-channels'
-            });
-        }
-
-        const updated = await queryOne('SELECT * FROM ChannelMembers WHERE id = @id', { id: member.id });
+        await executeInPool(pool, `UPDATE Users SET ${updates.join(',')}, updatedAt=GETDATE() WHERE id=@id`, params);
+        const updated = await queryOneInPool(pool, 'SELECT id, username, name, role, status, isChatBlocked FROM Users WHERE id=@id', { id: userId });
         res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// DELETE /api/channel-members/:channelId/users/:userId
+// 채널 회원 삭제 (채널 DB에서 제거)
+router.delete('/:channelId/users/:userId', protect, admin, async (req, res) => {
+    const channelId = parseInt(req.params.channelId);
+    const userId = parseInt(req.params.userId);
+    try {
+        const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
+        if (!channel || !channel.databaseName) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+
+        if (!req.user.isMaster) {
+            const entry = (req.user.channels || []).find(c => c.channelId === channelId && c.role === 'admin');
+            if (!entry) return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+
+        const pool = await getChannelPool(channel.databaseName);
+        await executeInPool(pool, 'DELETE FROM Users WHERE id=@id', { id: userId });
+        res.json({ message: '회원이 삭제되었습니다.' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
