@@ -1,7 +1,7 @@
-const { queryOne, execute, insertAndGetId } = require('../db/mssql');
+const { queryOne, execute, insertAndGetId, getChannelPool, queryOneInPool } = require('../db/mssql');
 const { writeChatLog, writeAuthLog } = require('../utils/logService');
 const { sendPushNotification, sendPushToChannelMembers } = require('../utils/pushService');
-const { populateRoomById, formatRoom: _formatRoom } = require('../utils/chatUtils');
+const { populateRoomById, formatRoom: _formatRoom, getChannelDbName } = require('../utils/chatUtils');
 
 const populateRoom = populateRoomById;
 const formatRoom = _formatRoom;
@@ -89,16 +89,19 @@ const socketHandler = (io) => {
                 const targetChannelId = channelId || room.channelId;
                 const chatMemberId = room.memberId;
 
-                const roomAdmin = await queryOne('SELECT role FROM Users WHERE id=@id', { id: room.adminId });
-                const isSuperAdminDirectRoom = roomAdmin?.role === 'superadmin';
-                const channelMember = await queryOne(
-                    'SELECT * FROM ChannelMembers WHERE channelId=@channelId AND userId=@userId',
-                    { channelId: targetChannelId, userId: chatMemberId }
-                );
+                const channel = await queryOne('SELECT name FROM Channels WHERE id=@id', { id: targetChannelId });
+                const isSuperAdminDirectRoom = channel?.name === '__SUPERADMIN_DM__';
 
-                if (!isSuperAdminDirectRoom && (!channelMember || channelMember.status === 'suspended')) {
-                    socket.emit('chat_error', { message: '해당 회원은 현재 휴정 상태이므로 메시지를 주고받을 수 없습니다.' });
-                    return;
+                if (!isSuperAdminDirectRoom) {
+                    const dbName = await getChannelDbName(targetChannelId);
+                    if (dbName) {
+                        const pool = await getChannelPool(dbName);
+                        const memberUser = await queryOneInPool(pool, 'SELECT status FROM Users WHERE id=@id', { id: chatMemberId });
+                        if (memberUser && memberUser.status === 'suspended') {
+                            socket.emit('chat_error', { message: '해당 회원은 현재 휴정 상태이므로 메시지를 주고받을 수 없습니다.' });
+                            return;
+                        }
+                    }
                 }
 
                 const messageId = await insertAndGetId(
@@ -107,7 +110,15 @@ const socketHandler = (io) => {
                 );
                 const message = await queryOne('SELECT * FROM Messages WHERE id=@id', { id: messageId });
 
-                const user = await queryOne('SELECT id, name, username FROM Users WHERE id=@id', { id: senderId });
+                let user = null;
+                const senderDbName = await getChannelDbName(targetChannelId);
+                if (senderDbName) {
+                    const senderPool = await getChannelPool(senderDbName);
+                    user = await queryOneInPool(senderPool, 'SELECT id, name, username FROM Users WHERE id=@id', { id: senderId });
+                }
+                if (!user) {
+                    user = await queryOne('SELECT id, name, username FROM Users WHERE id=@id', { id: senderId });
+                }
 
                 if (user) {
                     const logContent = fileUrl ? `[${fileName || (fileType?.startsWith('image/') ? '사진' : '파일')}] ${content || ''}` : content;
