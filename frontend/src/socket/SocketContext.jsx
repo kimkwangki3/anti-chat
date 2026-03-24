@@ -6,6 +6,7 @@ import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
 import useSettingsStore from '../store/settingsStore';
 import useChatStore from '../store/chatStore';
+import { installAudioUnlock, playNotificationTone } from '../utils/notificationSound';
 
 import axios from '../api/axios';
 
@@ -35,7 +36,7 @@ export const SocketProvider = ({ children }) => {
     const { user, token, sessionId: storeSessionId } = useAuthStore();
     const { myChannels, fetchMyChannels, currentChannel } = useChannelStore();
     const { addNotification, incrementUnreadCount, removeNotification, notifications, incrementPendingCount, fetchUnreadCounts } = useNotificationStore();
-    const { soundType, volume, sounds } = useSettingsStore();
+    const { soundType, volume } = useSettingsStore();
     const { markMessagesRead } = useChatStore();
     const [onlineCount, setOnlineCount] = useState(0);
 
@@ -80,39 +81,20 @@ export const SocketProvider = ({ children }) => {
     };
 
     // 알림음 재생 함수
-    const playFallbackBeep = () => {
+    const playNotificationSound = async () => {
         try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-            const ctx = new AudioCtx();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sine';
-            osc.frequency.value = 880;
-            gain.gain.value = Math.max(0.05, Math.min(0.25, Number(volume || 0.15)));
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.08);
-            setTimeout(() => ctx.close(), 200);
-        } catch (e) {
-            console.log('[SOUND] Fallback beep failed:', e);
+            const played = await playNotificationTone(soundType, volume);
+            if (!played) {
+                console.log('[SOUND] AudioContext is not available');
+            }
+        } catch (error) {
+            console.error('[SOUND] Notification tone error:', error);
         }
     };
 
-    const playNotificationSound = () => {
-        try {
-            const audio = new Audio(sounds[soundType]);
-            audio.volume = volume;
-            audio.play().catch(e => {
-                console.log('[SOUND] Audio play blocked:', e);
-                playFallbackBeep();
-            });
-        } catch (error) {
-            console.error('[SOUND] Audio play error:', error);
-            playFallbackBeep();
-        }
-    };
+    useEffect(() => {
+        installAudioUnlock();
+    }, []);
 
     // 푸시 알림 구독 함수 (항상 재구독 - VAPID 키 변경 이후 일관성 보장)
     const subscribeToPush = async () => {

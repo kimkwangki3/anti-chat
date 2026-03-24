@@ -4,13 +4,14 @@ import useAuthStore from '../store/authStore';
 import useSettingsStore from '../store/settingsStore';
 import axios from '../api/axios';
 import useChannelStore from '../store/channelStore';
+import { installAudioUnlock, playNotificationTone } from '../utils/notificationSound';
 
 const SettingsPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout, uploadProfileImage, updateProfile } = useAuthStore();
     const { myChannels } = useChannelStore();
-    const { soundType, volume, setSoundType, setVolume, sounds } = useSettingsStore();
+    const { soundType, volume, setSoundType, setVolume } = useSettingsStore();
 
     const ownedChannelId = myChannels.find(m =>
         (m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id)
@@ -43,6 +44,10 @@ const SettingsPage = () => {
         setProfileName(user?.name || '');
         setProfileNickname(user?.nickname || '');
     }, [user?.name, user?.nickname]);
+
+    useEffect(() => {
+        installAudioUnlock();
+    }, []);
 
     const urlBase64ToUint8Array = (base64String) => {
         const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -140,9 +145,7 @@ const SettingsPage = () => {
     };
 
     const playPreview = (type) => {
-        const audio = new Audio(sounds[type || soundType]);
-        audio.volume = volume;
-        audio.play().catch(e => console.log('Preview blocked:', e));
+        playNotificationTone(type || soundType, volume).catch((e) => console.log('Preview blocked:', e));
     };
 
     const soundOptions = [
