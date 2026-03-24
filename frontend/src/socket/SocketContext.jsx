@@ -83,9 +83,12 @@ export const SocketProvider = ({ children }) => {
     // 알림음 재생 함수
     const playNotificationSound = async () => {
         try {
-            const played = await playNotificationTone(soundType, volume);
+            // 항상 최신 설정을 읽어서 stale closure 방지
+            const { soundType: st, volume: vol } = useSettingsStore.getState();
+            const played = await playNotificationTone(st, vol);
             if (!played) {
-                console.log('[SOUND] AudioContext is not available');
+                // AudioContext가 정지 상태일 때 fresh context로 재시도
+                playNotificationTone(st, vol, { forceFreshContext: true });
             }
         } catch (error) {
             console.error('[SOUND] Notification tone error:', error);
