@@ -141,8 +141,9 @@ const ChatPage = () => {
         );
     }
 
-    const themeColor = currentChannel?.cardColor || '#FF8C69';
-    const channelName = currentChannel?.name || '알 수 없는 채널';
+    const channelData = currentChannel || currentRoom?.channelId;
+    const themeColor = channelData?.cardColor || '#FF8C69';
+    const channelName = channelData?.name || '알 수 없는 채널';
     const isUserAdminInRoom = user?._id === currentRoom?.adminId?._id || user?._id === currentRoom?.adminId;
     const roomTitle = isUserAdminInRoom ? currentRoom?.memberId?.name : channelName;
 
@@ -170,12 +171,12 @@ const ChatPage = () => {
                                 {/* 채널 로고 추가 */}
                                 <div
                                     className="w-10 h-10 md:w-12 md:h-12 rounded-2xl overflow-hidden flex items-center justify-center border border-white/5 shadow-2xl"
-                                    style={{ backgroundColor: `${currentChannel?.cardColor || '#FF8C69'}20` }}
+                                    style={{ backgroundColor: `${channelData?.cardColor || '#FF8C69'}20` }}
                                 >
-                                    {currentChannel?.profileImage ? (
-                                        <img src={currentChannel.profileImage} alt="" className="w-full h-full object-cover" />
+                                    {channelData?.profileImage ? (
+                                        <img src={channelData.profileImage} alt="" className="w-full h-full object-cover" />
                                     ) : (
-                                        <span className="text-xl font-black" style={{ color: currentChannel?.cardColor || '#FF8C69' }}>
+                                        <span className="text-xl font-black" style={{ color: channelData?.cardColor || '#FF8C69' }}>
                                             {channelName?.[0] || '#'}
                                         </span>
                                     )}
