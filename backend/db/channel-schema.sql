@@ -17,6 +17,7 @@ CREATE TABLE Users (
     registrationIp   NVARCHAR(100),
     role             NVARCHAR(20)   DEFAULT 'member',   -- admin | member
     isOnline         BIT            DEFAULT 0,
+    presenceStatus   NVARCHAR(20)   DEFAULT 'offline',  -- online | idle | offline
     lastLoginIp      NVARCHAR(100),
     lastLoginAt      DATETIME,
     lastLogoutAt     DATETIME,
@@ -26,5 +27,16 @@ CREATE TABLE Users (
     agreedToPrivacy  BIT            DEFAULT 0,
     createdAt        DATETIME       DEFAULT GETDATE(),
     updatedAt        DATETIME       DEFAULT GETDATE()
+);
+GO
+
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='LoginHistory' AND xtype='U')
+CREATE TABLE LoginHistory (
+    id          INT            IDENTITY(1,1) PRIMARY KEY,
+    userId      INT            NOT NULL,
+    ip          NVARCHAR(100),
+    userAgent   NVARCHAR(500),
+    loginAt     DATETIME       DEFAULT GETDATE(),
+    logoutAt    DATETIME       NULL
 );
 GO

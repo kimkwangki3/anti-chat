@@ -1,4 +1,4 @@
-const { queryOne, execute, insertAndGetId, getChannelPool, queryOneInPool } = require('../db/mssql');
+const { queryOne, execute, insertAndGetId, getChannelPool, queryOneInPool, executeInPool, queryInPool } = require('../db/mssql');
 const { writeChatLog, writeAuthLog } = require('../utils/logService');
 const { sendPushNotification, sendPushToChannelMembers } = require('../utils/pushService');
 const { populateRoomById, formatRoom: _formatRoom, getChannelDbName } = require('../utils/chatUtils');
@@ -16,6 +16,7 @@ const socketHandler = (io) => {
                 socket.join(userIdStr);
                 socket.userId = userIdStr;
                 socket.sessionId = userData.sessionId;
+                socket.userChannels = userData.channels || [];
 
                 // 슈퍼어드민만 마스터 DB 세션 체크
                 if (userData.isMaster) {
@@ -199,6 +200,32 @@ const socketHandler = (io) => {
         socket.on('typing', (room) => socket.in(room).emit('typing'));
         socket.on('stop_typing', (room) => socket.in(room).emit('stop_typing'));
 
+        socket.on('set_idle', async () => {
+            if (!socket.userChannels?.length) return;
+            try {
+                for (const ch of socket.userChannels) {
+                    const pool = await getChannelPool(ch.dbName);
+                    await executeInPool(pool, "UPDATE Users SET presenceStatus='idle' WHERE id=@id", { id: ch.userId });
+                    io.to(`channel_${ch.channelId}`).emit('presence_update', { userId: ch.userId, status: 'idle' });
+                }
+            } catch (error) {
+                console.error('[SOCKET] set_idle 에러:', error);
+            }
+        });
+
+        socket.on('set_online', async () => {
+            if (!socket.userChannels?.length) return;
+            try {
+                for (const ch of socket.userChannels) {
+                    const pool = await getChannelPool(ch.dbName);
+                    await executeInPool(pool, "UPDATE Users SET presenceStatus='online' WHERE id=@id", { id: ch.userId });
+                    io.to(`channel_${ch.channelId}`).emit('presence_update', { userId: ch.userId, status: 'online' });
+                }
+            } catch (error) {
+                console.error('[SOCKET] set_online 에러:', error);
+            }
+        });
+
         socket.on('disconnect_user', async (userId) => {
             if (userId) {
                 try {
@@ -206,7 +233,20 @@ const socketHandler = (io) => {
                     if (user) {
                         await execute('UPDATE Users SET isOnline=0, lastLogoutAt=GETDATE() WHERE id=@id', { id: userId });
                         writeAuthLog(`로그아웃: ${user.username}`);
-                        console.log('사용자 오프라인 처리 및 로그 기록:', user.username);
+                    }
+                    if (socket.userChannels?.length) {
+                        for (const ch of socket.userChannels) {
+                            const pool = await getChannelPool(ch.dbName);
+                            await executeInPool(pool,
+                                "UPDATE Users SET isOnline=0, presenceStatus='offline', lastLogoutAt=GETDATE() WHERE id=@id",
+                                { id: ch.userId }
+                            );
+                            await executeInPool(pool,
+                                'UPDATE LoginHistory SET logoutAt=GETDATE() WHERE userId=@userId AND logoutAt IS NULL',
+                                { userId: ch.userId }
+                            );
+                            io.to(`channel_${ch.channelId}`).emit('presence_update', { userId: ch.userId, status: 'offline' });
+                        }
                     }
                 } catch (error) {
                     console.error('[SOCKET] disconnect_user 에러:', error);

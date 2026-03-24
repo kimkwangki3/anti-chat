@@ -99,6 +99,38 @@ export const SocketProvider = ({ children }) => {
         installAudioUnlock();
     }, []);
 
+    // idle 감지 (10분 무활동 시 idle, 활동 시 online으로 복귀)
+    useEffect(() => {
+        if (!user) return;
+        const IDLE_TIMEOUT = 10 * 60 * 1000;
+        let idleTimer = null;
+        let isIdle = false;
+
+        const setIdle = () => {
+            if (!isIdle) {
+                isIdle = true;
+                socket.emit('set_idle');
+            }
+        };
+        const resetIdle = () => {
+            clearTimeout(idleTimer);
+            if (isIdle) {
+                isIdle = false;
+                socket.emit('set_online');
+            }
+            idleTimer = setTimeout(setIdle, IDLE_TIMEOUT);
+        };
+
+        const events = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
+        events.forEach(e => window.addEventListener(e, resetIdle, { passive: true }));
+        idleTimer = setTimeout(setIdle, IDLE_TIMEOUT);
+
+        return () => {
+            clearTimeout(idleTimer);
+            events.forEach(e => window.removeEventListener(e, resetIdle));
+        };
+    }, [user?._id]);
+
     // 푸시 알림 구독 함수 (항상 재구독 - VAPID 키 변경 이후 일관성 보장)
     const subscribeToPush = async () => {
         try {

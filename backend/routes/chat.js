@@ -33,10 +33,11 @@ const ensureSuperAdminDmChannel = async (ownerId) => {
     return channel;
 };
 
-// GET /api/chat/users/:channelId — 채널 DB에서 멤버 목록 조회
+// GET /api/chat/users/:channelId — 채널 DB에서 멤버 목록 조회 (?onlineOnly=true 시 온라인만)
 router.get('/users/:channelId', protect, admin, async (req, res) => {
     try {
-        const members = await getChannelMembers(req.params.channelId);
+        const onlineOnly = req.query.onlineOnly === 'true';
+        const members = await getChannelMembers(req.params.channelId, onlineOnly);
         res.json(members.map(u => ({ ...u, _id: u.id })));
     } catch (error) {
         res.status(500).json({ message: '멤버 목록을 불러오는데 실패했습니다.' });

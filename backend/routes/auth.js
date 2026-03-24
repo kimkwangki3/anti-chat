@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const { query, queryOne, execute, getChannelPool, queryOneInPool, executeInPool } = require('../db/mssql');
+const { query, queryOne, execute, getChannelPool, queryOneInPool, executeInPool, insertAndGetIdInPool } = require('../db/mssql');
 const { protect } = require('../middleware/authMiddleware');
 const { writeAuthLog } = require('../utils/logService');
 const { v4: uuidv4 } = require('uuid');
@@ -99,8 +99,12 @@ router.post('/login', async (req, res) => {
                         channelName: ch.name
                     });
                     await executeInPool(pool,
-                        'UPDATE Users SET isOnline=1, lastLoginIp=@ip, lastLoginAt=GETDATE(), currentSessionId=@sessionId WHERE id=@id',
-                        { ip: clientIp, sessionId, id: user.id }
+                        'UPDATE Users SET isOnline=1, presenceStatus=@status, lastLoginIp=@ip, lastLoginAt=GETDATE(), currentSessionId=@sessionId WHERE id=@id',
+                        { status: 'online', ip: clientIp, sessionId, id: user.id }
+                    );
+                    await insertAndGetIdInPool(pool,
+                        'INSERT INTO LoginHistory (userId, ip, userAgent) VALUES (@userId, @ip, @userAgent)',
+                        { userId: user.id, ip: clientIp, userAgent: req.headers['user-agent'] || '' }
                     );
                 }
             } catch (e) {

@@ -23,18 +23,35 @@ const ChatSidebar = () => {
 
     const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
+    const loadUsers = () => {
+        if (channelId && isAdmin) {
+            axios.get(`/chat/users/${channelId}?onlineOnly=true`)
+                .then(res => setUsers(res.data))
+                .catch(err => console.error('멤버 목록 로드 실패:', err));
+        }
+    };
+
     useEffect(() => {
         if (channelId) {
             fetchRooms(channelId);
-            if (isAdmin) {
-                axios.get(`/chat/users/${channelId}`)
-                    .then(res => setUsers(res.data))
-                    .catch(err => console.error('멤버 목록 로드 실패:', err));
-            }
+            loadUsers();
         } else {
             fetchRooms();
         }
     }, [fetchRooms, user, channelId, isAdmin]);
+
+    useEffect(() => {
+        const handlePresenceUpdate = ({ userId, status }) => {
+            setUsers(prev => {
+                if (status === 'offline') {
+                    return prev.filter(u => String(u._id) !== String(userId));
+                }
+                return prev.map(u => String(u._id) === String(userId) ? { ...u, presenceStatus: status, isOnline: status !== 'offline' } : u);
+            });
+        };
+        socket.on('presence_update', handlePresenceUpdate);
+        return () => socket.off('presence_update', handlePresenceUpdate);
+    }, []);
 
     // 실시간 목록 업데이트 리스너
     useEffect(() => {
@@ -158,7 +175,8 @@ const ChatSidebar = () => {
                                         size="w-12 h-12"
                                         radiusClass="rounded-2xl"
                                     />
-                                    {u.isOnline && <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#06d6a0] border-[3px] border-[#12121a] rounded-full"></span>}
+                                    {u.presenceStatus === 'online' && <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#06d6a0] border-[3px] border-[#12121a] rounded-full"></span>}
+                                    {u.presenceStatus === 'idle' && <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#ffd166] border-[3px] border-[#12121a] rounded-full"></span>}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <span className="text-sm font-bold text-white block truncate">{u.name}</span>
