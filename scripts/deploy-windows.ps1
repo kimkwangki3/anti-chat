@@ -3,70 +3,29 @@ $ErrorActionPreference = "Stop"
 $repoRoot = "C:\apps\anti"
 $backendDir = Join-Path $repoRoot "backend"
 $frontendDir = Join-Path $repoRoot "frontend"
-$logsDir = Join-Path $repoRoot "logs"
-
-if (-not (Test-Path $logsDir)) {
-    New-Item -ItemType Directory -Path $logsDir | Out-Null
-}
-
-function Resolve-ExecutablePath {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$CommandName,
-
-        [Parameter(Mandatory = $true)]
-        [string[]]$CandidatePaths
-    )
-
-    foreach ($candidate in $CandidatePaths) {
-        if (Test-Path $candidate) {
-            return $candidate
-        }
-    }
-
-    $command = Get-Command $CommandName -ErrorAction SilentlyContinue
-    if ($command -and $command.Source) {
-        return $command.Source
-    }
-
-    throw "Executable not found: $CommandName"
-}
 
 function Stop-PortProcess {
-    param(
-        [Parameter(Mandatory = $true)]
-        [int]$Port
-    )
-
-    $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-    if (-not $connections) {
-        return
-    }
-
-    $pids = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-    foreach ($processId in $pids) {
-        try {
-            Stop-Process -Id $processId -Force -ErrorAction Stop
-        } catch {
-            Write-Warning "Failed to stop PID ${processId} on port ${Port}: $($_.Exception.Message)"
+    param([Parameter(Mandatory = $true)][int]$Port)
+    $result = netstat -ano 2>$null | Select-String ":$Port\s.*LISTENING"
+    if (-not $result) { return }
+    $result | ForEach-Object {
+        $parts = $_ -split '\s+'
+        $processId = $parts[-1]
+        if ($processId -match '^\d+$') {
+            try {
+                Stop-Process -Id ([int]$processId) -Force -ErrorAction Stop
+            } catch {
+                Write-Warning "Failed to stop PID ${processId} on port ${Port}: $($_.Exception.Message)"
+            }
         }
     }
 }
 
+$npmCmdObj = Get-Command "npm.cmd" -ErrorAction SilentlyContinue
+if ($npmCmdObj) { $npmCmd = $npmCmdObj.Source } else { $npmCmd = (Get-Command "npm" -ErrorAction Stop).Source }
+
 Set-Location $repoRoot
-
-$nodeExe = Resolve-ExecutablePath -CommandName "node" -CandidatePaths @(
-    "$env:ProgramFiles\nodejs\node.exe",
-    "${env:ProgramFiles(x86)}\nodejs\node.exe"
-)
-
-$npmCmd = Resolve-ExecutablePath -CommandName "npm" -CandidatePaths @(
-    "$env:ProgramFiles\nodejs\npm.cmd",
-    "${env:ProgramFiles(x86)}\nodejs\npm.cmd"
-)
-
 git config --global --add safe.directory $repoRoot
-
 git fetch origin main
 git checkout main
 git pull --ff-only origin main
@@ -81,11 +40,6 @@ Set-Location $frontendDir
 & $npmCmd install --no-package-lock
 & $npmCmd run build
 
-$startScript = Join-Path $repoRoot "scripts\start-services.ps1"
-if (-not (Test-Path $startScript)) {
-    throw "Start script not found: $startScript"
-}
-
-& $startScript
+& "$repoRoot\scripts\start-services.ps1"
 
 Write-Host "Deployment completed."

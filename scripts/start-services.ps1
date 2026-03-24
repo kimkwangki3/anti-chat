@@ -28,14 +28,17 @@ function Resolve-ExecutablePath {
 
 function Stop-PortProcess {
     param([Parameter(Mandatory = $true)][int]$Port)
-    $connections = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-    if (-not $connections) { return }
-    $pids = $connections | Select-Object -ExpandProperty OwningProcess -Unique
-    foreach ($processId in $pids) {
-        try {
-            Stop-Process -Id $processId -Force -ErrorAction Stop
-        } catch {
-            Write-Warning "Failed to stop PID ${processId} on port ${Port}: $($_.Exception.Message)"
+    $result = netstat -ano 2>$null | Select-String ":$Port\s.*LISTENING"
+    if (-not $result) { return }
+    $result | ForEach-Object {
+        $parts = $_ -split '\s+'
+        $processId = $parts[-1]
+        if ($processId -match '^\d+$') {
+            try {
+                Stop-Process -Id ([int]$processId) -Force -ErrorAction Stop
+            } catch {
+                Write-Warning "Failed to stop PID ${processId} on port ${Port}: $($_.Exception.Message)"
+            }
         }
     }
 }
@@ -48,8 +51,8 @@ function Wait-ListeningPort {
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
-        $listening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-        if ($listening) { return $true }
+        $result = netstat -ano 2>$null | Select-String ":$Port\s.*LISTENING"
+        if ($result) { return $true }
         Start-Sleep -Seconds 1
     }
     return $false
