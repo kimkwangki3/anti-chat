@@ -51,7 +51,7 @@ function Wait-ListeningPort {
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
-        $result = netstat -ano 2>$null | Select-String ":$Port\s.*LISTENING"
+        $result = Test-NetConnection -ComputerName 127.0.0.1 -Port $Port -InformationLevel Quiet -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
         if ($result) { return $true }
         Start-Sleep -Seconds 1
     }
