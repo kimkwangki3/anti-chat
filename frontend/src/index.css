@@ -2,38 +2,43 @@
 
 @layer base {
     :root {
-        --bg-obsidian: #0d1829;
-        --surface-glass: rgba(255, 255, 255, 0.07);
+        --bg-main: #0f1117;
+        --bg-surface: #16181f;
+        --surface-glass: rgba(255, 255, 255, 0.06);
         --primary-peach: #FF8C69;
         --primary-peach-hover: #ff7b52;
         --primary-peach-glow: rgba(255, 140, 105, 0.15);
-        --border-glass: rgba(255, 255, 255, 0.14);
-        --text-dim: #cbd5e1;
+        --border-glass: rgba(255, 255, 255, 0.1);
+        --text-primary: #f1f3f5;
+        --text-secondary: #9ca3af;
+        --text-dim: #6b7280;
         --safe-top: env(safe-area-inset-top, 0px);
         --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     body {
-        background-color: var(--bg-obsidian);
-        color: #f8fafc;
+        background-color: var(--bg-main);
+        color: var(--text-primary);
         -webkit-font-smoothing: antialiased;
-        font-family: 'Inter', 'Pretendard', sans-serif;
+        -moz-osx-font-smoothing: grayscale;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
         font-size: 15px;
         line-height: 1.6;
+        word-break: keep-all;
     }
 
     .page-container {
         height: 100%;
-        background-color: var(--bg-obsidian);
+        background-color: var(--bg-main);
         overflow-y: auto;
     }
 
     .unified-header {
-        height: 5rem;
+        height: 4.5rem;
         flex-shrink: 0;
-        background-color: rgba(13, 24, 41, 0.6);
-        backdrop-filter: blur(24px);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background-color: rgba(15, 17, 23, 0.85);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.07);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -45,24 +50,22 @@
 
 @layer components {
     .glass-card {
-        background-color: rgba(255, 255, 255, 0.06);
-        backdrop-filter: blur(40px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 1.5rem;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+        background-color: var(--bg-surface);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1.25rem;
+        transition: border-color 0.2s ease, transform 0.2s ease;
     }
 
     .glass-card:hover {
-        border-color: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.14);
+        transform: translateY(-1px);
     }
 
     .bento-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        padding: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.25rem;
+        padding: 1.25rem;
     }
 
     .peach-button {
@@ -72,10 +75,10 @@
         padding-bottom: 0.75rem;
         background-color: var(--primary-peach);
         color: white;
-        border-radius: 1rem;
+        border-radius: 0.875rem;
         font-weight: 600;
-        box-shadow: 0 0 20px var(--primary-peach-glow);
-        transition: all 0.2s;
+        font-size: 15px;
+        transition: all 0.15s;
     }
 
     .peach-button:hover {
@@ -88,27 +91,23 @@
     }
 
     .custom-scrollbar::-webkit-scrollbar {
-        width: 8px;
+        width: 4px;
     }
 
     .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 10px;
+        background: transparent;
     }
 
     .custom-scrollbar::-webkit-scrollbar-thumb {
         background: rgba(255, 255, 255, 0.1);
         border-radius: 10px;
-        border: 2px solid transparent;
-        background-clip: content-box;
     }
 
     @keyframes slideUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(16px);
         }
-
         to {
             opacity: 1;
             transform: translateY(0);
@@ -116,11 +115,10 @@
     }
 
     .animate-slide-up {
-        animation: slideUp 0.4s ease-out forwards;
+        animation: slideUp 0.35s ease-out forwards;
     }
 }
 
-/* Utilities */
 .selection-peach::selection {
     background-color: rgba(255, 140, 105, 0.3);
 }

@@ -82,97 +82,75 @@ const Dashboard = () => {
     };
 
     const renderSuperAdminStats = () => {
-        if (isStatsLoading) return <div className="p-10 text-center animate-pulse text-[#FF8C69] font-bold">지표 데이터를 불러오는 중...</div>;
-        if (!stats) return <div className="p-10 text-center text-[#6b6b8a]">표시할 통계 데이터가 없습니다.</div>;
+        if (isStatsLoading) return <div className="p-10 text-center text-[#FF8C69] font-medium">지표 데이터를 불러오는 중...</div>;
+        if (!stats) return <div className="p-10 text-center text-gray-500">표시할 통계 데이터가 없습니다.</div>;
 
         return (
             <>
-                <div className="glass-card p-8 group">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 text-6xl group-hover:scale-125 transition-transform text-[#FF8C69]">👤</div>
-                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">오늘 가입 신규 유저</h3>
-                    <p className="text-5xl font-black text-white leading-none">{stats.today.newUsers}<span className="text-sm font-bold text-[#FF8C69] ml-2">명</span></p>
-                    <div className="mt-6 flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-[#06d6a0] bg-[#06d6a0]/10 px-3 py-1 rounded-full border border-[#06d6a0]/20">↑ 상승 중</span>
-                        <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalUsers}</span>
-                    </div>
+                <div className="glass-card p-6">
+                    <p className="text-sm font-medium text-gray-400 mb-3">오늘 신규 가입</p>
+                    <p className="text-4xl font-bold text-white">{stats.today.newUsers}<span className="text-base font-medium text-[#FF8C69] ml-1.5">명</span></p>
+                    <p className="text-sm text-gray-500 mt-2">전체 {stats.total.totalUsers}명</p>
                 </div>
-                <div className="glass-card p-8 group">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 text-6xl group-hover:scale-125 transition-transform text-[#FF8C69]">🏘️</div>
-                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">오늘 개설 신규 채널</h3>
-                    <p className="text-5xl font-black text-white leading-none">{stats.today.newChannels}<span className="text-sm font-bold text-[#FF8C69] ml-2">개</span></p>
-                    <div className="mt-6 flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-[#FF8C69] bg-[#FF8C69]/10 px-3 py-1 rounded-full border border-[#FF8C69]/20">+ 확장 중</span>
-                        <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalChannels}</span>
-                    </div>
+                <div className="glass-card p-6">
+                    <p className="text-sm font-medium text-gray-400 mb-3">오늘 신규 채널</p>
+                    <p className="text-4xl font-bold text-white">{stats.today.newChannels}<span className="text-base font-medium text-[#FF8C69] ml-1.5">개</span></p>
+                    <p className="text-sm text-gray-500 mt-2">전체 {stats.total.totalChannels}개</p>
                 </div>
-                <div className="glass-card p-8 group">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 text-6xl group-hover:scale-125 transition-transform text-purple-400">📋</div>
-                    <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-4">오늘 등록 신규 게시글</h3>
-                    <p className="text-5xl font-black text-white leading-none">{stats.today.newPosts}<span className="text-sm font-bold text-purple-400 ml-2">개</span></p>
-                    <div className="mt-6 flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">💬 활성</span>
-                        <span className="text-[10px] font-bold text-[#444466]">전체: {stats.total.totalPosts}</span>
-                    </div>
+                <div className="glass-card p-6">
+                    <p className="text-sm font-medium text-gray-400 mb-3">오늘 신규 게시글</p>
+                    <p className="text-4xl font-bold text-white">{stats.today.newPosts}<span className="text-base font-medium text-purple-400 ml-1.5">개</span></p>
+                    <p className="text-sm text-gray-500 mt-2">전체 {stats.total.totalPosts}개</p>
                 </div>
             </>
         );
     };
 
     return (
-        <div className="page-container p-6 md:p-10 pb-24 md:pb-10 pt-safe">
-            <header className="flex justify-between items-end mb-12 animate-slide-up">
+        <div className="page-container p-5 md:p-8 pb-24 md:pb-8 pt-safe">
+            <header className="flex justify-between items-center mb-8 animate-slide-up">
                 <div>
-                    <div className="flex items-center gap-3 mb-3">
-                        <span className="px-3 py-1 bg-[#FF8C69]/10 text-[#FF8C69] text-[10px] font-bold rounded-full border border-[#FF8C69]/20 tracking-widest uppercase">
-                            {user?.role === 'superadmin' ? 'System Master' : 'Online'}
-                        </span>
-                        <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">
-                            {user?.role === 'superadmin' ? 'Terminal Control' : 'Network Connect'}
-                        </h2>
-                    </div>
-                    <h2 className="text-3xl font-black text-white/95 tracking-tight">
-                        반가워요, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF8C69] to-[#E8735A]">{user?.role === 'superadmin' ? '최고관리자' : (user?.name || user?.username)}</span>님 🍑
+                    <p className="text-sm text-gray-500 mb-1">
+                        {user?.role === 'superadmin' ? '최고관리자' : '온라인'}
+                    </p>
+                    <h2 className="text-2xl font-bold text-white">
+                        반가워요, <span className="text-[#FF8C69]">{user?.role === 'superadmin' ? '최고관리자' : (user?.name || user?.username)}</span>님 👋
                     </h2>
                 </div>
                 {user?.role === 'admin' && (
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="peach-button"
-                    >
-                        <span className="text-xl">+</span>
+                    <button onClick={() => setIsModalOpen(true)} className="peach-button px-5 py-2.5 text-sm">
+                        + 채널 개설
                     </button>
                 )}
             </header>
 
             {user?.role === 'superadmin' ? (
                 <section className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                    <h2 className="text-[11px] font-black tracking-[0.4em] uppercase text-slate-500 flex items-center gap-3 mb-8">
-                        <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full shadow-[0_0_10px_#FF8C69]"></span> 시스템 실시간 지표
-                    </h2>
-                    <div className="bento-grid !p-0 !gap-6">
+                    <p className="text-sm font-semibold text-gray-400 flex items-center gap-2 mb-5">
+                        <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full"></span> 실시간 현황
+                    </p>
+                    <div className="bento-grid !p-0 !gap-4">
                         {renderSuperAdminStats()}
                     </div>
                 </section>
             ) : (
-                <div className="space-y-12 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                <div className="space-y-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
                     {superAdminRoom && (
                         <section>
-                            <h2 className="text-[11px] font-black tracking-[0.4em] uppercase text-slate-500 flex items-center gap-3 mb-6">
-                                <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full animate-pulse shadow-[0_0_10px_#FF8C69]"></span> 관리자 전용 채팅
-                            </h2>
+                            <p className="text-sm font-semibold text-gray-400 flex items-center gap-2 mb-4">
+                                <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full animate-pulse"></span> 관리자 메시지
+                            </p>
                             <div
                                 onClick={() => navigate(`/chat?roomId=${superAdminRoom._id}`)}
-                                className="glass-card p-8 cursor-pointer group border border-[#FF8C69]/20"
+                                className="glass-card p-6 cursor-pointer border border-[#FF8C69]/20 hover:border-[#FF8C69]/40 transition-colors"
                             >
-                                <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center justify-between gap-4">
                                     <div>
-                                        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#FF8C69]">SUPERADMIN DIRECT CHAT</p>
-                                        <h3 className="mt-3 text-2xl font-black text-white">최고관리자 대화 요청이 도착했습니다</h3>
-                                        <p className="mt-2 text-sm text-[#8b8ba7]">
-                                            채널 가입 여부와 상관없이 이 화면에서 바로 대화를 확인할 수 있습니다.
-                                        </p>
+                                        <p className="text-xs font-semibold text-[#FF8C69] mb-1">1:1 메시지</p>
+                                        <h3 className="text-lg font-bold text-white">최고관리자로부터 메시지가 도착했습니다</h3>
+                                        <p className="mt-1 text-sm text-gray-500">확인하려면 탭하세요.</p>
                                     </div>
-                                    <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
+                                    <span className="text-xl text-gray-400">→</span>
                                 </div>
                             </div>
                         </section>
@@ -180,27 +158,21 @@ const Dashboard = () => {
 
                     {(notifications.length > 0 || totalPending > 0 || totalUnread > 0) && (
                         <section>
-                            <h2 className="text-[11px] font-black tracking-[0.4em] uppercase text-slate-500 flex items-center gap-3 mb-6">
-                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_red]"></span> 신규 업데이트
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <p className="text-sm font-semibold text-gray-400 flex items-center gap-2 mb-4">
+                                <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span> 새 알림
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {user?.role === 'admin' && totalPending > 0 && (
                                     <div
                                         onClick={() => {
                                             const adminChannel = myChannels.find(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id);
                                             navigate(`/admin/members?channelId=${adminChannel?.channelId?._id || myChannels[0]?.channelId?._id}`);
                                         }}
-                                        className="glass-card p-8 bg-gradient-to-br from-[#FF8C69]/20 to-transparent cursor-pointer group"
+                                        className="glass-card p-5 cursor-pointer hover:border-[#FF8C69]/30 transition-colors"
                                     >
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <span className="w-2 h-2 bg-white rounded-full animate-ping"></span>
-                                            <span className="text-[9px] font-black text-white/60 uppercase tracking-widest">운영 센터</span>
-                                        </div>
-                                        <h3 className="text-xl font-black text-white mb-2">가입 신청 {totalPending}건</h3>
-                                        <p className="text-slate-400 text-xs font-medium mb-6">새로운 멤버가 승인을 기다리고 있습니다.</p>
-                                        <div className="text-[9px] font-black text-[#FF8C69] uppercase tracking-widest py-2 px-4 bg-white/5 rounded-full w-fit group-hover:bg-[#FF8C69] group-hover:text-white transition-all">
-                                            관리 도구 열기
-                                        </div>
+                                        <p className="text-xs font-semibold text-[#FF8C69] mb-2">가입 승인 대기</p>
+                                        <h3 className="text-lg font-bold text-white mb-1">{totalPending}건 대기 중</h3>
+                                        <p className="text-sm text-gray-500">새로운 멤버가 승인을 기다리고 있습니다.</p>
                                     </div>
                                 )}
                                 {myChannels.map(membership => {
@@ -218,20 +190,18 @@ const Dashboard = () => {
                                                 else if (counts.poll > 0) navigate(`/polls?channelId=${chId}`);
                                                 else navigate(`/board?channelId=${chId}`);
                                             }}
-                                            className="glass-card p-6 flex items-center gap-4 cursor-pointer group"
+                                            className="glass-card p-5 flex items-center gap-4 cursor-pointer hover:border-white/15 transition-colors"
                                         >
-                                            <div className="w-12 h-12 rounded-2xl overflow-hidden glass-card !p-0 shadow-inner flex-shrink-0">
+                                            <div className="w-11 h-11 rounded-xl overflow-hidden bg-white/5 flex-shrink-0">
                                                 {membership.channelId?.profileImage ? (
                                                     <img src={membership.channelId.profileImage} alt="" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-xl bg-white/5">🏘️</div>
+                                                    <div className="w-full h-full flex items-center justify-center text-lg">🏘️</div>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-white truncate group-hover:text-[#FF8C69] transition-colors">{membership.channelId?.name}</p>
-                                                <div className="flex items-center gap-3 mt-1">
-                                                    {sum > 0 && <span className="text-[10px] font-black text-[#FF8C69] animate-pulse">NEW CONTENT +{sum}</span>}
-                                                </div>
+                                                <p className="text-sm font-semibold text-white truncate">{membership.channelId?.name}</p>
+                                                <p className="text-xs text-[#FF8C69] font-medium mt-0.5">새 콘텐츠 {sum}개</p>
                                             </div>
                                         </div>
                                     );
@@ -241,21 +211,21 @@ const Dashboard = () => {
                     )}
 
                     <section>
-                        <h2 className="text-[11px] font-black tracking-[0.4em] uppercase text-slate-500 flex items-center gap-3 mb-8">
-                            <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full shadow-[0_0_10px_#FF8C69]"></span> 나의 채널
-                        </h2>
+                        <p className="text-sm font-semibold text-gray-400 flex items-center gap-2 mb-4">
+                            <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full"></span> 내 채널
+                        </p>
                         {isLoading ? (
                             <div className="bento-grid !p-0">
                                 {[1, 2, 3].map(i => (
-                                    <div key={i} className="h-48 glass-card animate-pulse"></div>
+                                    <div key={i} className="h-44 glass-card animate-pulse"></div>
                                 ))}
                             </div>
                         ) : myChannels.length === 0 ? (
-                            <div className="glass-card p-20 text-center border-dashed border-white/10">
-                                <div className="text-5xl mb-6">🏝️</div>
-                                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">가입된 채널이 없습니다.</p>
+                            <div className="glass-card p-16 text-center border-dashed">
+                                <div className="text-4xl mb-4">🏝️</div>
+                                <p className="text-gray-500 text-sm">가입된 채널이 없습니다.</p>
                                 {user?.role === 'admin' && (
-                                    <button onClick={() => setIsModalOpen(true)} className="peach-button mt-8">새 채널 개설</button>
+                                    <button onClick={() => setIsModalOpen(true)} className="peach-button mt-6 text-sm">새 채널 개설</button>
                                 )}
                             </div>
                         ) : (
@@ -264,36 +234,35 @@ const Dashboard = () => {
                                     <div
                                         key={membership.channelId?._id}
                                         onClick={() => handleChannelClick(membership.channelId)}
-                                        className="glass-card p-8 flex flex-col h-full group"
+                                        className="glass-card p-6 flex flex-col h-full cursor-pointer hover:border-white/15 transition-colors"
                                     >
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="w-14 h-14 rounded-2xl overflow-hidden glass-card !p-0 shadow-inner">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5">
                                                 {membership.channelId?.profileImage ? (
                                                     <img src={membership.channelId.profileImage} alt="" className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-2xl bg-white/5">🏘️</div>
+                                                    <div className="w-full h-full flex items-center justify-center text-xl">🏘️</div>
                                                 )}
                                             </div>
-                                            <span className={`text-[9px] font-black px-3 py-1 rounded-full border ${membership.status === 'approved' ? 'border-[#06d6a0]/30 text-[#06d6a0] bg-[#06d6a0]/5' : 'border-yellow-500/30 text-yellow-500 bg-yellow-500/5'
-                                                } uppercase tracking-tighter`}>
-                                                {membership.status === 'approved' ? 'Active' : 'Pending'}
+                                            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                                                membership.status === 'approved'
+                                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                                    : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                                            }`}>
+                                                {membership.status === 'approved' ? '활성' : '대기중'}
                                             </span>
                                         </div>
-                                        <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#FF8C69] transition-colors truncate">{membership.channelId?.name}</h3>
-                                        <p className="text-slate-500 text-xs line-clamp-2 h-10 leading-relaxed font-medium mb-3">{membership.channelId?.description}</p>
+                                        <h3 className="text-base font-bold text-white mb-1.5 truncate">{membership.channelId?.name}</h3>
+                                        <p className="text-gray-500 text-sm line-clamp-2 leading-relaxed mb-3">{membership.channelId?.description}</p>
                                         {membership.channelId?.slug && (
-                                            <p className="text-[10px] font-bold text-[#FF8C69] break-all mb-8">
-                                                /channel/{membership.channelId.slug}
-                                            </p>
+                                            <p className="text-xs text-[#FF8C69]/70 mb-4">/channel/{membership.channelId.slug}</p>
                                         )}
-                                        <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-[#06d6a0]' : 'bg-slate-700'}`}></div>
-                                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Admin {membership.channelId?.ownerId?.isOnline ? 'Online' : 'Offline'}</span>
+                                        <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
+                                            <div className="flex items-center gap-1.5">
+                                                <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-emerald-400' : 'bg-gray-600'}`}></div>
+                                                <span className="text-xs text-gray-500">관리자 {membership.channelId?.ownerId?.isOnline ? '온라인' : '오프라인'}</span>
                                             </div>
-                                            <div className="text-[10px] font-black text-[#FF8C69] uppercase tracking-widest flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                                                Enter <span>→</span>
-                                            </div>
+                                            <span className="text-xs font-medium text-[#FF8C69]">입장 →</span>
                                         </div>
                                     </div>
                                 ))}
@@ -302,11 +271,11 @@ const Dashboard = () => {
                     </section>
 
                     {user?.role === 'admin' && (
-                        <section className="mt-20 mb-32">
-                            <h2 className="text-[11px] font-black tracking-[0.4em] uppercase text-slate-500 flex items-center gap-3 mb-8">
-                                <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full shadow-[0_0_10px_#FF8C69]"></span> 채널 대화 스테이션
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <section className="mb-24">
+                            <p className="text-sm font-semibold text-gray-400 flex items-center gap-2 mb-4">
+                                <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full"></span> 채팅 관리
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
                                     const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
                                     const chatCount = unreadCounts[chId]?.chat || 0;
@@ -317,29 +286,25 @@ const Dashboard = () => {
                                                 setCurrentChannel(membership.channelId);
                                                 navigate(`/chat?channelId=${chId}`);
                                             }}
-                                            className="glass-card p-8 group cursor-pointer relative overflow-hidden"
+                                            className="glass-card p-6 cursor-pointer hover:border-white/15 transition-colors"
                                         >
-                                            <div className="absolute top-0 right-0 p-8 opacity-[0.02] text-8xl group-hover:scale-125 transition-transform text-[#FF8C69]">💬</div>
-                                            <div className="flex items-center justify-between mb-6">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-14 h-14 rounded-2xl glass-card !p-0 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">🏘️</div>
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl">🏘️</div>
                                                     <div>
-                                                        <h3 className="text-xl font-bold text-white tracking-tight">{membership.channelId?.name}</h3>
-                                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">대화방 입장</p>
+                                                        <h3 className="text-base font-bold text-white">{membership.channelId?.name}</h3>
+                                                        <p className="text-xs text-gray-500 mt-0.5">채팅 관리</p>
                                                     </div>
                                                 </div>
                                                 {chatCount > 0 && (
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        <span className="px-3 py-1 bg-red-500 text-white text-[9px] font-black rounded-full animate-bounce shadow-lg shadow-red-500/20">NEW</span>
-                                                        <span className="text-[8px] font-bold text-red-500 uppercase tracking-tighter">{chatCount} Messages</span>
-                                                    </div>
+                                                    <span className="px-2.5 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
+                                                        {chatCount}
+                                                    </span>
                                                 )}
                                             </div>
-                                            <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/5">
-                                                <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em]">Communication Hub</span>
-                                                <div className="flex items-center gap-2 text-[10px] font-black text-[#FF8C69] uppercase tracking-widest group-hover:translate-x-2 transition-transform">
-                                                    Connect <span>→</span>
-                                                </div>
+                                            <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                                                <span className="text-xs text-gray-600">멤버와 1:1 대화</span>
+                                                <span className="text-xs font-medium text-[#FF8C69]">열기 →</span>
                                             </div>
                                         </div>
                                     );
