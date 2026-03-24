@@ -40,18 +40,33 @@ const ChatSidebar = () => {
         }
     }, [fetchRooms, user, channelId, isAdmin]);
 
+    // + 버튼으로 멤버 목록 열 때마다 재조회
+    useEffect(() => {
+        if (showUserList) loadUsers();
+    }, [showUserList]);
+
     useEffect(() => {
         const handlePresenceUpdate = ({ userId, status }) => {
             setUsers(prev => {
                 if (status === 'offline') {
                     return prev.filter(u => String(u._id) !== String(userId));
                 }
+                const exists = prev.some(u => String(u._id) === String(userId));
+                if (!exists) {
+                    // 새로 온라인된 사용자 → 목록 갱신
+                    if (channelId && isAdmin) {
+                        axios.get(`/chat/users/${channelId}?onlineOnly=true`)
+                            .then(res => setUsers(res.data))
+                            .catch(() => {});
+                    }
+                    return prev;
+                }
                 return prev.map(u => String(u._id) === String(userId) ? { ...u, presenceStatus: status, isOnline: status !== 'offline' } : u);
             });
         };
         socket.on('presence_update', handlePresenceUpdate);
         return () => socket.off('presence_update', handlePresenceUpdate);
-    }, []);
+    }, [channelId, isAdmin]);
 
     // 실시간 목록 업데이트 리스너
     useEffect(() => {
