@@ -31,6 +31,18 @@ const socketHandler = (io) => {
                         console.error('[SOCKET] setup 세션 체크 에러:', error);
                     }
                 }
+                // 채널 DB에 온라인 상태 설정
+                if (socket.userChannels?.length) {
+                    for (const ch of socket.userChannels) {
+                        try {
+                            const pool = await getChannelPool(ch.dbName);
+                            await executeInPool(pool, "UPDATE Users SET isOnline=1, presenceStatus='online' WHERE id=@id", { id: ch.userId });
+                            io.to(`channel_${ch.channelId}`).emit('presence_update', { userId: ch.userId, status: 'online' });
+                        } catch (e) {
+                            console.error('[SOCKET] setup 온라인 상태 설정 에러:', e.message);
+                        }
+                    }
+                }
                 socket.emit('connected');
             }
         });
