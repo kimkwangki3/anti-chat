@@ -10,8 +10,7 @@ const resolveSocketUrl = () => {
     }
 
     if (typeof window !== 'undefined') {
-        const { protocol, hostname } = window.location;
-        return `${protocol}//${hostname}:5000`;
+        return window.location.origin;
     }
 
     return 'http://127.0.0.1:5000';
