@@ -8,6 +8,7 @@ const fs = require('fs');
 const { Server } = require('socket.io');
 const webpush = require('web-push');
 const { getPool } = require('./db/mssql');
+const { startSyncService } = require('./services/syncService');
 
 // Web Push VAPID 설정
 const vapidPublic = process.env.PUBLIC_VAPID_KEY;
@@ -102,6 +103,7 @@ getPool()
     .then(() => {
         console.log('MSSQL 연결 성공');
         initPollReminders(io);
+        startSyncService();
 
         server.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
     })
