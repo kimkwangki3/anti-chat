@@ -66,6 +66,19 @@ export const installAudioUnlock = () => {
     window.addEventListener('pointerdown', unlock, { passive: true });
     window.addEventListener('keydown', unlock, { passive: true });
     window.addEventListener('touchstart', unlock, { passive: true });
+
+    // 탭이 다시 포그라운드로 올 때 suspended 된 AudioContext 재개
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && audioContext) {
+            audioContext.resume()
+                .then(() => {
+                    if (audioContext.state === 'running') {
+                        audioUnlocked = true;
+                    }
+                })
+                .catch(() => {});
+        }
+    });
 };
 
 const scheduleTone = (ctx, { start, duration, frequency, type, gainValue }) => {
