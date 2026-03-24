@@ -1,68 +1,47 @@
-$ErrorActionPreference = "Stop"
-
 $repoRoot = "C:\apps\anti"
 $backendDir = Join-Path $repoRoot "backend"
 $frontendDir = Join-Path $repoRoot "frontend"
 $logsDir = Join-Path $repoRoot "logs"
+$nodeExe = "C:\Program Files\nodejs\node.exe"
 
 if (-not (Test-Path $logsDir)) {
     New-Item -ItemType Directory -Path $logsDir | Out-Null
 }
 
-function Resolve-ExecutablePath {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$CommandName,
-        [Parameter(Mandatory = $true)]
-        [string[]]$CandidatePaths
-    )
+$backendLog = Join-Path $logsDir "backend.log"
+$frontendLog = Join-Path $logsDir "frontend.log"
 
-    foreach ($candidate in $CandidatePaths) {
-        if (Test-Path $candidate) { return $candidate }
-    }
-
-    $command = Get-Command $CommandName -ErrorAction SilentlyContinue
-    if ($command -and $command.Source) { return $command.Source }
-    throw "Executable not found: $CommandName"
-}
-
-function Stop-PortProcess {
-    param([Parameter(Mandatory = $true)][int]$Port)
-    $result = netstat -ano 2>$null | Select-String ":$Port\s.*LISTENING"
-    if (-not $result) { return }
-    $result | ForEach-Object {
-        $parts = $_ -split '\s+'
-        $processId = $parts[-1]
-        if ($processId -match '^\d+$') {
-            try {
-                Stop-Process -Id ([int]$processId) -Force -ErrorAction Stop
-            } catch {
-                Write-Warning "Failed to stop PID ${processId} on port ${Port}: $($_.Exception.Message)"
+# 기존 프로세스 종료
+$ports = @(5000, 3000)
+foreach ($port in $ports) {
+    $result = netstat -ano 2>$null | Select-String ":$port\s.*LISTENING"
+    if ($result) {
+        $result | ForEach-Object {
+            $parts = ($_ -split '\s+') | Where-Object { $_ -ne '' }
+            $procId = $parts[-1]
+            if ($procId -match '^\d+$') {
+                try { Stop-Process -Id ([int]$procId) -Force -ErrorAction SilentlyContinue } catch {}
             }
         }
     }
 }
 
+Start-Sleep -Seconds 1
 
-$nodeExe = Resolve-ExecutablePath -CommandName "node" -CandidatePaths @(
-    "$env:ProgramFiles\nodejs\node.exe",
-    "${env:ProgramFiles(x86)}\nodejs\node.exe"
-)
-
-$backendLog = Join-Path $logsDir "backend.log"
-$frontendLog = Join-Path $logsDir "frontend.log"
-
-Stop-PortProcess -Port 5000
-Stop-PortProcess -Port 3000
-
-Start-Process -FilePath "cmd.exe" `
+# 백엔드 시작
+Start-Process -FilePath $nodeExe `
+    -ArgumentList "server.js" `
     -WorkingDirectory $backendDir `
-    -ArgumentList "/c `"$nodeExe`" server.js >> `"$backendLog`" 2>&1" `
+    -RedirectStandardOutput $backendLog `
+    -RedirectStandardError (Join-Path $logsDir "backend.err.log") `
     -WindowStyle Hidden
 
-Start-Process -FilePath "cmd.exe" `
+# 프론트엔드 시작
+Start-Process -FilePath $nodeExe `
+    -ArgumentList "scripts\serve-dist.cjs" `
     -WorkingDirectory $frontendDir `
-    -ArgumentList "/c `"$nodeExe`" scripts\serve-dist.cjs >> `"$frontendLog`" 2>&1" `
+    -RedirectStandardOutput $frontendLog `
+    -RedirectStandardError (Join-Path $logsDir "frontend.err.log") `
     -WindowStyle Hidden
 
 Start-Sleep -Seconds 5
