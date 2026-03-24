@@ -4,10 +4,10 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const { getPool, queryOne, execute, insertAndGetId, initChannelDb } = require('../db/mssql');
 
 const CHANNELS = [
-    { name: '골프채널',  slug: 'golf',   linkedServer: '211.175.217.19,6100', linkedDb: 'GTRADENEW' },
-    { name: '이클릭채널', slug: 'eclick', linkedServer: '211.175.217.11,6100', linkedDb: 'GTRADENEW' },
-    { name: '금메달채널', slug: 'gold',   linkedServer: '115.92.124.27,6100',  linkedDb: 'GTRADENEW' },
-    { name: '바른채널',  slug: 'barun',  linkedServer: '110.4.89.210,4600',   linkedDb: 'GTRADENEW' },
+    { name: '골프채널',  slug: 'golf',   desc: '골프채널',  linkedServer: '211.175.217.19,6100', linkedDb: 'GTRADENEW' },
+    { name: '이클릭채널', slug: 'eclick', desc: '이클릭채널', linkedServer: '211.175.217.11,6100', linkedDb: 'GTRADENEW' },
+    { name: '금메달채널', slug: 'gold',   desc: '금메달채널', linkedServer: '115.92.124.27,6100',  linkedDb: 'GTRADENEW' },
+    { name: '바른채널',  slug: 'barun',  desc: '바른채널',  linkedServer: '110.4.89.210,4600',   linkedDb: 'GTRADENEW' },
 ];
 
 // 슈퍼어드민 ID (master DB Users 테이블에서 role='superadmin')
@@ -38,9 +38,9 @@ async function main() {
                 // 신규 생성
                 const dbName = `ch_${ch.slug}_${Date.now().toString().slice(-6)}`;
                 const channelId = await insertAndGetId(
-                    `INSERT INTO Channels (ownerId, name, slug, databaseName, linkedServer, linkedDb, syncEnabled, status)
-                     VALUES (@ownerId, @name, @slug, @dbName, @linkedServer, @linkedDb, 1, 'active')`,
-                    { ownerId: OWNER_ID, name: ch.name, slug: ch.slug, dbName, linkedServer: ch.linkedServer, linkedDb: ch.linkedDb }
+                    `INSERT INTO Channels (ownerId, name, description, slug, databaseName, linkedServer, linkedDb, syncEnabled, status)
+                     VALUES (@ownerId, @name, @desc, @slug, @dbName, @linkedServer, @linkedDb, 1, 'active')`,
+                    { ownerId: OWNER_ID, name: ch.name, desc: ch.desc, slug: ch.slug, dbName, linkedServer: ch.linkedServer, linkedDb: ch.linkedDb }
                 );
                 await initChannelDb(dbName);
                 console.log(`[CREATE] "${ch.name}" 채널 생성 완료 (id=${channelId}, db=${dbName})`);
