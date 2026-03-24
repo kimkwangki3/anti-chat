@@ -7,6 +7,7 @@ import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
 import useAuthStore from '../store/authStore';
 import socket from '../socket/socket';
+import axios from '../api/axios';
 
 const ChatPage = () => {
     const [input, setInput] = useState('');
@@ -294,9 +295,17 @@ const ChatPage = () => {
                         <h1 className="text-4xl font-black tracking-[0.2em] uppercase italic font-mono mb-4 text-white">대기 중</h1>
                         <p className="max-w-xs text-[12px] font-bold uppercase tracking-[0.3em] leading-relaxed text-[#555577] mb-10">대화 상대를 선택하고<br />즐거운 소통을 시작해 보세요.</p>
 
-                        {user.role === 'member' && rooms.length === 0 && (
+                        {user.role === 'member' && channelId && rooms.length === 0 && (
                             <button
-                                onClick={() => navigate(`/chat?channelId=${channelId}`)}
+                                onClick={async () => {
+                                    try {
+                                        const res = await axios.post('/chat/rooms', { channelId });
+                                        await fetchRooms(channelId);
+                                        setCurrentRoom(res.data);
+                                    } catch (err) {
+                                        alert(err.response?.data?.message || '대화를 시작할 수 없습니다.');
+                                    }
+                                }}
                                 className="px-10 py-5 text-white text-[11px] font-black rounded-2xl shadow-xl transition-all uppercase tracking-[0.2em] hover:scale-105 active:scale-95"
                                 style={{ backgroundColor: themeColor, boxShadow: `0 15px 25px ${themeColor}40` }}
                             >
