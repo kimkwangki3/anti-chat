@@ -125,3 +125,12 @@ Get-Content C:\apps\anti\logs\frontend.log -Tail 120
     - API runtime check from server logs
     - one real UI upload test (avatar + board attachment)
   - If user reports failure, first verify deployed commit hash on server before further patching.
+
+10. Notification sound preview depended on async resume
+- What failed:
+  - The settings page `SIGNAL TEST` did not ring even though the UI path was wired.
+- Why:
+  - Audio playback waited on `AudioContext.resume()` before scheduling tones, which can miss the user-gesture window in some browsers.
+- Prevention:
+  - For click-triggered previews, use a fresh audio context and schedule the tone immediately in the gesture handler.
+  - Keep runtime notifications on a separate unlocked path, and verify preview sound before shipping.
