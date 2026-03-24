@@ -44,7 +44,7 @@ const Sidebar = () => {
 
     const menuItems = [
         { id: 'dashboard', label: '홈', icon: 'home', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
-        { id: 'search', label: '채널 검색', icon: 'search', path: '/search-channels', hidden: !!urlChannelId },
+        { id: 'search', label: '채널 검색', icon: 'search', path: '/search-channels', hidden: !!urlChannelId || !isSuperAdmin },
         { id: 'notice', label: '공지사항', icon: 'bell', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
         { id: 'poll', label: '투표', icon: 'vote', path: `/polls?channelId=${urlChannelId}`, hidden: !urlChannelId },
         { id: 'board', label: '게시판', icon: 'board', path: `/board?channelId=${urlChannelId}`, count: counts.post, hidden: !urlChannelId },
