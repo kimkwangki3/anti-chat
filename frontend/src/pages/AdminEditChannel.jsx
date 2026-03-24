@@ -15,6 +15,7 @@ const AdminEditChannel = () => {
 
     const [formData, setFormData] = useState({
         name: '',
+        slug: '',
         description: '',
         profileImage: '',
         cardColor: '#FF8C69'
@@ -33,6 +34,7 @@ const AdminEditChannel = () => {
                     }
                     setFormData({
                         name: channel.name,
+                        slug: channel.slug || '',
                         description: channel.description,
                         profileImage: channel.profileImage || '',
                         cardColor: channel.cardColor || '#FF8C69'
@@ -69,7 +71,8 @@ const AdminEditChannel = () => {
             formData.name,
             formData.description,
             formData.profileImage,
-            formData.cardColor
+            formData.cardColor,
+            formData.slug
         );
         if (success) {
             alert('채널 정보가 수정되었습니다.');
@@ -160,6 +163,24 @@ const AdminEditChannel = () => {
                                 className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-8 py-5 text-white text-sm font-bold focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-inner"
                                 placeholder="채널의 이름을 정해주세요"
                             />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <label className="block text-[10px] font-black text-[#5a5a6a] uppercase tracking-[0.3em] ml-2">Channel Address</label>
+                        <div className="space-y-3">
+                            <input
+                                type="text"
+                                required
+                                value={formData.slug}
+                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                className="w-full bg-[#1a1a24] border border-white/5 rounded-2xl px-8 py-5 text-white text-sm font-bold focus:outline-none focus:border-[#FF8C69]/30 transition-all shadow-inner"
+                                placeholder="golf"
+                            />
+                            <div className="rounded-2xl bg-[#1a1a24] border border-white/5 px-5 py-4">
+                                <p className="text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.2em] mb-2">Preview Link</p>
+                                <p className="text-sm text-white break-all">{`${window.location.origin}/channel/${formData.slug || 'channel-address'}`}</p>
+                            </div>
                         </div>
                     </div>
 

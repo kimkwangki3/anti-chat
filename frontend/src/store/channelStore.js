@@ -34,10 +34,22 @@ const useChannelStore = create(
                 }
             },
 
-            updateChannel: async (id, name, description, profileImage, cardColor) => {
+            fetchChannelBySlug: async (slug) => {
                 set({ isLoading: true, error: null });
                 try {
-                    const response = await axios.put(`/channels/${id}`, { name, description, profileImage, cardColor });
+                    const response = await axios.get(`/channels/slug/${slug}`);
+                    set({ isLoading: false });
+                    return response.data;
+                } catch (error) {
+                    set({ error: error.response?.data?.message || '채널 주소를 불러오는데 실패했습니다.', isLoading: false });
+                    return null;
+                }
+            },
+
+            updateChannel: async (id, name, description, profileImage, cardColor, slug) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const response = await axios.put(`/channels/${id}`, { name, description, profileImage, cardColor, slug });
                     set((state) => ({
                         myChannels: state.myChannels.map(m =>
                             m.channelId?._id === id ? { ...m, channelId: response.data } : m

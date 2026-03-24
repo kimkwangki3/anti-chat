@@ -12,6 +12,12 @@ const channelSchema = new mongoose.Schema({
         unique: true,
         trim: true
     },
+    slug: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true
+    },
     description: {
         type: String,
         required: true

@@ -21,6 +21,7 @@ const PostDetailPage = lazy(() => import('./pages/PostDetailPage'));
 const PollPage = lazy(() => import('./pages/PollPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const ChannelEntryRedirect = lazy(() => import('./pages/ChannelEntryRedirect'));
 const SuperAdminUsers = lazy(() => import('./pages/SuperAdminUsers'));
 const SuperAdminAdmins = lazy(() => import('./pages/SuperAdminAdmins'));
 const SuperAdminDirectChat = lazy(() => import('./pages/SuperAdminDirectChat'));
@@ -76,6 +77,7 @@ function App() {
           <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
           <Route path="/chat" element={<ProtectedLayout><ChatPage /></ProtectedLayout>} />
           <Route path="/search-channels" element={<ProtectedLayout><ChannelSearchPage /></ProtectedLayout>} />
+          <Route path="/channel/:slug" element={<ProtectedLayout><ChannelEntryRedirect /></ProtectedLayout>} />
           <Route path="/admin/members" element={<ProtectedLayout><AdminMemberManagement /></ProtectedLayout>} />
           <Route path="/admin/edit-channel" element={<ProtectedLayout><AdminEditChannel /></ProtectedLayout>} />
           <Route path="/notices" element={<ProtectedLayout><NoticePage /></ProtectedLayout>} />

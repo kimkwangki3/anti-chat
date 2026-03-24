@@ -78,7 +78,7 @@ const Dashboard = () => {
 
     const handleChannelClick = (channel) => {
         setCurrentChannel(channel);
-        navigate(`/notices?channelId=${channel._id}`);
+        navigate(channel?.slug ? `/channel/${channel.slug}` : `/notices?channelId=${channel._id}`);
     };
 
     const renderSuperAdminStats = () => {
@@ -280,7 +280,12 @@ const Dashboard = () => {
                                             </span>
                                         </div>
                                         <h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#FF8C69] transition-colors truncate">{membership.channelId?.name}</h3>
-                                        <p className="text-slate-500 text-xs line-clamp-2 h-10 leading-relaxed font-medium mb-8">{membership.channelId?.description}</p>
+                                        <p className="text-slate-500 text-xs line-clamp-2 h-10 leading-relaxed font-medium mb-3">{membership.channelId?.description}</p>
+                                        {membership.channelId?.slug && (
+                                            <p className="text-[10px] font-bold text-[#FF8C69] break-all mb-8">
+                                                /channel/{membership.channelId.slug}
+                                            </p>
+                                        )}
                                         <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-1.5 h-1.5 rounded-full ${membership.channelId?.ownerId?.isOnline ? 'bg-[#06d6a0]' : 'bg-slate-700'}`}></div>

@@ -118,7 +118,12 @@ const ChannelSearchPage = () => {
                                     <h3 className="text-xl font-bold text-white group-hover:text-[#FF8C69] transition-colors leading-tight truncate">{channel.name}</h3>
                                 </div>
 
-                                <p className="text-slate-500 text-xs leading-relaxed mb-10 flex-1 font-medium italic line-clamp-3">{channel.description}</p>
+                                <p className="text-slate-500 text-xs leading-relaxed mb-3 flex-1 font-medium italic line-clamp-3">{channel.description}</p>
+                                {channel.slug && (
+                                    <p className="text-[10px] font-bold text-[#FF8C69] break-all mb-10">
+                                        /channel/{channel.slug}
+                                    </p>
+                                )}
 
                                 <div className="mt-auto pt-6 border-t border-white/5 flex items-center justify-between relative z-10">
                                     <div className="flex items-center gap-3">

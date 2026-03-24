@@ -9,6 +9,46 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+const slugifyChannelName = (value) => {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9가-힣]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-{2,}/g, '-')
+        .slice(0, 60);
+};
+
+const buildUniqueChannelSlug = async (name, excludeChannelId = null) => {
+    const baseSlug = slugifyChannelName(name) || `channel-${Date.now()}`;
+    let candidate = baseSlug;
+    let suffix = 1;
+
+    while (true) {
+        const existingChannel = await Channel.findOne({
+            slug: candidate,
+            ...(excludeChannelId ? { _id: { $ne: excludeChannelId } } : {})
+        }).select('_id');
+
+        if (!existingChannel) {
+            return candidate;
+        }
+
+        suffix += 1;
+        candidate = `${baseSlug}-${suffix}`;
+    }
+};
+
+const ensureChannelSlug = async (channel) => {
+    if (!channel || channel.slug) {
+        return channel;
+    }
+
+    channel.slug = await buildUniqueChannelSlug(channel.name, channel._id);
+    await channel.save();
+    return channel;
+};
+
 // Multer 설정 (메모리 스토리지)
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -44,7 +84,7 @@ const saveChannelImageLocally = async (req, file) => {
 // @desc    채널 생성 (관리자 전용)
 // @access  Private/Admin
 router.post('/', protect, admin, async (req, res) => {
-    const { name, description } = req.body;
+    const { name, description, slug } = req.body;
 
     try {
         const ownedChannelsCount = await Channel.countDocuments({ ownerId: req.user._id });
@@ -60,7 +100,8 @@ router.post('/', protect, admin, async (req, res) => {
         const channel = await Channel.create({
             ownerId: req.user._id,
             name,
-            description
+            description,
+            slug: await buildUniqueChannelSlug(slug || name)
         });
 
         // 생성한 관리자는 자동으로 approved 멤버로 등록
@@ -87,6 +128,7 @@ router.get('/search', protect, async (req, res) => {
             status: 'active' // 활성화된 채널만 검색 허용
         };
         const channels = await Channel.find(query).populate('ownerId', 'name username');
+        await Promise.all(channels.map((channel) => ensureChannelSlug(channel)));
         res.json(channels);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -107,6 +149,7 @@ router.get('/my-channels', protect, async (req, res) => {
 
         // channelId가 null인 것(비활성화된 채널)과 membership 상태가 'approved'가 아닌 것 제외
         const activeMemberships = memberships.filter(m => m.channelId !== null && m.status === 'approved');
+        await Promise.all(activeMemberships.map((membership) => ensureChannelSlug(membership.channelId)));
         res.json(activeMemberships);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -201,6 +244,24 @@ router.get('/unread-counts', protect, async (req, res) => {
     }
 });
 
+// @route   GET /api/channels/slug/:slug
+// @desc    Find channel by slug
+// @access  Private
+router.get('/slug/:slug', protect, async (req, res) => {
+    try {
+        const channel = await Channel.findOne({ slug: req.params.slug }).populate('ownerId', 'name username');
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+
+        if (channel.status === 'suspended' && req.user.role !== 'superadmin' && channel.ownerId._id.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: '이 채널은 현재 정지된 상태입니다.' });
+        }
+
+        res.json(await ensureChannelSlug(channel));
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 
 // @route   GET /api/channels/:id
 // @desc    특정 채널 상세 정보 조회
@@ -215,7 +276,7 @@ router.get('/:id', protect, async (req, res) => {
             return res.status(403).json({ message: '이 채널은 현재 정지된 상태입니다.' });
         }
 
-        res.json(channel);
+        res.json(await ensureChannelSlug(channel));
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -225,7 +286,7 @@ router.get('/:id', protect, async (req, res) => {
 // @desc    채널 정보 수정 (소유자 전용)
 // @access  Private
 router.put('/:id', protect, async (req, res) => {
-    const { name, description, profileImage, cardColor } = req.body;
+    const { name, description, profileImage, cardColor, slug } = req.body;
 
     try {
         const channel = await Channel.findById(req.params.id);
@@ -240,6 +301,7 @@ router.put('/:id', protect, async (req, res) => {
         channel.description = description || channel.description;
         channel.profileImage = profileImage !== undefined ? profileImage : channel.profileImage;
         channel.cardColor = cardColor || channel.cardColor;
+        channel.slug = await buildUniqueChannelSlug(slug || name || channel.name, channel._id);
 
         const updatedChannel = await channel.save();
         res.json(updatedChannel);
