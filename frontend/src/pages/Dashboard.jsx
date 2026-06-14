@@ -156,7 +156,7 @@ const Dashboard = () => {
                         </section>
                     )}
 
-                    {(notifications.length > 0 || totalPending > 0 || totalUnread > 0) && (
+                    {((Array.isArray(notifications) && notifications.length > 0) || totalPending > 0 || totalUnread > 0) && (
                         <section>
                             <p className="text-sm font-semibold text-gray-400 flex items-center gap-2 mb-4">
                                 <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse"></span> 새 알림
@@ -175,7 +175,7 @@ const Dashboard = () => {
                                         <p className="text-sm text-gray-500">새로운 멤버가 승인을 기다리고 있습니다.</p>
                                     </div>
                                 )}
-                                {myChannels.map(membership => {
+                                {Array.isArray(myChannels) && myChannels.map(membership => {
                                     const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
                                     const counts = unreadCounts[chId] || { notice: 0, post: 0, chat: 0, poll: 0 };
                                     const sum = (counts.notice || 0) + (counts.post || 0) + (counts.chat || 0) + (counts.poll || 0);
@@ -230,7 +230,7 @@ const Dashboard = () => {
                             </div>
                         ) : (
                             <div className="bento-grid !p-0">
-                                {myChannels.map((membership) => (
+                                {Array.isArray(myChannels) && myChannels.map((membership) => (
                                     <div
                                         key={membership.channelId?._id}
                                         onClick={() => handleChannelClick(membership.channelId)}
@@ -276,7 +276,7 @@ const Dashboard = () => {
                                 <span className="w-1.5 h-1.5 bg-[#FF8C69] rounded-full"></span> 채팅 관리
                             </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
+                                {Array.isArray(myChannels) && myChannels.filter(m => m.channelId?.ownerId?._id === user?._id || m.channelId?.ownerId === user?._id).map(membership => {
                                     const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
                                     const chatCount = unreadCounts[chId]?.chat || 0;
                                     return (

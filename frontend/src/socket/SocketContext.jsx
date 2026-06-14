@@ -434,7 +434,7 @@ export const SocketProvider = ({ children }) => {
             {children}
             {/* 실시간 알림 팝업 UI - 우측 상단 */}
             <div className="fixed top-20 right-4 z-[100] space-y-3 pointer-events-none">
-                {notifications.map((noti) => (
+                {Array.isArray(notifications) && notifications.map((noti) => (
                     <div
                         key={noti.id}
                         onClick={() => handleNotificationClick(noti)}
