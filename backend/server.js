@@ -33,9 +33,20 @@ const allowedOrigins = [
     'http://localhost'
 ].filter(Boolean);
 
+// Render 정적 사이트(*.onrender.com)에서 오는 요청 허용 (프론트를 Render에 배포)
+const isAllowedOrigin = (origin) => {
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return true;
+    try {
+        const host = new URL(origin).hostname;
+        return host.endsWith('.onrender.com');
+    } catch {
+        return false;
+    }
+};
+
 const corsOptions = {
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        if (!origin || isAllowedOrigin(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));

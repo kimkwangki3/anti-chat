@@ -1,0 +1,19 @@
+# Render Blueprint — anti-chat 프론트엔드(정적 사이트)
+# 백엔드는 Render로 옮기지 않음(MSSQL이 윈도우 서버에 있음). 프론트만 Render에 배포.
+# VITE_API_URL / VITE_SOCKET_URL 은 Render 대시보드에서 백엔드 HTTPS 주소로 입력(터널 주소).
+services:
+  - name: anti-chat-frontend
+    type: web
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false   # 예: https://api.example.com/api
+      - key: VITE_SOCKET_URL
+        sync: false   # 예: https://api.example.com
+    routes:
+      # SPA: 모든 경로를 index.html로 (새로고침/딥링크 대응)
+      - type: rewrite
+        path: /*
+        destination: /index.html
