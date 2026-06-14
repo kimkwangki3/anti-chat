@@ -34,6 +34,8 @@ instance.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        // ngrok 무료티어의 브라우저 경고 페이지(HTML) 우회 — 이게 없으면 API가 JSON 대신 경고 HTML을 반환함
+        config.headers['ngrok-skip-browser-warning'] = 'true';
         return config;
     },
     (error) => {

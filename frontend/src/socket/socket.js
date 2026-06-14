@@ -24,7 +24,13 @@ if (!import.meta.env.VITE_SOCKET_URL && !import.meta.env.DEV) {
 
 const socket = io(socketUrl, {
     withCredentials: true,
-    autoConnect: false
+    autoConnect: false,
+    // ngrok 무료티어 경고 페이지 우회 (polling 핸드셰이크용)
+    transportOptions: {
+        polling: {
+            extraHeaders: { 'ngrok-skip-browser-warning': 'true' }
+        }
+    }
 });
 
 export default socket;
