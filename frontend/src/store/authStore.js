@@ -32,7 +32,19 @@ const useAuthStore = create((set) => ({
             localStorage.setItem('token', token);
             localStorage.setItem('sessionId', sessionId);
             localStorage.setItem('user', JSON.stringify(userData));
-            set({ user: userData, token, sessionId, isLoading: false });
+            // 토큰을 먼저 store에 반영해야 이후 요청 인터셉터가 Authorization 헤더를 붙임
+            set({ user: userData, token, sessionId });
+
+            // 로그인 응답은 일부 필드(profileImage, status 등)가 비어 있으므로
+            // 즉시 /auth/me로 완전한 프로필을 동기화 → 새로고침 없이도 새로고침과 동일한 상태 확보
+            try {
+                const me = await axios.get('/auth/me');
+                localStorage.setItem('user', JSON.stringify(me.data));
+                set({ user: me.data, isLoading: false });
+            } catch (e) {
+                // /auth/me 실패해도 로그인 자체는 성공으로 처리 (로그인 응답 user 유지)
+                set({ isLoading: false });
+            }
             return true;
         } catch (error) {
             set({

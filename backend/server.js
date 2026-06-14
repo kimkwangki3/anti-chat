@@ -92,9 +92,15 @@ app.use('/api/channel-members', channelMemberRoutes);
 app.use('/api/superadmin', superadminRoutes);
 app.use('/api/polls', pollRoutes);
 
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
+const frontendDist = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    app.get('/{*splat}', (req, res) => {
+        res.sendFile(path.join(frontendDist, 'index.html'));
+    });
+} else {
+    app.get('/', (req, res) => res.send('API is running...'));
+}
 
 const PORT = process.env.PORT || 5000;
 
