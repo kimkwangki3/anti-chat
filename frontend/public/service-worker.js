@@ -1,60 +1,23 @@
-const CACHE_NAME = 'peach-chat-v4';
-const STATIC_ASSETS = ['/', '/index.html'];
+const CACHE_NAME = 'peach-chat-v5';
 
-// 설치: 정적 파일 캐싱
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS);
-        })
-    );
+// 설치: 즉시 활성화 (대기 없이 새 SW로 교체)
+self.addEventListener('install', () => {
     self.skipWaiting();
 });
 
-// 활성화: 즉시 모든 이전 캐시 삭제 및 제어권 획득
+// 활성화: 모든 이전 캐시 삭제 + 즉시 제어권 획득
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) =>
-            Promise.all(
-                cacheNames
-                    .map((name) => caches.delete(name))
-            )
+            Promise.all(cacheNames.map((name) => caches.delete(name)))
         )
     );
     self.clients.claim();
 });
 
-// Fetch: API 요청은 네트워크 우선, 나머지는 캐시 우선
-self.addEventListener('fetch', (event) => {
-    const { request } = event;
-    const url = new URL(request.url);
-
-    // API 요청 및 소켓 요청은 캐싱하지 않음
-    if (url.pathname.startsWith('/api') || url.pathname.startsWith('/socket.io')) {
-        return;
-    }
-
-    // HTML 요청은 네트워크 우선 (최신 버전 유지)
-    if (request.mode === 'navigate') {
-        event.respondWith(
-            fetch(request).catch(() => caches.match('/index.html'))
-        );
-        return;
-    }
-
-    // 정적 자산은 캐시 우선
-    event.respondWith(
-        caches.match(request).then((cached) => {
-            return cached || fetch(request).then((response) => {
-                if (response.ok) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-                }
-                return response;
-            });
-        })
-    );
-});
+// fetch 핸들러 없음 → 모든 요청을 브라우저 기본(네트워크)로 처리.
+// 자산을 SW가 캐싱하지 않으므로 배포 후 옛 번들이 남아 빈 화면이 되는 문제가 없음.
+// (Vite 번들은 파일명에 콘텐츠 해시가 붙어 있어 HTTP 캐시만으로 충분히 빠름)
 
 // 푸시 알림 수신
 self.addEventListener('push', function (event) {
