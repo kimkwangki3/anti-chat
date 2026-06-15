@@ -119,7 +119,8 @@ router.get('/my-channels', protect, async (req, res) => {
                 channelId: {
                     _id: c.id, id: c.id, name: c.name, slug: c.slug,
                     description: c.description, profileImage: c.profileImage,
-                    status: c.status, cardColor: c.cardColor, ownerId: c.ownerId,
+                    status: c.status, cardColor: c.cardColor,
+                    ownerId: { _id: c.owner_id, id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline },
                     owner: { _id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline }
                 },
                 status: 'approved', isChatBlocked: 0
@@ -139,7 +140,8 @@ router.get('/my-channels', protect, async (req, res) => {
                 channelId: {
                     _id: c.id, id: c.id, name: c.name, slug: c.slug,
                     description: c.description, profileImage: c.profileImage,
-                    status: c.status, cardColor: c.cardColor, ownerId: c.ownerId,
+                    status: c.status, cardColor: c.cardColor,
+                    ownerId: { _id: c.owner_id, id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline },
                     owner: { _id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline }
                 },
                 status: 'approved', isChatBlocked: 0, role: 'admin'

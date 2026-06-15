@@ -1,7 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
+const { query, queryOne, execute, insertAndGetId, getChannelPool, queryOneInPool } = require('../db/mssql');
 const { protect, superAdmin } = require('../middleware/authMiddleware');
+
+// 아이디 중복검사 — 마스터 DB + 모든 채널 DB 전체 확인
+const isUsernameTakenAnywhere = async (username) => {
+    const inMaster = await queryOne('SELECT id FROM Users WHERE username = @username', { username });
+    if (inMaster) return true;
+    const channels = await query("SELECT databaseName FROM Channels WHERE databaseName IS NOT NULL");
+    for (const ch of channels) {
+        try {
+            const pool = await getChannelPool(ch.databaseName);
+            const found = await queryOneInPool(pool, 'SELECT id FROM Users WHERE username = @username', { username });
+            if (found) return true;
+        } catch (e) {
+            console.error(`[중복검사] 채널 DB 오류 (${ch.databaseName}):`, e.message);
+        }
+    }
+    return false;
+};
 
 router.use(protect, superAdmin);
 
@@ -31,8 +48,8 @@ router.get('/admins/check-username', async (req, res) => {
     const username = req.query.username?.trim().toLowerCase();
     if (!username) return res.status(400).json({ message: '아이디를 입력해 주세요.' });
     if (!usernamePattern.test(username)) return res.status(400).json({ message: '아이디 형식이 올바르지 않습니다.' });
-    const existing = await queryOne('SELECT id FROM Users WHERE username = @username', { username });
-    res.json({ available: !existing, message: existing ? '이미 사용 중인 아이디입니다.' : '사용 가능한 아이디입니다.' });
+    const taken = await isUsernameTakenAnywhere(username);
+    res.json({ available: !taken, message: taken ? '이미 사용 중인 아이디입니다. (전체 회원/채널 회원 포함)' : '사용 가능한 아이디입니다.' });
 });
 
 // POST /api/superadmin/admins
@@ -43,8 +60,8 @@ router.post('/admins', async (req, res) => {
 
     try {
         const normalizedUsername = username.trim().toLowerCase();
-        const existing = await queryOne('SELECT id FROM Users WHERE username = @username', { username: normalizedUsername });
-        if (existing) return res.status(400).json({ message: '이미 사용 중인 아이디입니다.' });
+        const taken = await isUsernameTakenAnywhere(normalizedUsername);
+        if (taken) return res.status(400).json({ message: '이미 사용 중인 아이디입니다. (전체 회원/채널 회원 포함)' });
 
         const id = await insertAndGetId(
             `INSERT INTO Users (username, password, name, nickname, gender, birthdate, phone, role, status)

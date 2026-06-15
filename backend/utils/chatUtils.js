@@ -52,15 +52,17 @@ const getChannelAdminId = async (channelId) => {
     return ch?.ownerId || null;
 };
 
-// 채널 DB 승인된 멤버 목록 조회 (onlineOnly=true 시 온라인만)
-const getChannelMembers = async (channelId, onlineOnly = false) => {
+// 채널 DB 승인된 멤버 목록 조회 (onlineOnly=true 시 온라인만, search 시 이름/아이디 검색)
+const getChannelMembers = async (channelId, onlineOnly = false, search = '') => {
     const dbName = await getChannelDbName(channelId);
     if (!dbName) return [];
     const pool = await getChannelPool(dbName);
     const onlineFilter = onlineOnly ? "AND isOnline=1" : "";
+    const searchFilter = search ? "AND (name LIKE @search OR username LIKE @search OR nickname LIKE @search)" : "";
     return queryInPool(pool,
-        `SELECT id, name, username, isOnline, presenceStatus, profileImage FROM Users WHERE role='member' AND status='approved' ${onlineFilter} ORDER BY name`,
-        {}
+        `SELECT TOP 100 id, name, username, nickname, isOnline, presenceStatus, profileImage FROM Users
+         WHERE role='member' AND status='approved' ${onlineFilter} ${searchFilter} ORDER BY name`,
+        search ? { search: `%${search}%` } : {}
     );
 };
 

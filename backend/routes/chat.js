@@ -37,7 +37,8 @@ const ensureSuperAdminDmChannel = async (ownerId) => {
 router.get('/users/:channelId', protect, admin, async (req, res) => {
     try {
         const onlineOnly = req.query.onlineOnly === 'true';
-        const members = await getChannelMembers(req.params.channelId, onlineOnly);
+        const search = (req.query.search || '').trim();
+        const members = await getChannelMembers(req.params.channelId, onlineOnly, search);
         res.json(members.map(u => ({ ...u, _id: u.id })));
     } catch (error) {
         res.status(500).json({ message: '멤버 목록을 불러오는데 실패했습니다.' });

@@ -16,6 +16,7 @@ const ChatSidebar = () => {
     const { user } = useAuthStore();
     const [users, setUsers] = useState([]);
     const [showUserList, setShowUserList] = useState(false);
+    const [userSearch, setUserSearch] = useState('');
 
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -23,9 +24,11 @@ const ChatSidebar = () => {
 
     const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
-    const loadUsers = () => {
+    const loadUsers = (search = '') => {
         if (channelId && isAdmin) {
-            axios.get(`/chat/users/${channelId}?onlineOnly=true`)
+            // 검색어가 있으면 전체 회원에서 검색, 없으면 온라인 회원만
+            const q = search ? `?search=${encodeURIComponent(search)}` : '?onlineOnly=true';
+            axios.get(`/chat/users/${channelId}${q}`)
                 .then(res => setUsers(res.data))
                 .catch(err => console.error('멤버 목록 로드 실패:', err));
         }
@@ -34,22 +37,25 @@ const ChatSidebar = () => {
     useEffect(() => {
         if (channelId) {
             fetchRooms(channelId);
-            loadUsers();
         } else {
             fetchRooms();
         }
     }, [fetchRooms, user, channelId, isAdmin]);
 
-    // + 버튼으로 멤버 목록 열 때마다 재조회
+    // 멤버 목록 패널이 열려 있을 때 검색어 변경 시 재조회 (디바운스)
     useEffect(() => {
-        if (showUserList) loadUsers();
-    }, [showUserList]);
+        if (!showUserList) return;
+        const t = setTimeout(() => loadUsers(userSearch.trim()), 250);
+        return () => clearTimeout(t);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showUserList, userSearch, channelId]);
 
     useEffect(() => {
         const handlePresenceUpdate = ({ userId, status }) => {
             setUsers(prev => {
                 if (status === 'offline') {
-                    return prev.filter(u => String(u._id) !== String(userId));
+                    // 검색 목록 유지 위해 제거하지 않고 상태만 갱신
+                    return prev.map(u => String(u._id) === String(userId) ? { ...u, presenceStatus: 'offline', isOnline: false } : u);
                 }
                 const exists = prev.some(u => String(u._id) === String(userId));
                 if (!exists) {
@@ -148,7 +154,7 @@ const ChatSidebar = () => {
                     </div>
                     {isAdmin ? (
                         <button
-                            onClick={() => setShowUserList(!showUserList)}
+                            onClick={() => { setShowUserList(!showUserList); if (showUserList) setUserSearch(''); }}
                             className="w-10 h-10 rounded-xl bg-[#FF8C69] text-white flex items-center justify-center hover:bg-[#FFB5A0] transition-all shadow-xl shadow-[#FF8C69]/20 active:scale-95 border border-white/10"
                             style={{ backgroundColor: currentChannel?.cardColor || '#FF8C69' }}
                         >
@@ -170,12 +176,21 @@ const ChatSidebar = () => {
 
             <div className="flex-1 overflow-y-auto custom-scrollbar relative p-4 md:p-6 space-y-3">
                 {showUserList ? (
-                    <div className="absolute inset-0 bg-[#12121a] z-10 animate-in slide-in-from-right duration-300">
-                        <div className="p-6 bg-white/[0.02] text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] border-b border-white/5">Select Member</div>
+                    <div className="absolute inset-0 bg-[#12121a] z-10 animate-in slide-in-from-right duration-300 overflow-y-auto custom-scrollbar">
+                        <div className="p-6 bg-white/[0.02] text-[10px] font-black text-[#6b6b8a] uppercase tracking-[0.3em] border-b border-white/5">대화 상대 선택</div>
+                        <div className="p-4 border-b border-white/5">
+                            <input
+                                type="text"
+                                value={userSearch}
+                                onChange={(e) => setUserSearch(e.target.value)}
+                                placeholder="회원 이름·아이디 검색 (비우면 접속중인 회원)"
+                                className="w-full bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#FF8C69]/50 transition-all"
+                            />
+                        </div>
                         {users.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 opacity-30">
                                 <span className="text-4xl mb-4">👥</span>
-                                <p className="text-[11px] font-bold uppercase tracking-widest">No Members Found</p>
+                                <p className="text-[11px] font-bold uppercase tracking-widest">{userSearch ? '검색 결과 없음' : '접속 중인 회원 없음'}</p>
                             </div>
                         ) : users.map(u => (
                             <div
