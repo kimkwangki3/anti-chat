@@ -104,7 +104,7 @@ const superadminRoutes = require('./routes/superadmin');
 const pollRoutes = require('./routes/polls');
 const pushRoutes = require('./routes/push');
 const initPollReminders = require('./utils/pollReminder');
-const { scheduleDailyLogout } = require('./utils/dailyLogout');
+const { scheduleDailyLogout, resetPresenceOffline } = require('./utils/dailyLogout');
 
 app.use(express.json());
 app.use(cookieParser());
@@ -142,6 +142,7 @@ getPool()
     .then(async () => {
         console.log('MSSQL 연결 성공');
         await ensureLoginColumns();
+        await resetPresenceOffline();
         initPollReminders(io);
         scheduleDailyLogout(io);
         startSyncService();
