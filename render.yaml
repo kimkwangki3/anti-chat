@@ -15,5 +15,5 @@ services:
     routes:
       # SPA: 모든 경로를 index.html로 (새로고침/딥링크 대응)
       - type: rewrite
-        path: /*
+        source: /*
         destination: /index.html
