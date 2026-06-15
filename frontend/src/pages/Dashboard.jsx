@@ -117,6 +117,16 @@ const Dashboard = () => {
                         반가워요, <span className="text-[#FF8C69]">{user?.role === 'superadmin' ? '최고관리자' : (user?.name || user?.username)}</span>님 👋
                     </h2>
                 </div>
+                {user?.role === 'superadmin' && (
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => setIsModalOpen(true)} className="peach-button px-5 py-2.5 text-sm">
+                            + 채널 생성
+                        </button>
+                        <button onClick={() => navigate('/superadmin/channels')} className="glass-card px-5 py-2.5 text-sm font-bold text-[#FF8C69] border-[#FF8C69]/20 hover:bg-[#FF8C69]/5 transition-colors rounded-xl">
+                            채널 관리
+                        </button>
+                    </div>
+                )}
             </header>
 
             {user?.role === 'superadmin' ? (
