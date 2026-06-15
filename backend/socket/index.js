@@ -102,8 +102,15 @@ const socketHandler = (io) => {
                 const targetChannelId = channelId || room.channelId;
                 const chatMemberId = room.memberId;
 
-                const channel = await queryOne('SELECT name FROM Channels WHERE id=@id', { id: targetChannelId });
+                const channel = await queryOne('SELECT name, ownerId FROM Channels WHERE id=@id', { id: targetChannelId });
                 const isSuperAdminDirectRoom = channel?.name === '__SUPERADMIN_DM__';
+
+                // 채널 관리자(owner) 변경 반영: 일반 채널 방의 adminId를 현재 ownerId로 자동 보정
+                // (임명 전에 만들어진 방이 새 관리자에게 보이고 알림이 가도록)
+                if (!isSuperAdminDirectRoom && channel?.ownerId && String(channel.ownerId) !== String(room.adminId)) {
+                    await execute('UPDATE ChatRooms SET adminId=@ownerId WHERE id=@id', { ownerId: channel.ownerId, id: roomId });
+                    room.adminId = channel.ownerId;
+                }
 
                 if (!isSuperAdminDirectRoom) {
                     const dbName = await getChannelDbName(targetChannelId);

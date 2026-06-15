@@ -261,6 +261,10 @@ router.put('/channels/:id/owner', async (req, res) => {
         }
 
         await execute('UPDATE Channels SET ownerId=@ownerId, updatedAt=GETDATE() WHERE id=@id', { ownerId, id: channel.id });
+
+        // 기존 채팅방의 adminId도 새 관리자로 재배정 (임명 전에 만들어진 방이 새 관리자에게 보이고 알림 가도록)
+        await execute('UPDATE ChatRooms SET adminId=@ownerId, updatedAt=GETDATE() WHERE channelId=@id', { ownerId, id: channel.id });
+
         res.json({ message: `채널 관리자를 ${owner.name}(으)로 배정했습니다.`, ownerId, ownerName: owner.name });
     } catch (error) {
         res.status(500).json({ message: error.message });
