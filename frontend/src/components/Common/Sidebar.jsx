@@ -55,6 +55,7 @@ const Sidebar = () => {
     const adminMenuItems = [
         { id: 'members', label: '멤버 관리', icon: 'users', path: `/admin/members?channelId=${urlChannelId}` },
         { id: 'edit', label: '채널 설정', icon: 'edit', path: `/admin/edit-channel?channelId=${urlChannelId}` },
+        { id: 'login-settings', label: '로그인 페이지', icon: 'globe', path: `/admin/login-settings?channelId=${urlChannelId}` },
     ];
 
     const superAdminMenuItems = [

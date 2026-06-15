@@ -15,6 +15,7 @@ import BottomNav from './components/Common/BottomNav';
 const ChannelSearchPage = lazy(() => import('./pages/ChannelSearchPage'));
 const AdminMemberManagement = lazy(() => import('./pages/AdminMemberManagement'));
 const AdminEditChannel = lazy(() => import('./pages/AdminEditChannel'));
+const AdminLoginSettings = lazy(() => import('./pages/AdminLoginSettings'));
 const NoticePage = lazy(() => import('./pages/NoticePage'));
 const BoardPage = lazy(() => import('./pages/BoardPage'));
 const PostDetailPage = lazy(() => import('./pages/PostDetailPage'));
@@ -73,6 +74,7 @@ function App() {
       <SocketProvider>
         <Routes>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+          <Route path="/c/:slug" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
           <Route path="/chat" element={<ProtectedLayout><ChatPage /></ProtectedLayout>} />
@@ -80,6 +82,7 @@ function App() {
           <Route path="/channel/:slug" element={<ProtectedLayout><ChannelEntryRedirect /></ProtectedLayout>} />
           <Route path="/admin/members" element={<ProtectedLayout><AdminMemberManagement /></ProtectedLayout>} />
           <Route path="/admin/edit-channel" element={<ProtectedLayout><AdminEditChannel /></ProtectedLayout>} />
+          <Route path="/admin/login-settings" element={<ProtectedLayout><AdminLoginSettings /></ProtectedLayout>} />
           <Route path="/notices" element={<ProtectedLayout><NoticePage /></ProtectedLayout>} />
           <Route path="/board" element={<ProtectedLayout><BoardPage /></ProtectedLayout>} />
           <Route path="/board/:id" element={<ProtectedLayout><PostDetailPage /></ProtectedLayout>} />

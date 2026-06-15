@@ -23,10 +23,12 @@ const useAuthStore = create((set) => ({
     isLoading: false,
     error: null,
 
-    login: async (username, password) => {
+    login: async (username, password, channelId = null) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post('/auth/login', { username, password });
+            const body = { username, password };
+            if (channelId) body.channelId = channelId;
+            const response = await axios.post('/auth/login', body);
             const { token, sessionId, ...userData } = response.data;
 
             localStorage.setItem('token', token);

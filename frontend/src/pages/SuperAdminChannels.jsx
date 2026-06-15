@@ -176,6 +176,12 @@ const SuperAdminChannels = () => {
                                                 >
                                                     콘텐츠 관리
                                                 </button>
+                                                <button
+                                                    onClick={() => navigate(`/admin/login-settings?channelId=${channel._id || channel.id}`)}
+                                                    className="px-3 py-1.5 bg-[#FF8C69]/10 hover:bg-[#FF8C69] text-[#FF8C69] hover:text-white rounded-lg transition-all text-[10px] font-black border border-[#FF8C69]/20 uppercase"
+                                                >
+                                                    로그인설정
+                                                </button>
                                                 <div className="w-px h-6 bg-white/5 mx-1"></div>
                                                 {(channel.status && channel.status !== 'active') && (
                                                     <button
