@@ -53,6 +53,12 @@ const saveProfileImageLocally = async (req, file) => {
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
+
+    // 'admin' 계정 로그인 영구 차단 (기본 시드 계정 — 보안). 실제 최고관리자는 'gtadmin' 사용.
+    if ((username || '').trim().toLowerCase() === 'admin') {
+        return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+    }
+
     try {
         const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const sessionId = uuidv4();
