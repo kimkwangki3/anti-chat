@@ -62,8 +62,8 @@ const MessageList = () => {
                     const channelColor = currentRoom.channelId?.cardColor || '#FF8C69';
                     const channelName = currentRoom.channelId?.name || '';
 
-                    // 상대방 표시 이름
-                    const otherName = iAmAdmin ? currentRoom.memberId?.name : currentRoom.adminId?.name;
+                    // 상대방 표시 이름 (채널관리자는 항상 '관리자'로 통일)
+                    const otherName = iAmAdmin ? currentRoom.memberId?.name : '관리자';
 
                     return (
                         <div

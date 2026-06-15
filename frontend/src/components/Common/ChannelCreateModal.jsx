@@ -1,20 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useChannelStore from '../../store/channelStore';
 import useAuthStore from '../../store/authStore';
+import axios from '../../api/axios';
 
-const ChannelCreateModal = ({ isOpen, onClose }) => {
-    const [formData, setFormData] = useState({ name: '', description: '' });
+const ChannelCreateModal = ({ isOpen, onClose, onCreated }) => {
+    const [formData, setFormData] = useState({ name: '', description: '', ownerId: '' });
+    const [admins, setAdmins] = useState([]);
     const { createChannel } = useChannelStore();
-    const { checkAuth } = useAuthStore();
+    const { user, checkAuth } = useAuthStore();
+
+    const isSuperAdmin = user?.role === 'superadmin';
+
+    // 슈퍼어드민이면 배정 가능한 관리자(admin) 목록 조회
+    useEffect(() => {
+        if (isOpen && isSuperAdmin) {
+            axios.get('/superadmin/users')
+                .then((res) => setAdmins((res.data || []).filter((u) => u.role === 'admin')))
+                .catch(() => setAdmins([]));
+        }
+    }, [isOpen, isSuperAdmin]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await createChannel(formData);
+        const payload = { name: formData.name, description: formData.description };
+        if (formData.ownerId) payload.ownerId = formData.ownerId;
+
+        const success = await createChannel(payload);
         if (success) {
-            // 서버에서 대화명이 '{채널명} 관리자'로 변경됐으므로 user 정보 갱신
             await checkAuth();
             onClose();
-            setFormData({ name: '', description: '' });
+            setFormData({ name: '', description: '', ownerId: '' });
+            if (onCreated) onCreated();
         }
     };
 
@@ -48,6 +64,23 @@ const ChannelCreateModal = ({ isOpen, onClose }) => {
                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         ></textarea>
                     </div>
+
+                    {isSuperAdmin && (
+                        <div>
+                            <label className="block text-xs font-bold text-[#444466] uppercase tracking-widest mb-2 ml-1">채널 관리자 배정 (선택)</label>
+                            <select
+                                className="w-full bg-[#1a1a28] border border-white/5 rounded-lg px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FF8C69] transition-all"
+                                value={formData.ownerId}
+                                onChange={(e) => setFormData({ ...formData, ownerId: e.target.value })}
+                            >
+                                <option value="">— 최고관리자(나)가 직접 관리 —</option>
+                                {admins.map((a) => (
+                                    <option key={a.id} value={a.id}>{a.name} ({a.username})</option>
+                                ))}
+                            </select>
+                            <p className="mt-2 ml-1 text-[10px] text-[#6b6b8a]">나중에 채널 목록에서 다시 변경할 수 있습니다.</p>
+                        </div>
+                    )}
 
                     <div className="flex gap-3">
                         <button

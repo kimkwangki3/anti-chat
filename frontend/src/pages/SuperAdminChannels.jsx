@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
+import ChannelCreateModal from '../components/Common/ChannelCreateModal';
 
 const SuperAdminChannels = () => {
     const [channels, setChannels] = useState([]);
+    const [admins, setAdmins] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchChannels();
+        fetchAdmins();
     }, []);
 
     const fetchChannels = async () => {
@@ -20,6 +24,16 @@ const SuperAdminChannels = () => {
             console.error('Fetch channels failed:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchAdmins = async () => {
+        try {
+            const { data } = await axios.get('/superadmin/users');
+            // 채널에 배정 가능한 계정: 관리자 + 최고관리자
+            setAdmins((data || []).filter((u) => u.role === 'admin' || u.role === 'superadmin'));
+        } catch (error) {
+            console.error('Fetch admins failed:', error);
         }
     };
 
@@ -38,9 +52,20 @@ const SuperAdminChannels = () => {
         }
     };
 
+    const handleAssignAdmin = async (channelId, ownerId) => {
+        if (!ownerId) return;
+        try {
+            const { data } = await axios.put(`/superadmin/channels/${channelId}/owner`, { ownerId: Number(ownerId) });
+            alert(data.message || '채널 관리자가 배정되었습니다.');
+            fetchChannels();
+        } catch (error) {
+            alert('관리자 배정에 실패했습니다: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
     const filteredChannels = channels.filter(channel =>
         channel.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        channel.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (channel.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -53,15 +78,23 @@ const SuperAdminChannels = () => {
                     <p className="text-[#6b6b8a] text-[10px] font-bold uppercase tracking-[0.3em] ml-1">전체 네트워크 서비스 모니터링</p>
                 </div>
 
-                <div className="relative group min-w-[300px]">
-                    <input
-                        type="text"
-                        placeholder="채널 이름 또는 설명으로 검색..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-[#12121a] border border-white/10 rounded-xl px-6 py-3 text-sm text-white focus:outline-none focus:border-[#FF8C69]/50 transition-all font-medium"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FF8C69] transition-colors">🔍</span>
+                <div className="flex items-center gap-3">
+                    <div className="relative group min-w-[260px]">
+                        <input
+                            type="text"
+                            placeholder="채널 이름 또는 설명으로 검색..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-[#12121a] border border-white/10 rounded-xl px-6 py-3 text-sm text-white focus:outline-none focus:border-[#FF8C69]/50 transition-all font-medium"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#FF8C69] transition-colors">🔍</span>
+                    </div>
+                    <button
+                        onClick={() => setIsCreateOpen(true)}
+                        className="shrink-0 orange-gradient text-white font-bold rounded-xl px-5 py-3 text-sm hover:scale-105 transition-transform shadow-lg shadow-[#FF8C69]/20"
+                    >
+                        + 채널 생성
+                    </button>
                 </div>
             </header>
 
@@ -78,6 +111,7 @@ const SuperAdminChannels = () => {
                             <thead>
                                 <tr className="bg-white/5 border-b border-white/5">
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">채널 메타데이터</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">담당 관리자</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">서비스 상태</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">통계 데이터</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-[#6b6b8a] uppercase tracking-widest">정밀 관리</th>
@@ -85,7 +119,7 @@ const SuperAdminChannels = () => {
                             </thead>
                             <tbody className="divide-y divide-white/5">
                                 {filteredChannels.map((channel) => (
-                                    <tr key={channel._id} className="hover:bg-white/[0.02] transition-colors group">
+                                    <tr key={channel._id || channel.id} className="hover:bg-white/[0.02] transition-colors group">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-2xl bg-[#FF8C69]/10 flex items-center justify-center text-2xl border border-[#FF8C69]/10">
@@ -93,12 +127,28 @@ const SuperAdminChannels = () => {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-base font-bold text-white group-hover:text-[#FF8C69] transition-colors cursor-pointer"
-                                                        onClick={() => navigate(`/superadmin/channels/${channel._id}`)}>
+                                                        onClick={() => navigate(`/superadmin/channels/${channel._id || channel.id}`)}>
                                                         {channel.name}
                                                     </p>
                                                     <p className="text-[10px] text-[#6b6b8a] truncate max-w-[200px] font-medium mt-0.5">{channel.description}</p>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td className="px-8 py-6">
+                                            <select
+                                                value={channel.ownerId || ''}
+                                                onChange={(e) => handleAssignAdmin(channel._id || channel.id, e.target.value)}
+                                                className="bg-[#0d0d14] border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF8C69]/50 transition-all max-w-[180px]"
+                                            >
+                                                {!admins.some((a) => a.id === channel.ownerId) && (
+                                                    <option value={channel.ownerId || ''}>현재 담당자 (id:{channel.ownerId})</option>
+                                                )}
+                                                {admins.map((a) => (
+                                                    <option key={a.id} value={a.id}>
+                                                        {a.role === 'superadmin' ? '👑 ' : ''}{a.name} ({a.username})
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </td>
                                         <td className="px-8 py-6">
                                             <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${channel.status === 'active' || !channel.status ? 'bg-[#06d6a0]/10 text-[#06d6a0]' :
@@ -121,7 +171,7 @@ const SuperAdminChannels = () => {
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-2">
                                                 <button
-                                                    onClick={() => navigate(`/superadmin/channels/${channel._id}`)}
+                                                    onClick={() => navigate(`/superadmin/channels/${channel._id || channel.id}`)}
                                                     className="px-3 py-1.5 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white rounded-lg transition-all text-[10px] font-black border border-purple-500/20 uppercase"
                                                 >
                                                     콘텐츠 관리
@@ -129,7 +179,7 @@ const SuperAdminChannels = () => {
                                                 <div className="w-px h-6 bg-white/5 mx-1"></div>
                                                 {(channel.status && channel.status !== 'active') && (
                                                     <button
-                                                        onClick={() => handleStatusChange(channel._id, 'active')}
+                                                        onClick={() => handleStatusChange(channel._id || channel.id, 'active')}
                                                         className="px-3 py-1.5 bg-[#06d6a0]/10 hover:bg-[#06d6a0] text-[#06d6a0] hover:text-white rounded-lg transition-all text-[10px] font-black border border-[#06d6a0]/20"
                                                     >
                                                         활성화
@@ -137,7 +187,7 @@ const SuperAdminChannels = () => {
                                                 )}
                                                 {channel.status !== 'suspended' && (
                                                     <button
-                                                        onClick={() => handleStatusChange(channel._id, 'suspended')}
+                                                        onClick={() => handleStatusChange(channel._id || channel.id, 'suspended')}
                                                         className="px-3 py-1.5 bg-yellow-500/10 hover:bg-yellow-500 text-yellow-500 hover:text-white rounded-lg transition-all text-[10px] font-black border border-yellow-500/20"
                                                     >
                                                         정지
@@ -145,7 +195,7 @@ const SuperAdminChannels = () => {
                                                 )}
                                                 {channel.status !== 'deleted' && (
                                                     <button
-                                                        onClick={() => handleStatusChange(channel._id, 'deleted')}
+                                                        onClick={() => handleStatusChange(channel._id || channel.id, 'deleted')}
                                                         className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-lg transition-all text-[10px] font-black border border-red-500/20"
                                                     >
                                                         삭제
@@ -160,6 +210,12 @@ const SuperAdminChannels = () => {
                     </div>
                 </div>
             )}
+
+            <ChannelCreateModal
+                isOpen={isCreateOpen}
+                onClose={() => setIsCreateOpen(false)}
+                onCreated={fetchChannels}
+            />
         </div>
     );
 };

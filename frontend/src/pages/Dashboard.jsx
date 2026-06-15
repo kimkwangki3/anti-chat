@@ -117,11 +117,6 @@ const Dashboard = () => {
                         반가워요, <span className="text-[#FF8C69]">{user?.role === 'superadmin' ? '최고관리자' : (user?.name || user?.username)}</span>님 👋
                     </h2>
                 </div>
-                {user?.role === 'admin' && (
-                    <button onClick={() => setIsModalOpen(true)} className="peach-button px-5 py-2.5 text-sm">
-                        + 채널 개설
-                    </button>
-                )}
             </header>
 
             {user?.role === 'superadmin' ? (
@@ -223,10 +218,9 @@ const Dashboard = () => {
                         ) : myChannels.length === 0 ? (
                             <div className="glass-card p-16 text-center border-dashed">
                                 <div className="text-4xl mb-4">🏝️</div>
-                                <p className="text-gray-500 text-sm">가입된 채널이 없습니다.</p>
-                                {user?.role === 'admin' && (
-                                    <button onClick={() => setIsModalOpen(true)} className="peach-button mt-6 text-sm">새 채널 개설</button>
-                                )}
+                                <p className="text-gray-500 text-sm">
+                                    {user?.role === 'admin' ? '배정된 채널이 없습니다. 최고관리자가 채널을 배정하면 여기에 표시됩니다.' : '가입된 채널이 없습니다.'}
+                                </p>
                             </div>
                         ) : (
                             <div className="bento-grid !p-0">
