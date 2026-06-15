@@ -38,7 +38,12 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const success = await login(formData.username, formData.password, channelInfo?.id || null);
-        if (success) navigate('/');
+        if (success) {
+            // 로그아웃 시 돌아갈 채널 로그인 기억 (채널 로그인이면 슬러그 저장, 메인이면 제거)
+            if (channelInfo?.slug) localStorage.setItem('channelLoginSlug', channelInfo.slug);
+            else localStorage.removeItem('channelLoginSlug');
+            navigate('/');
+        }
     };
 
     if (resolving) {

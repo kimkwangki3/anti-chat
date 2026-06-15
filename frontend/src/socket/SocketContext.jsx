@@ -227,7 +227,8 @@ export const SocketProvider = ({ children }) => {
             alert(data.message || '다른 기기에서 로그인이 감지되어 자동 로그아웃됩니다.');
             const { logout } = useAuthStore.getState();
             logout();
-            navigate('/login');
+            const channelSlug = localStorage.getItem('channelLoginSlug');
+            navigate(channelSlug ? `/c/${channelSlug}` : '/login');
         });
 
         return () => {

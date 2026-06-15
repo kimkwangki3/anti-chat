@@ -40,7 +40,10 @@ const PageLoader = () => (
 
 const ProtectedLayout = ({ children }) => {
   const { token } = useAuthStore();
-  if (!token) return <Navigate to="/login" />;
+  if (!token) {
+    const channelSlug = localStorage.getItem('channelLoginSlug');
+    return <Navigate to={channelSlug ? `/c/${channelSlug}` : '/login'} />;
+  }
 
   return (
     <div className="flex h-screen h-[100dvh] w-full min-w-0 overflow-hidden bg-[#1a1a24] isolation-auto">
