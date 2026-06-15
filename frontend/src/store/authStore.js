@@ -155,10 +155,15 @@ const useAuthStore = create((set) => ({
                 set({ user: userData });
             }
         } catch (error) {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('sessionId');
-            set({ user: null, token: null, sessionId: null });
+            // 토큰이 실제로 무효일 때(401/403)만 로그아웃. 네트워크/일시 오류(타임아웃, 5xx 등)는 기존 세션 유지.
+            const status = error.response?.status;
+            if (status === 401 || status === 403) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('sessionId');
+                set({ user: null, token: null, sessionId: null });
+            }
+            // 그 외(네트워크 끊김/일시 오류)는 로그인 상태를 그대로 유지해 새로고침 시 튕김 방지
         }
     }
 }));
