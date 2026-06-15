@@ -6,6 +6,8 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
 
 const slugifyChannelName = (value) => {
     return String(value || '')
@@ -100,6 +102,87 @@ router.get('/search', protect, async (req, res) => {
             ...c,
             ownerId: { _id: c.ownerId, id: c.ownerId, name: c.ownerName, username: c.ownerUsername }
         })));
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// GET /api/channels/login-info?slug=xxx 또는 ?host=xxx — 로그인 페이지 브랜딩 (공개, 인증 불필요)
+router.get('/login-info', async (req, res) => {
+    try {
+        const { slug, host } = req.query;
+        let channel = null;
+        if (host) {
+            channel = await queryOne(
+                "SELECT id, name, slug, profileImage, cardColor, loginLogo, loginTitle FROM Channels WHERE loginDomain=@host AND status='active'",
+                { host: String(host).trim().toLowerCase() }
+            );
+        }
+        if (!channel && slug) {
+            channel = await queryOne(
+                "SELECT id, name, slug, profileImage, cardColor, loginLogo, loginTitle FROM Channels WHERE slug=@slug AND status='active'",
+                { slug }
+            );
+        }
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        res.json({
+            id: channel.id, _id: channel.id, name: channel.name, slug: channel.slug,
+            loginLogo: channel.loginLogo || channel.profileImage || null,
+            loginTitle: channel.loginTitle || null,
+            cardColor: channel.cardColor || '#FF8C69'
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// PUT /api/channels/:id/login-settings — 채널 로그인 페이지 설정 (관리자/소유자)
+router.put('/:id/login-settings', protect, admin, async (req, res) => {
+    const { loginTitle, loginDomain, cardColor } = req.body;
+    try {
+        const channel = await queryOne('SELECT id, ownerId FROM Channels WHERE id=@id', { id: req.params.id });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        if (!req.user.isMaster && channel.ownerId !== req.user.id) {
+            return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+        const updates = [], params = { id: channel.id };
+        if (typeof loginTitle === 'string') { updates.push('loginTitle=@loginTitle'); params.loginTitle = loginTitle.trim().slice(0, 100); }
+        if (typeof loginDomain === 'string') { updates.push('loginDomain=@loginDomain'); params.loginDomain = loginDomain.trim().toLowerCase().slice(0, 255) || null; }
+        if (typeof cardColor === 'string') { updates.push('cardColor=@cardColor'); params.cardColor = cardColor.trim().slice(0, 20); }
+        if (updates.length) await execute(`UPDATE Channels SET ${updates.join(',')}, updatedAt=GETDATE() WHERE id=@id`, params);
+        const updated = await queryOne('SELECT id, name, slug, loginLogo, loginTitle, loginDomain, cardColor FROM Channels WHERE id=@id', { id: channel.id });
+        res.json({ message: '로그인 페이지 설정이 저장되었습니다.', channel: updated });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// POST /api/channels/:id/login-logo — 로그인 아이콘 업로드 (관리자/소유자)
+router.post('/:id/login-logo', protect, admin, upload.single('logo'), async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: '이미지 파일이 없습니다.' });
+        const channel = await queryOne('SELECT id, ownerId FROM Channels WHERE id=@id', { id: req.params.id });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        if (!req.user.isMaster && channel.ownerId !== req.user.id) {
+            return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+        let logoUrl = null;
+        const hasCloud = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET;
+        if (hasCloud) {
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        { folder: 'login_logos', transformation: [{ width: 400, height: 400, crop: 'limit' }, { quality: 'auto', fetch_format: 'auto' }] },
+                        (err, r) => r ? resolve(r) : reject(err)
+                    );
+                    streamifier.createReadStream(req.file.buffer).pipe(stream);
+                });
+                logoUrl = result.secure_url;
+            } catch (e) { console.error('[login-logo] cloudinary 실패, 로컬 저장:', e.message); }
+        }
+        if (!logoUrl) logoUrl = await saveChannelImageLocally(req, req.file);
+        await execute('UPDATE Channels SET loginLogo=@logo, updatedAt=GETDATE() WHERE id=@id', { logo: logoUrl, id: channel.id });
+        res.json({ message: '아이콘이 업로드되었습니다.', loginLogo: logoUrl });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

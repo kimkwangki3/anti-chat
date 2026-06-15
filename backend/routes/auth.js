@@ -52,7 +52,7 @@ const saveProfileImageLocally = async (req, file) => {
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, channelId } = req.body;
 
     // 'admin' 계정 로그인 영구 차단 (기본 시드 계정 — 보안). 실제 최고관리자는 'gtadmin' 사용.
     if ((username || '').trim().toLowerCase() === 'admin') {
@@ -102,7 +102,14 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // 2. 모든 활성 채널 DB 검색
+        // 메인 로그인(channelId 없음): 관리자(superadmin/admin)만 위에서 통과.
+        // 여기까지 왔다는 건 일반회원이 메인에서 시도한 것 → 조용히 거부.
+        if (!channelId) {
+            return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+        }
+
+        // === 채널 로그인 (channelId 있음): 해당 채널 회원만 ===
+        // 2. 모든 활성 채널 DB 검색 (멀티채널 가입자는 전체 채널 확보)
         const activeChannels = await query(
             "SELECT id, name, databaseName FROM Channels WHERE status='active' AND databaseName IS NOT NULL"
         );
@@ -139,7 +146,9 @@ router.post('/login', async (req, res) => {
             }
         }
 
-        if (!foundChannels.length) {
+        // 이 채널 로그인창은 해당 채널 회원만 허용 (이 채널 멤버가 아니면 거부)
+        const targetChannelId = parseInt(channelId);
+        if (!foundChannels.length || !foundChannels.some(c => c.channelId === targetChannelId)) {
             return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
 
