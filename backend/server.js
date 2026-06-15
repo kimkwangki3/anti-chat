@@ -7,8 +7,29 @@ const path = require('path');
 const fs = require('fs');
 const { Server } = require('socket.io');
 const webpush = require('web-push');
-const { getPool } = require('./db/mssql');
+const { getPool, queryOne, execute } = require('./db/mssql');
 const { startSyncService } = require('./services/syncService');
+
+// 시작 시 Channels 테이블에 로그인 페이지 컬럼 자동 추가 (수동 마이그레이션 불필요)
+const ensureLoginColumns = async () => {
+    const cols = [
+        ['loginLogo', 'NVARCHAR(500)'],
+        ['loginTitle', 'NVARCHAR(100)'],
+        ['loginDomain', 'NVARCHAR(255)'],
+        ['cardColor', 'NVARCHAR(20)'],
+    ];
+    for (const [name, type] of cols) {
+        try {
+            const row = await queryOne(`SELECT COL_LENGTH('Channels', @col) AS len`, { col: name });
+            if (row && (row.len === null || row.len === undefined)) {
+                await execute(`ALTER TABLE Channels ADD ${name} ${type} NULL`);
+                console.log(`[Migrate] Channels.${name} 컬럼 추가됨`);
+            }
+        } catch (e) {
+            console.error(`[Migrate] ${name} 처리 오류:`, e.message);
+        }
+    }
+};
 
 // Web Push VAPID 설정
 const vapidPublic = process.env.PUBLIC_VAPID_KEY;
@@ -117,8 +138,9 @@ const PORT = process.env.PORT || 5000;
 
 // MSSQL 연결 후 서버 시작
 getPool()
-    .then(() => {
+    .then(async () => {
         console.log('MSSQL 연결 성공');
+        await ensureLoginColumns();
         initPollReminders(io);
         startSyncService();
 
