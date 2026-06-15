@@ -104,6 +104,7 @@ const superadminRoutes = require('./routes/superadmin');
 const pollRoutes = require('./routes/polls');
 const pushRoutes = require('./routes/push');
 const initPollReminders = require('./utils/pollReminder');
+const { scheduleDailyLogout } = require('./utils/dailyLogout');
 
 app.use(express.json());
 app.use(cookieParser());
@@ -142,6 +143,7 @@ getPool()
         console.log('MSSQL 연결 성공');
         await ensureLoginColumns();
         initPollReminders(io);
+        scheduleDailyLogout(io);
         startSyncService();
 
         server.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
