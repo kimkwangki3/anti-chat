@@ -20,7 +20,7 @@ const populateRoom = async (roomId, dbName) => {
             m.role as member_role, m.status as member_status,
             c.name as channel_name, c.profileImage as channel_profileImage, c.cardColor as channel_cardColor
          FROM ChatRooms r
-         LEFT JOIN ${usersRef} a ON r.adminId = a.id
+         LEFT JOIN Users a ON r.adminId = a.id
          LEFT JOIN ${usersRef} m ON r.memberId = m.id
          JOIN Channels c ON r.channelId = c.id
          WHERE r.id = @id`,
@@ -46,13 +46,10 @@ const formatRoom = (r) => {
     };
 };
 
-// 채널 DB에서 관리자 userId 조회
+// 채널 관리자 userId 조회 (A안: 마스터 DB의 채널 ownerId = 채널관리자)
 const getChannelAdminId = async (channelId) => {
-    const dbName = await getChannelDbName(channelId);
-    if (!dbName) return null;
-    const pool = await getChannelPool(dbName);
-    const admin = await queryOneInPool(pool, "SELECT TOP 1 id FROM Users WHERE role='admin' ORDER BY id ASC", {});
-    return admin?.id || null;
+    const ch = await queryOne('SELECT ownerId FROM Channels WHERE id=@id', { id: channelId });
+    return ch?.ownerId || null;
 };
 
 // 채널 DB 승인된 멤버 목록 조회 (onlineOnly=true 시 온라인만)
