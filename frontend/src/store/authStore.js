@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import axios from '../api/axios';
+import socket from '../socket/socket';
 import useChatStore from './chatStore';
 import useChannelStore from './channelStore';
 import useNoticeStore from './noticeStore';
@@ -78,6 +79,9 @@ const useAuthStore = create((set) => ({
     },
 
     logout: () => {
+        // 소켓을 즉시 끊어 서버가 오프라인 처리하도록 (로그아웃 실시간 반영)
+        try { if (socket.connected) socket.disconnect(); } catch (e) { /* ignore */ }
+
         localStorage.removeItem('token');
         localStorage.removeItem('sessionId');
         localStorage.removeItem('user');

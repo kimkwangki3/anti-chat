@@ -273,8 +273,28 @@ const socketHandler = (io) => {
             }
         });
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', async () => {
             console.log('소켓 연결 해제됨');
+            try {
+                if (socket.userChannels?.length) {
+                    // 채널 회원 — 가입한 모든 채널 DB에서 오프라인 처리 + 실시간 알림
+                    for (const ch of socket.userChannels) {
+                        try {
+                            const pool = await getChannelPool(ch.dbName);
+                            await executeInPool(pool,
+                                "UPDATE Users SET isOnline=0, presenceStatus='offline', lastLogoutAt=GETDATE() WHERE id=@id",
+                                { id: ch.userId }
+                            );
+                            io.to(`channel_${ch.channelId}`).emit('presence_update', { userId: ch.userId, status: 'offline' });
+                        } catch (e) { /* 개별 채널 오류 무시 */ }
+                    }
+                } else if (socket.userId) {
+                    // 마스터 유저 (슈퍼어드민/채널관리자)
+                    await execute('UPDATE Users SET isOnline=0, lastLogoutAt=GETDATE() WHERE id=@id', { id: socket.userId });
+                }
+            } catch (e) {
+                console.error('[SOCKET] disconnect 오프라인 처리 오류:', e.message);
+            }
         });
     });
 };
