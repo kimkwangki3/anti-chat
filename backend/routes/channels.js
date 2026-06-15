@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { query, queryOne, execute, insertAndGetId, initChannelDb } = require('../db/mssql');
-const { protect, admin } = require('../middleware/authMiddleware');
+const { protect, admin, superAdmin } = require('../middleware/authMiddleware');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -49,12 +49,19 @@ const saveChannelImageLocally = async (req, file) => {
     return `${protocol}://${host}/uploads/channels/${fileName}`;
 };
 
-// POST /api/channels
-router.post('/', protect, admin, async (req, res) => {
-    const { name, description, slug } = req.body;
+// POST /api/channels  (채널 생성 = 슈퍼어드민 전용. ownerId로 채널관리자 배정 가능)
+router.post('/', protect, superAdmin, async (req, res) => {
+    const { name, description, slug, ownerId } = req.body;
     try {
-        const countRow = await queryOne('SELECT COUNT(*) as cnt FROM Channels WHERE ownerId = @ownerId', { ownerId: req.user.id });
-        if (countRow.cnt >= 4) return res.status(400).json({ message: '관리자는 최대 4개의 채널까지 개설할 수 있습니다.' });
+        // 배정할 관리자(owner) 결정: ownerId가 오면 그 admin, 없으면 슈퍼어드민 본인
+        let owner = req.user.id;
+        if (ownerId) {
+            const ownerUser = await queryOne('SELECT id, role FROM Users WHERE id = @id', { id: ownerId });
+            if (!ownerUser || !['admin', 'superadmin'].includes(ownerUser.role)) {
+                return res.status(400).json({ message: '배정할 관리자가 유효하지 않습니다.' });
+            }
+            owner = ownerUser.id;
+        }
 
         const existing = await queryOne('SELECT id FROM Channels WHERE name = @name', { name });
         if (existing) return res.status(400).json({ message: '이미 존재하는 채널 이름입니다.' });
@@ -66,7 +73,7 @@ router.post('/', protect, admin, async (req, res) => {
 
         const channelId = await insertAndGetId(
             'INSERT INTO Channels (ownerId, name, description, slug, databaseName) VALUES (@ownerId, @name, @description, @slug, @databaseName)',
-            { ownerId: req.user.id, name, description, slug: channelSlug, databaseName: dbName }
+            { ownerId: owner, name, description, slug: channelSlug, databaseName: dbName }
         );
 
         // 채널 전용 DB 생성 및 스키마 초기화
@@ -116,6 +123,26 @@ router.get('/my-channels', protect, async (req, res) => {
                     owner: { _id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline }
                 },
                 status: 'approved', isChatBlocked: 0
+            })));
+        }
+
+        if (req.user.isAdminMaster) {
+            // 채널관리자 — 본인이 owner인 채널만 반환 (A안: 다채널 관리)
+            const channels = await query(
+                `SELECT c.*, u.id as owner_id, u.name as owner_name, u.username as owner_username, u.isOnline as owner_isOnline
+                 FROM Channels c JOIN Users u ON c.ownerId = u.id
+                 WHERE c.ownerId = @ownerId AND c.status = 'active'`,
+                { ownerId: req.user.id }
+            );
+            return res.json(channels.map(c => ({
+                _id: c.id, id: c.id,
+                channelId: {
+                    _id: c.id, id: c.id, name: c.name, slug: c.slug,
+                    description: c.description, profileImage: c.profileImage,
+                    status: c.status, cardColor: c.cardColor, ownerId: c.ownerId,
+                    owner: { _id: c.owner_id, name: c.owner_name, username: c.owner_username, isOnline: c.owner_isOnline }
+                },
+                status: 'approved', isChatBlocked: 0, role: 'admin'
             })));
         }
 

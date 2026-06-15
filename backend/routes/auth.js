@@ -75,6 +75,27 @@ router.post('/login', async (req, res) => {
             });
         }
 
+        // 1.5. 마스터 DB 채널관리자(role='admin') 확인 (A안)
+        if (masterUser && masterUser.password === password && masterUser.role === 'admin') {
+            if (masterUser.status && masterUser.status !== 'active') {
+                return res.status(403).json({ message: '계정이 정지되었습니다. 관리자에게 문의하세요.' });
+            }
+            await execute(
+                'UPDATE Users SET isOnline=1, lastLoginIp=@ip, lastLoginAt=GETDATE(), currentSessionId=@sessionId WHERE id=@id',
+                { ip: clientIp, sessionId, id: masterUser.id }
+            );
+            const io = req.app.get('io');
+            if (io) io.to(String(masterUser.id)).emit('force_logout', { message: '다른 기기에서 로그인이 감지되었습니다.', newSessionId: sessionId });
+            writeAuthLog(`채널관리자 로그인: ${username} (IP: ${clientIp})`);
+            const token = jwt.sign({ isAdminMaster: true, id: masterUser.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+            return res.json({
+                _id: masterUser.id, id: masterUser.id,
+                name: masterUser.name, nickname: masterUser.nickname,
+                username: masterUser.username, role: 'admin',
+                sessionId, token, isMaster: false, isAdminMaster: true
+            });
+        }
+
         // 2. 모든 활성 채널 DB 검색
         const activeChannels = await query(
             "SELECT id, name, databaseName FROM Channels WHERE status='active' AND databaseName IS NOT NULL"
@@ -141,6 +162,16 @@ router.get('/me', protect, async (req, res) => {
             );
             if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
             return res.json({ ...user, isMaster: true });
+        }
+
+        if (req.user.isAdminMaster) {
+            // 채널관리자 (마스터 DB)
+            const user = await queryOne(
+                'SELECT id, name, username, nickname, profileImage, gender, birthdate, phone, memo, recommender, role, isOnline, status, lastLoginAt, lastLoginIp, currentSessionId, createdAt FROM Users WHERE id = @id',
+                { id: req.user.id }
+            );
+            if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+            return res.json({ ...user, role: 'admin', isMaster: false, isAdminMaster: true });
         }
 
         // 채널 유저 — 첫 번째 채널 DB에서 최신 데이터 조회

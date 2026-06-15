@@ -18,6 +18,15 @@ const protect = async (req, res, next) => {
             );
             if (!user) return res.status(401).json({ message: '사용자를 찾을 수 없습니다.' });
             req.user = { ...user, isMaster: true };
+        } else if (decoded.isAdminMaster) {
+            // 채널관리자 — 마스터 DB의 role='admin' 계정 (A안)
+            const user = await queryOne(
+                'SELECT id, name, username, nickname, profileImage, gender, birthdate, phone, memo, role, isOnline, status, currentSessionId, lastLoginAt, lastLoginIp, createdAt FROM Users WHERE id = @id',
+                { id: decoded.id }
+            );
+            if (!user) return res.status(401).json({ message: '사용자를 찾을 수 없습니다.' });
+            if (user.status && user.status !== 'active') return res.status(403).json({ message: '계정이 정지되었습니다. 관리자에게 문의하세요.' });
+            req.user = { ...user, role: 'admin', isAdminMaster: true, isMaster: false };
         } else {
             // 채널 유저 — JWT에 channels 배열 포함
             const { username, channels } = decoded;

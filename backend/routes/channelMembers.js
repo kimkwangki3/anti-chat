@@ -33,7 +33,7 @@ router.get('/management/:channelId', protect, admin, async (req, res) => {
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
 
         // 관리자 권한 확인 (슈퍼어드민 또는 해당 채널 admin)
-        if (!req.user.isMaster) {
+        if (!req.user.isMaster && channel.ownerId !== req.user.id) {
             const entry = (req.user.channels || []).find(c => c.channelId === channelId && c.role === 'admin');
             if (!entry) return res.status(403).json({ message: '해당 채널의 관리자가 아닙니다.' });
         }
@@ -68,7 +68,7 @@ router.post('/create', protect, admin, async (req, res) => {
         if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
         if (!channel.databaseName) return res.status(400).json({ message: '채널 DB가 초기화되지 않았습니다.' });
 
-        if (!req.user.isMaster) {
+        if (!req.user.isMaster && channel.ownerId !== req.user.id) {
             const entry = (req.user.channels || []).find(c => c.channelId === parseInt(channelId) && c.role === 'admin');
             if (!entry) return res.status(403).json({ message: '해당 채널의 관리자가 아닙니다.' });
         }
@@ -115,7 +115,7 @@ router.put('/:channelId/users/:userId/status', protect, admin, async (req, res) 
         const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
         if (!channel || !channel.databaseName) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
 
-        if (!req.user.isMaster) {
+        if (!req.user.isMaster && channel.ownerId !== req.user.id) {
             const entry = (req.user.channels || []).find(c => c.channelId === channelId && c.role === 'admin');
             if (!entry) return res.status(403).json({ message: '권한이 없습니다.' });
         }
@@ -145,7 +145,7 @@ router.delete('/:channelId/users/:userId', protect, admin, async (req, res) => {
         const channel = await queryOne('SELECT * FROM Channels WHERE id = @id', { id: channelId });
         if (!channel || !channel.databaseName) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
 
-        if (!req.user.isMaster) {
+        if (!req.user.isMaster && channel.ownerId !== req.user.id) {
             const entry = (req.user.channels || []).find(c => c.channelId === channelId && c.role === 'admin');
             if (!entry) return res.status(403).json({ message: '권한이 없습니다.' });
         }

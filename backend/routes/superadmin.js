@@ -231,6 +231,25 @@ router.put('/channels/:id/status', async (req, res) => {
     }
 });
 
+// PUT /api/superadmin/channels/:id/owner — 채널에 관리자 임명/배정 (A안)
+router.put('/channels/:id/owner', async (req, res) => {
+    const { ownerId } = req.body;
+    try {
+        const channel = await queryOne('SELECT id FROM Channels WHERE id=@id', { id: req.params.id });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+
+        const owner = await queryOne('SELECT id, name, username, role FROM Users WHERE id=@id', { id: ownerId });
+        if (!owner || !['admin', 'superadmin'].includes(owner.role)) {
+            return res.status(400).json({ message: '관리자(admin) 계정만 채널에 배정할 수 있습니다.' });
+        }
+
+        await execute('UPDATE Channels SET ownerId=@ownerId, updatedAt=GETDATE() WHERE id=@id', { ownerId, id: channel.id });
+        res.json({ message: `채널 관리자를 ${owner.name}(으)로 배정했습니다.`, ownerId, ownerName: owner.name });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // GET /api/superadmin/channels/:id/detail
 router.get('/channels/:id/detail', async (req, res) => {
     try {
