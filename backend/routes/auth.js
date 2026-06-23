@@ -259,8 +259,11 @@ router.post('/sso/exchange', async (req, res) => {
 // body: { username, password, channelId 또는 channelSlug, key(보안번호) }
 router.post('/login-direct', async (req, res) => {
     const { username, password, channelId, channelSlug, key } = req.body;
-    if (!process.env.SSO_SECRET || key !== process.env.SSO_SECRET) {
-        return res.status(403).json({ message: '보안 인증에 실패했습니다.' });
+    // 보안번호(key)는 선택: 값이 들어오면 검증, 없으면 비밀번호 인증만으로 진행
+    if (key) {
+        if (!process.env.SSO_SECRET || key !== process.env.SSO_SECRET) {
+            return res.status(403).json({ message: '보안 인증에 실패했습니다.' });
+        }
     }
     if (!username || !password || (!channelId && !channelSlug)) {
         return res.status(400).json({ message: 'id, pwd, channel 정보가 필요합니다.' });

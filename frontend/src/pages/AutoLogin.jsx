@@ -15,8 +15,8 @@ const AutoLogin = () => {
         const key = p.get('key');
         const channelSlug = p.get('channel');
 
-        if (!username || !password || !key || !channelSlug) {
-            setError('필수 정보(id, pwd, key, channel)가 누락되었습니다.');
+        if (!username || !password || !channelSlug) {
+            setError('필수 정보(id, pwd, channel)가 누락되었습니다.');
             setTimeout(() => navigate('/login', { replace: true }), 2500);
             return;
         }
