@@ -20,9 +20,10 @@ const AutoLogin = () => {
             setTimeout(() => navigate('/login', { replace: true }), 2500);
             return;
         }
-        directLogin({ username, password, channelSlug, key }).then((ok) => {
-            if (ok) {
-                navigate('/', { replace: true });
+        directLogin({ username, password, channelSlug, key }).then((res) => {
+            if (res?.ok) {
+                // 자동 로그인 성공 → 바로 그 채널 채팅 화면으로
+                navigate(res.channelId ? `/chat?channelId=${res.channelId}` : '/', { replace: true });
             } else {
                 setError('자동 로그인에 실패했습니다. 잠시 후 로그인 화면으로 이동합니다.');
                 setTimeout(() => navigate(`/c/${channelSlug}`, { replace: true }), 2500);

@@ -302,14 +302,16 @@ router.post('/login-direct', async (req, res) => {
         }
         const overallRole = foundChannels.some(c => c.role === 'admin') ? 'admin' : 'member';
         const token = jwt.sign({ username, channels: foundChannels }, process.env.JWT_SECRET, { expiresIn: '30d' });
-        const chSlug = (await queryOne('SELECT slug FROM Channels WHERE id=@id', { id: targetChannelId }))?.slug || null;
+        const ch = await queryOne('SELECT id, name, slug, cardColor, profileImage FROM Channels WHERE id=@id', { id: targetChannelId });
         writeAuthLog(`직접 자동로그인: ${username} (채널 ${targetChannelId}, IP ${clientIp})`);
         return res.json({
             _id: foundChannels[0].userId, id: foundChannels[0].userId,
             name: firstName, nickname: firstNickname,
             username, role: overallRole,
             channels: foundChannels, sessionId, token, isMaster: false,
-            channelSlug: chSlug
+            channelSlug: ch?.slug || null,
+            channelId: targetChannelId,
+            channel: ch ? { _id: ch.id, id: ch.id, name: ch.name, slug: ch.slug, cardColor: ch.cardColor, profileImage: ch.profileImage } : null
         });
     } catch (error) {
         console.error('[LoginDirect] 오류:', error.message);

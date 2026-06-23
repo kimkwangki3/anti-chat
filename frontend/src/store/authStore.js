@@ -63,16 +63,17 @@ const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await axios.post('/auth/login-direct', { username, password, channelSlug, channelId, key });
-            const { token, sessionId, channelSlug: slug, ...userData } = response.data;
+            const { token, sessionId, channelSlug: slug, channelId: chId, channel, ...userData } = response.data;
             localStorage.setItem('token', token);
             localStorage.setItem('sessionId', sessionId);
             localStorage.setItem('user', JSON.stringify(userData));
             if (slug) localStorage.setItem('channelLoginSlug', slug);
             set({ user: userData, token, sessionId, isLoading: false });
-            return true;
+            if (channel) useChannelStore.getState().setCurrentChannel(channel);
+            return { ok: true, channelId: chId || null };
         } catch (error) {
             set({ error: error.response?.data?.message || '자동 로그인에 실패했습니다.', isLoading: false });
-            return false;
+            return { ok: false };
         }
     },
 
