@@ -58,6 +58,24 @@ const useAuthStore = create((set) => ({
         }
     },
 
+    // 외부 프로그램 직접 자동 로그인: URL의 id/pwd/보안번호로 로그인
+    directLogin: async ({ username, password, channelSlug, channelId, key }) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axios.post('/auth/login-direct', { username, password, channelSlug, channelId, key });
+            const { token, sessionId, channelSlug: slug, ...userData } = response.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('sessionId', sessionId);
+            localStorage.setItem('user', JSON.stringify(userData));
+            if (slug) localStorage.setItem('channelLoginSlug', slug);
+            set({ user: userData, token, sessionId, isLoading: false });
+            return true;
+        } catch (error) {
+            set({ error: error.response?.data?.message || '자동 로그인에 실패했습니다.', isLoading: false });
+            return false;
+        }
+    },
+
     // 외부(델파이) 시스템 자동 로그인: 일회용 코드를 세션으로 교환
     ssoLogin: async (code) => {
         set({ isLoading: true, error: null });

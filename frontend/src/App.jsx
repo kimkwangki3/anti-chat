@@ -6,6 +6,7 @@ import { SocketProvider } from './socket/SocketContext';
 // 즉시 로드 (자주 사용하는 페이지)
 import Login from './pages/Login';
 import SsoLogin from './pages/SsoLogin';
+import AutoLogin from './pages/AutoLogin';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ChatPage from './pages/ChatPage';
@@ -80,6 +81,7 @@ function App() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/c/:slug" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/sso" element={<SsoLogin />} />
+          <Route path="/auto-login" element={<AutoLogin />} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/" element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
           <Route path="/chat" element={<ProtectedLayout><ChatPage /></ProtectedLayout>} />

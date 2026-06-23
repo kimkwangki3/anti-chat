@@ -255,6 +255,65 @@ router.post('/sso/exchange', async (req, res) => {
     }
 });
 
+// POST /api/auth/login-direct — 외부 프로그램이 URL 파라미터(id, pwd, 보안번호)로 직접 자동 로그인
+// body: { username, password, channelId 또는 channelSlug, key(보안번호) }
+router.post('/login-direct', async (req, res) => {
+    const { username, password, channelId, channelSlug, key } = req.body;
+    if (!process.env.SSO_SECRET || key !== process.env.SSO_SECRET) {
+        return res.status(403).json({ message: '보안 인증에 실패했습니다.' });
+    }
+    if (!username || !password || (!channelId && !channelSlug)) {
+        return res.status(400).json({ message: 'id, pwd, channel 정보가 필요합니다.' });
+    }
+    if ((username || '').trim().toLowerCase() === 'admin') {
+        return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+    }
+    try {
+        const channel = channelId
+            ? await queryOne("SELECT id FROM Channels WHERE id=@id AND status='active'", { id: channelId })
+            : await queryOne("SELECT id FROM Channels WHERE slug=@slug AND status='active'", { slug: channelSlug });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        const targetChannelId = channel.id;
+
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        const sessionId = uuidv4();
+        const activeChannels = await query("SELECT id, name, databaseName FROM Channels WHERE status='active' AND databaseName IS NOT NULL");
+        const foundChannels = [];
+        let firstName = username, firstNickname = null;
+        for (const ch of activeChannels) {
+            try {
+                const pool = await getChannelPool(ch.databaseName);
+                const user = await queryOneInPool(pool, 'SELECT * FROM Users WHERE username=@username', { username });
+                if (user && user.password === password) {
+                    if (!foundChannels.length) { firstName = user.name; firstNickname = user.nickname; }
+                    foundChannels.push({ channelId: ch.id, dbName: ch.databaseName, userId: user.id, role: user.role, channelName: ch.name });
+                    await executeInPool(pool,
+                        "UPDATE Users SET isOnline=1, presenceStatus='online', lastLoginIp=@ip, lastLoginAt=GETDATE(), currentSessionId=@sessionId WHERE id=@id",
+                        { ip: clientIp, sessionId, id: user.id }
+                    );
+                }
+            } catch (e) { /* 개별 채널 오류 무시 */ }
+        }
+        if (!foundChannels.length || !foundChannels.some(c => c.channelId === targetChannelId)) {
+            return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
+        }
+        const overallRole = foundChannels.some(c => c.role === 'admin') ? 'admin' : 'member';
+        const token = jwt.sign({ username, channels: foundChannels }, process.env.JWT_SECRET, { expiresIn: '30d' });
+        const chSlug = (await queryOne('SELECT slug FROM Channels WHERE id=@id', { id: targetChannelId }))?.slug || null;
+        writeAuthLog(`직접 자동로그인: ${username} (채널 ${targetChannelId}, IP ${clientIp})`);
+        return res.json({
+            _id: foundChannels[0].userId, id: foundChannels[0].userId,
+            name: firstName, nickname: firstNickname,
+            username, role: overallRole,
+            channels: foundChannels, sessionId, token, isMaster: false,
+            channelSlug: chSlug
+        });
+    } catch (error) {
+        console.error('[LoginDirect] 오류:', error.message);
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // GET /api/auth/me
 router.get('/me', protect, async (req, res) => {
     try {
