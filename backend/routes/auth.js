@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { query, queryOne, execute, getChannelPool, queryOneInPool, executeInPool, insertAndGetIdInPool } = require('../db/mssql');
 const { protect } = require('../middleware/authMiddleware');
+const { syncSingleUser } = require('../services/syncService');
 const { writeAuthLog } = require('../utils/logService');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
@@ -18,6 +19,56 @@ const SSO_TTL_MS = 60 * 1000; // 60초
 const cleanupSsoCodes = () => {
     const now = Date.now();
     for (const [code, v] of ssoCodes) { if (v.expiresAt < now) ssoCodes.delete(code); }
+};
+
+// 채널 회원 인증 (USER_GRADE 2만 통과). 타겟 채널에 없으면 GTRADE에서 그 회원 1명만 즉석 보충(백스톱) 후 재확인.
+// 성공 시 { foundChannels, firstName, firstNickname }, 실패 시 null.
+const authenticateChannelMember = async (username, password, targetChannelId, clientIp, sessionId, userAgent) => {
+    const onLogin = async (pool, id) => {
+        await executeInPool(pool,
+            "UPDATE Users SET isOnline=1, presenceStatus='online', lastLoginIp=@ip, lastLoginAt=GETDATE(), currentSessionId=@sessionId WHERE id=@id",
+            { ip: clientIp, sessionId, id }
+        );
+        try {
+            await insertAndGetIdInPool(pool, 'INSERT INTO LoginHistory (userId, ip, userAgent) VALUES (@userId, @ip, @userAgent)', { userId: id, ip: clientIp, userAgent: userAgent || '' });
+        } catch (e) { /* LoginHistory 실패는 무시 */ }
+    };
+
+    const activeChannels = await query("SELECT id, name, databaseName FROM Channels WHERE status='active' AND databaseName IS NOT NULL");
+    const foundChannels = [];
+    let firstName = username, firstNickname = null;
+
+    for (const ch of activeChannels) {
+        try {
+            const pool = await getChannelPool(ch.databaseName);
+            const user = await queryOneInPool(pool, 'SELECT * FROM Users WHERE username = @username', { username });
+            if (user && user.password === password && user.userGrade === 2) {
+                if (!foundChannels.length) { firstName = user.name; firstNickname = user.nickname; }
+                foundChannels.push({ channelId: ch.id, dbName: ch.databaseName, userId: user.id, role: user.role, channelName: ch.name });
+                await onLogin(pool, user.id);
+            }
+        } catch (e) { console.error(`[Login] 채널 DB 오류 (${ch.databaseName}):`, e.message); }
+    }
+
+    // 타겟 채널에 grade2 매치가 없으면 백스톱: GTRADE에서 그 회원 보충 후 재확인
+    if (!foundChannels.some(c => c.channelId === targetChannelId)) {
+        const targetCh = await queryOne("SELECT id, name, databaseName, linkedServer, linkedDb FROM Channels WHERE id=@id AND status='active'", { id: targetChannelId });
+        if (targetCh && targetCh.databaseName) {
+            await syncSingleUser(targetCh, username);
+            try {
+                const pool = await getChannelPool(targetCh.databaseName);
+                const user = await queryOneInPool(pool, 'SELECT * FROM Users WHERE username = @username', { username });
+                if (user && user.password === password && user.userGrade === 2) {
+                    if (!foundChannels.length) { firstName = user.name; firstNickname = user.nickname; }
+                    foundChannels.push({ channelId: targetCh.id, dbName: targetCh.databaseName, userId: user.id, role: user.role, channelName: targetCh.name });
+                    await onLogin(pool, user.id);
+                }
+            } catch (e) { console.error('[Login] 백스톱 재확인 오류:', e.message); }
+        }
+    }
+
+    if (!foundChannels.length || !foundChannels.some(c => c.channelId === targetChannelId)) return null;
+    return { foundChannels, firstName, firstNickname };
 };
 
 const storage = multer.memoryStorage();
@@ -116,49 +167,13 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
 
-        // === 채널 로그인 (channelId 있음): 해당 채널 회원만 ===
-        // 2. 모든 활성 채널 DB 검색 (멀티채널 가입자는 전체 채널 확보)
-        const activeChannels = await query(
-            "SELECT id, name, databaseName FROM Channels WHERE status='active' AND databaseName IS NOT NULL"
-        );
-        const foundChannels = [];
-        let firstName = username, firstNickname = null;
-
-        for (const ch of activeChannels) {
-            try {
-                const pool = await getChannelPool(ch.databaseName);
-                const user = await queryOneInPool(pool, 'SELECT * FROM Users WHERE username = @username', { username });
-                if (user && user.password === password) {
-                    if (foundChannels.length === 0) {
-                        firstName = user.name;
-                        firstNickname = user.nickname;
-                    }
-                    foundChannels.push({
-                        channelId: ch.id,
-                        dbName: ch.databaseName,
-                        userId: user.id,
-                        role: user.role,
-                        channelName: ch.name
-                    });
-                    await executeInPool(pool,
-                        'UPDATE Users SET isOnline=1, presenceStatus=@status, lastLoginIp=@ip, lastLoginAt=GETDATE(), currentSessionId=@sessionId WHERE id=@id',
-                        { status: 'online', ip: clientIp, sessionId, id: user.id }
-                    );
-                    await insertAndGetIdInPool(pool,
-                        'INSERT INTO LoginHistory (userId, ip, userAgent) VALUES (@userId, @ip, @userAgent)',
-                        { userId: user.id, ip: clientIp, userAgent: req.headers['user-agent'] || '' }
-                    );
-                }
-            } catch (e) {
-                console.error(`[Login] 채널 DB 오류 (${ch.databaseName}):`, e.message);
-            }
-        }
-
-        // 이 채널 로그인창은 해당 채널 회원만 허용 (이 채널 멤버가 아니면 거부)
+        // === 채널 로그인 (channelId 있음): 해당 채널 회원만 (USER_GRADE 2, 없으면 백스톱) ===
         const targetChannelId = parseInt(channelId);
-        if (!foundChannels.length || !foundChannels.some(c => c.channelId === targetChannelId)) {
+        const auth = await authenticateChannelMember(username, password, targetChannelId, clientIp, sessionId, req.headers['user-agent'] || '');
+        if (!auth) {
             return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
+        const { foundChannels, firstName, firstNickname } = auth;
 
         const overallRole = foundChannels.some(c => c.role === 'admin') ? 'admin' : 'member';
         writeAuthLog(`로그인: ${username} (IP: ${clientIp}), 채널 ${foundChannels.length}개`);
@@ -280,26 +295,11 @@ router.post('/login-direct', async (req, res) => {
 
         const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const sessionId = uuidv4();
-        const activeChannels = await query("SELECT id, name, databaseName FROM Channels WHERE status='active' AND databaseName IS NOT NULL");
-        const foundChannels = [];
-        let firstName = username, firstNickname = null;
-        for (const ch of activeChannels) {
-            try {
-                const pool = await getChannelPool(ch.databaseName);
-                const user = await queryOneInPool(pool, 'SELECT * FROM Users WHERE username=@username', { username });
-                if (user && user.password === password) {
-                    if (!foundChannels.length) { firstName = user.name; firstNickname = user.nickname; }
-                    foundChannels.push({ channelId: ch.id, dbName: ch.databaseName, userId: user.id, role: user.role, channelName: ch.name });
-                    await executeInPool(pool,
-                        "UPDATE Users SET isOnline=1, presenceStatus='online', lastLoginIp=@ip, lastLoginAt=GETDATE(), currentSessionId=@sessionId WHERE id=@id",
-                        { ip: clientIp, sessionId, id: user.id }
-                    );
-                }
-            } catch (e) { /* 개별 채널 오류 무시 */ }
-        }
-        if (!foundChannels.length || !foundChannels.some(c => c.channelId === targetChannelId)) {
+        const auth = await authenticateChannelMember(username, password, targetChannelId, clientIp, sessionId, req.headers['user-agent'] || '');
+        if (!auth) {
             return res.status(401).json({ message: '아이디 또는 비밀번호가 일치하지 않습니다.' });
         }
+        const { foundChannels, firstName, firstNickname } = auth;
         const overallRole = foundChannels.some(c => c.role === 'admin') ? 'admin' : 'member';
         const token = jwt.sign({ username, channels: foundChannels }, process.env.JWT_SECRET, { expiresIn: '30d' });
         const ch = await queryOne('SELECT id, name, slug, cardColor, profileImage FROM Channels WHERE id=@id', { id: targetChannelId });

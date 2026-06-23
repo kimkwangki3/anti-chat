@@ -1,9 +1,12 @@
-// 외부 MSSQL DB → 채널 전용 DB 실시간 동기화 서비스
-const { getPool, query, execute, getChannelPool, queryOneInPool, executeInPool, insertAndGetIdInPool } = require('../db/mssql');
+// 외부 MSSQL DB(GTRADE USER_MST) → 채널 전용 DB 동기화 서비스
+const { getPool, query, queryOne, execute, getChannelPool, queryOneInPool, executeInPool, insertAndGetIdInPool } = require('../db/mssql');
 
-const SYNC_INTERVAL_MS = 60 * 1000; // 1분마다 동기화
+const SYNC_INTERVAL_MS = 60 * 1000; // (수동 모드에서는 사용 안 함)
 
-// USER_MST 행 → anti-chat Users 레코드 매핑
+// GTRADE USER_MST에서 가져올 컬럼
+const SELECT_COLS = 'USER_ID, USER_NM, USER_NICK_NM, USER_PWD, USER_HP, USER_TEL, BIRTH_DT, USER_CREATE_IP, RECOMM_NM, USER_BIGO, USER_BLACK, USER_GRADE, UPDATE_DT, REG_DT';
+
+// USER_MST 행 → 채널 Users 레코드 매핑
 const mapRow = (row) => ({
     username:      (String(row.USER_ID || '')).trim(),
     name:          (String(row.USER_NM || row.USER_ID || '')).trim(),
@@ -17,98 +20,112 @@ const mapRow = (row) => ({
     status:        (row.USER_BLACK === 1 || row.USER_BLACK === '1' || row.USER_BLACK === 'Y') ? 'suspended' : 'approved',
     role:          'member',
     gender:        'none',
+    userGrade:     (row.USER_GRADE === null || row.USER_GRADE === undefined || row.USER_GRADE === '') ? null : parseInt(row.USER_GRADE, 10),
 });
 
-// 채널 1개 동기화
-const syncChannel = async (channel) => {
-    const { id: channelId, name: channelName, linkedServer, linkedDb, databaseName, lastSyncAt } = channel;
+// 채널 DB에 회원 1명 upsert (id 보존). 반환: 'inserted' | 'updated'
+const upsertUser = async (channelPool, u) => {
+    const existing = await queryOneInPool(channelPool, 'SELECT id FROM Users WHERE username=@username', { username: u.username });
+    if (existing) {
+        await executeInPool(channelPool,
+            `UPDATE Users SET name=@name, nickname=@nickname, password=@password,
+             phone=@phone, birthdate=@birthdate, memo=@memo, recommender=@recommender,
+             status=@status, userGrade=@userGrade, updatedAt=GETDATE() WHERE username=@username`,
+            { name: u.name, nickname: u.nickname, password: u.password, phone: u.phone, birthdate: u.birthdate,
+              memo: u.memo, recommender: u.recommender, status: u.status, userGrade: u.userGrade, username: u.username }
+        );
+        return 'updated';
+    }
+    await insertAndGetIdInPool(channelPool,
+        `INSERT INTO Users (username, name, nickname, password, phone, birthdate, memo,
+         recommender, registrationIp, status, role, gender, userGrade, agreedToPrivacy)
+         VALUES (@username, @name, @nickname, @password, @phone, @birthdate, @memo,
+         @recommender, @registrationIp, @status, @role, @gender, @userGrade, 1)`,
+        { username: u.username, name: u.name, nickname: u.nickname, password: u.password, phone: u.phone,
+          birthdate: u.birthdate, memo: u.memo, recommender: u.recommender, registrationIp: u.registrationIp,
+          status: u.status, role: u.role, gender: u.gender, userGrade: u.userGrade }
+    );
+    return 'inserted';
+};
 
+// 채널 1개 동기화 (full=true면 전체, false면 증분). USER_GRADE 2,3만 가져옴
+const syncChannel = async (channel, { full = false } = {}) => {
+    const { id: channelId, name: channelName, linkedServer, linkedDb, databaseName, lastSyncAt } = channel;
+    const masterPool = await getPool();
+
+    let innerWhere = 'WHERE USER_GRADE IN (2,3)';
+    if (!full && lastSyncAt) {
+        const d = new Date(lastSyncAt);
+        const dateStr = d.getFullYear().toString() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+        innerWhere += ` AND (REG_DT >= ''${dateStr}'' OR (UPDATE_DT IS NOT NULL AND UPDATE_DT >= ''${dateStr}''))`;
+    }
+    const innerSql = `SELECT ${SELECT_COLS} FROM ${linkedDb}.dbo.USER_MST ${innerWhere}`;
+    const outerSql = `SELECT * FROM OPENQUERY([${linkedServer}], '${innerSql}')`;
+
+    const result = await masterPool.request().query(outerSql);
+    const rows = result.recordset;
+
+    const channelPool = await getChannelPool(databaseName);
+    let inserted = 0, updated = 0, skipped = 0;
+    for (const row of rows) {
+        const u = mapRow(row);
+        if (!u.username) { skipped++; continue; }
+        try {
+            const r = await upsertUser(channelPool, u);
+            if (r === 'inserted') inserted++; else updated++;
+        } catch (e) { skipped++; }
+    }
+    await execute('UPDATE Channels SET lastSyncAt=GETDATE() WHERE id=@id', { id: channelId });
+    console.log(`[Sync] ${channelName}: 신규 ${inserted}, 업데이트 ${updated}, 건너뜀 ${skipped} (full=${full})`);
+    return { inserted, updated, skipped, total: rows.length };
+};
+
+// 채널 ID로 전체 동기화 (수동 버튼용)
+const syncChannelById = async (channelId) => {
+    const channel = await queryOne(
+        `SELECT id, name, linkedServer, linkedDb, databaseName, lastSyncAt FROM Channels
+         WHERE id=@id AND status='active' AND linkedServer IS NOT NULL AND databaseName IS NOT NULL`,
+        { id: channelId }
+    );
+    if (!channel) throw new Error('동기화 대상 채널이 아닙니다. (외부 DB 연결 설정 확인)');
+    return syncChannel(channel, { full: true });
+};
+
+// 로그인 백스톱: GTRADE에서 회원 1명만 가져와 채널 DB에 upsert. (신규/미동기화 회원 자동 보충)
+const syncSingleUser = async (channel, username) => {
+    const { linkedServer, linkedDb, databaseName } = channel;
+    if (!linkedServer || !linkedDb || !databaseName) return null;
+    // 인젝션 방지: 안전한 문자만 사용 (일반 USER_ID는 영숫자)
+    const safeUser = String(username).replace(/[^A-Za-z0-9_.@-]/g, '');
+    if (!safeUser) return null;
     try {
         const masterPool = await getPool();
-
-        // 마지막 동기화 이후 변경된 레코드만 (첫 실행이면 전체)
-        // USER_GRADE = 2 인 유저만 동기화
-        let innerWhere = 'WHERE USER_GRADE = 2';
-        if (lastSyncAt) {
-            const d = new Date(lastSyncAt);
-            const dateStr = d.getFullYear().toString()
-                + String(d.getMonth() + 1).padStart(2, '0')
-                + String(d.getDate()).padStart(2, '0');
-            innerWhere += ` AND (REG_DT >= ''${dateStr}'' OR (UPDATE_DT IS NOT NULL AND UPDATE_DT >= ''${dateStr}''))`;
-        }
-
-        const cols = 'USER_ID, USER_NM, USER_NICK_NM, USER_PWD, USER_HP, USER_TEL, BIRTH_DT, USER_CREATE_IP, RECOMM_NM, USER_BIGO, USER_BLACK, USER_GRADE, UPDATE_DT, REG_DT';
-        const innerSql = `SELECT ${cols} FROM ${linkedDb}.dbo.USER_MST ${innerWhere}`;
+        const innerSql = `SELECT ${SELECT_COLS} FROM ${linkedDb}.dbo.USER_MST WHERE USER_ID = ''${safeUser}'' AND USER_GRADE IN (2,3)`;
         const outerSql = `SELECT * FROM OPENQUERY([${linkedServer}], '${innerSql}')`;
-
         const result = await masterPool.request().query(outerSql);
-        const rows = result.recordset;
-
-        if (!rows.length) {
-            console.log(`[Sync] ${channelName}: 변경 없음`);
-            await execute('UPDATE Channels SET lastSyncAt=GETDATE() WHERE id=@id', { id: channelId });
-            return;
-        }
-
+        const row = result.recordset[0];
+        if (!row) return null;
+        const u = mapRow(row);
+        if (!u.username) return null;
         const channelPool = await getChannelPool(databaseName);
-        let inserted = 0, updated = 0, skipped = 0;
-
-        for (const row of rows) {
-            const u = mapRow(row);
-            if (!u.username) { skipped++; continue; }
-
-            try {
-                const existing = await queryOneInPool(channelPool, 'SELECT id FROM Users WHERE username=@username', { username: u.username });
-
-                if (existing) {
-                    await executeInPool(channelPool,
-                        `UPDATE Users SET name=@name, nickname=@nickname, password=@password,
-                         phone=@phone, birthdate=@birthdate, memo=@memo, recommender=@recommender,
-                         status=@status, updatedAt=GETDATE() WHERE username=@username`,
-                        { name: u.name, nickname: u.nickname, password: u.password,
-                          phone: u.phone, birthdate: u.birthdate, memo: u.memo,
-                          recommender: u.recommender, status: u.status, username: u.username }
-                    );
-                    updated++;
-                } else {
-                    await insertAndGetIdInPool(channelPool,
-                        `INSERT INTO Users (username, name, nickname, password, phone, birthdate, memo,
-                         recommender, registrationIp, status, role, gender, agreedToPrivacy)
-                         VALUES (@username, @name, @nickname, @password, @phone, @birthdate, @memo,
-                         @recommender, @registrationIp, @status, @role, @gender, 1)`,
-                        { username: u.username, name: u.name, nickname: u.nickname, password: u.password,
-                          phone: u.phone, birthdate: u.birthdate, memo: u.memo,
-                          recommender: u.recommender, registrationIp: u.registrationIp,
-                          status: u.status, role: u.role, gender: u.gender }
-                    );
-                    inserted++;
-                }
-            } catch (e) {
-                skipped++;
-                // 개별 유저 오류는 계속 진행
-            }
-        }
-
-        await execute('UPDATE Channels SET lastSyncAt=GETDATE() WHERE id=@id', { id: channelId });
-        console.log(`[Sync] ${channelName}: 신규 ${inserted}명, 업데이트 ${updated}명, 건너뜀 ${skipped}명`);
+        await upsertUser(channelPool, u);
+        return await queryOneInPool(channelPool, 'SELECT * FROM Users WHERE username=@username', { username: u.username });
     } catch (e) {
-        console.error(`[Sync] ${channelName} 오류:`, e.message);
+        console.error('[Sync] 단일 회원 보충 오류:', e.message);
+        return null;
     }
 };
 
-// 전체 동기화 대상 채널 실행
+// (자동 폴링 — 현재 수동 모드라 server.js에서 호출하지 않음)
 const runSync = async () => {
     try {
         const channels = await query(
             `SELECT id, name, linkedServer, linkedDb, databaseName, lastSyncAt
              FROM Channels
-             WHERE status='active' AND syncEnabled=1
-               AND linkedServer IS NOT NULL AND databaseName IS NOT NULL`
+             WHERE status='active' AND syncEnabled=1 AND linkedServer IS NOT NULL AND databaseName IS NOT NULL`
         );
-        if (!channels.length) return;
-
         for (const channel of channels) {
-            await syncChannel(channel);
+            try { await syncChannel(channel); } catch (e) { console.error(`[Sync] ${channel.name} 오류:`, e.message); }
         }
     } catch (e) {
         console.error('[Sync] 스케줄러 오류:', e.message);
@@ -116,21 +133,10 @@ const runSync = async () => {
 };
 
 let syncTimer = null;
-
 const startSyncService = () => {
-    console.log('[Sync] 외부 DB 동기화 서비스 시작 (1분 간격)');
-    // 서버 시작 10초 후 첫 동기화
-    setTimeout(() => {
-        runSync();
-        syncTimer = setInterval(runSync, SYNC_INTERVAL_MS);
-    }, 10000);
+    console.log('[Sync] 자동 동기화 스케줄러 시작 (1분 간격)');
+    setTimeout(() => { runSync(); syncTimer = setInterval(runSync, SYNC_INTERVAL_MS); }, 10000);
 };
+const stopSyncService = () => { if (syncTimer) { clearInterval(syncTimer); syncTimer = null; } };
 
-const stopSyncService = () => {
-    if (syncTimer) {
-        clearInterval(syncTimer);
-        syncTimer = null;
-    }
-};
-
-module.exports = { startSyncService, stopSyncService, runSync };
+module.exports = { startSyncService, stopSyncService, runSync, syncChannel, syncChannelById, syncSingleUser };

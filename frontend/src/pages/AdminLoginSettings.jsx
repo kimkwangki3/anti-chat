@@ -14,8 +14,21 @@ const AdminLoginSettings = () => {
     const [loginLogo, setLoginLogo] = useState('');
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const [msg, setMsg] = useState('');
     const fileRef = useRef(null);
+
+    const handleSync = async () => {
+        setSyncing(true); setMsg('');
+        try {
+            const { data } = await axios.post(`/channels/${channelId}/sync`);
+            setMsg(data.message || '동기화 완료');
+        } catch (e) {
+            setMsg(e.response?.data?.message || '동기화에 실패했습니다.');
+        } finally {
+            setSyncing(false);
+        }
+    };
 
     useEffect(() => {
         if (!channelId) return;
@@ -81,6 +94,15 @@ const AdminLoginSettings = () => {
             {msg && <div className="mb-5 p-3 rounded-xl bg-[#FF8C69]/10 border border-[#FF8C69]/20 text-[#FF8C69] text-sm">{msg}</div>}
 
             <div className="space-y-6">
+                {/* 회원 DB 동기화 */}
+                <section className="glass-card p-6 border-[#FF8C69]/20">
+                    <h3 className="text-sm font-bold text-gray-300 mb-2">회원 DB 동기화</h3>
+                    <p className="text-[11px] text-gray-600 mb-4">외부(GTRADE) 회원 정보를 이 채널로 가져옵니다. (USER_GRADE 2·3 회원, 기존 회원은 갱신·신규는 추가)</p>
+                    <button onClick={handleSync} disabled={syncing} className="peach-button px-5 py-2.5 text-sm disabled:opacity-50">
+                        {syncing ? '동기화 중...' : '지금 동기화'}
+                    </button>
+                </section>
+
                 {/* 아이콘 */}
                 <section className="glass-card p-6">
                     <h3 className="text-sm font-bold text-gray-300 mb-4">아이콘 / 로고</h3>

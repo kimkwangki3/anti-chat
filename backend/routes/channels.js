@@ -8,6 +8,7 @@ const path = require('path');
 const crypto = require('crypto');
 const cloudinary = require('../config/cloudinary');
 const streamifier = require('streamifier');
+const { syncChannelById } = require('../services/syncService');
 
 const slugifyChannelName = (value) => {
     return String(value || '')
@@ -185,6 +186,22 @@ router.post('/:id/login-logo', protect, admin, upload.single('logo'), async (req
         res.json({ message: '아이콘이 업로드되었습니다.', loginLogo: logoUrl });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// POST /api/channels/:id/sync — 채널 회원 DB를 GTRADE에서 수동 전체 동기화 (관리자/소유자)
+router.post('/:id/sync', protect, admin, async (req, res) => {
+    try {
+        const channel = await queryOne('SELECT id, ownerId FROM Channels WHERE id=@id', { id: req.params.id });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        if (!req.user.isMaster && channel.ownerId !== req.user.id) {
+            return res.status(403).json({ message: '권한이 없습니다.' });
+        }
+        const result = await syncChannelById(req.params.id);
+        res.json({ message: `동기화 완료 — 신규 ${result.inserted}명, 업데이트 ${result.updated}명 (총 ${result.total}건)`, ...result });
+    } catch (error) {
+        console.error('[ChannelSync] 오류:', error.message);
+        res.status(500).json({ message: error.message || '동기화에 실패했습니다.' });
     }
 });
 

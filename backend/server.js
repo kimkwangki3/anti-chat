@@ -7,8 +7,29 @@ const path = require('path');
 const fs = require('fs');
 const { Server } = require('socket.io');
 const webpush = require('web-push');
-const { getPool, queryOne, execute } = require('./db/mssql');
-const { startSyncService } = require('./services/syncService');
+const { getPool, queryOne, execute, query, getChannelPool, queryOneInPool, executeInPool } = require('./db/mssql');
+// 동기화는 수동(채널관리자 버튼)으로만 — 자동 폴링은 사용하지 않음
+
+// 시작 시 각 채널 DB의 Users에 userGrade 컬럼 자동 추가 (수동 마이그레이션 불필요)
+const ensureChannelUserColumns = async () => {
+    try {
+        const channels = await query("SELECT databaseName FROM Channels WHERE databaseName IS NOT NULL");
+        for (const ch of channels) {
+            try {
+                const pool = await getChannelPool(ch.databaseName);
+                const row = await queryOneInPool(pool, "SELECT COL_LENGTH('Users','userGrade') AS len");
+                if (row && (row.len === null || row.len === undefined)) {
+                    await executeInPool(pool, "ALTER TABLE Users ADD userGrade INT NULL");
+                    console.log(`[Migrate] ${ch.databaseName}.Users.userGrade 컬럼 추가됨`);
+                }
+            } catch (e) {
+                console.error(`[Migrate] 채널DB ${ch.databaseName} userGrade 처리 오류:`, e.message);
+            }
+        }
+    } catch (e) {
+        console.error('[Migrate] 채널 컬럼 점검 오류:', e.message);
+    }
+};
 
 // 시작 시 Channels 테이블에 로그인 페이지 컬럼 자동 추가 (수동 마이그레이션 불필요)
 const ensureLoginColumns = async () => {
@@ -142,10 +163,11 @@ getPool()
     .then(async () => {
         console.log('MSSQL 연결 성공');
         await ensureLoginColumns();
+        await ensureChannelUserColumns();
         await resetPresenceOffline();
         initPollReminders(io);
         scheduleDailyLogout(io);
-        startSyncService();
+        // 동기화는 수동 전용 — 자동 폴링(startSyncService) 호출하지 않음
 
         server.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
     })

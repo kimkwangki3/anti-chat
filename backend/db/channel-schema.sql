@@ -16,6 +16,7 @@ CREATE TABLE Users (
     recommender      NVARCHAR(100),
     registrationIp   NVARCHAR(100),
     role             NVARCHAR(20)   DEFAULT 'member',   -- admin | member
+    userGrade        INT            NULL,               -- GTRADE USER_GRADE (2=로그인가능, 3=동기화만)
     isOnline         BIT            DEFAULT 0,
     presenceStatus   NVARCHAR(20)   DEFAULT 'offline',  -- online | idle | offline
     lastLoginIp      NVARCHAR(100),
