@@ -58,6 +58,24 @@ const useAuthStore = create((set) => ({
         }
     },
 
+    // 외부(델파이) 시스템 자동 로그인: 일회용 코드를 세션으로 교환
+    ssoLogin: async (code) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axios.post('/auth/sso/exchange', { code });
+            const { token, sessionId, channelSlug, ...userData } = response.data;
+            localStorage.setItem('token', token);
+            localStorage.setItem('sessionId', sessionId);
+            localStorage.setItem('user', JSON.stringify(userData));
+            if (channelSlug) localStorage.setItem('channelLoginSlug', channelSlug);
+            set({ user: userData, token, sessionId, isLoading: false });
+            return true;
+        } catch (error) {
+            set({ error: error.response?.data?.message || '자동 로그인에 실패했습니다.', isLoading: false });
+            return false;
+        }
+    },
+
     register: async (userData) => {
         set({ isLoading: true, error: null });
         try {
