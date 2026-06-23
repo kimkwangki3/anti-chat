@@ -271,6 +271,24 @@ router.put('/channels/:id/owner', async (req, res) => {
     }
 });
 
+// PUT /api/superadmin/channels/:id/sync-settings — 채널 외부 DB(GTRADE) 연결 정보 수정
+router.put('/channels/:id/sync-settings', async (req, res) => {
+    const { linkedServer, linkedDb, syncEnabled } = req.body;
+    try {
+        const channel = await queryOne('SELECT id FROM Channels WHERE id=@id', { id: req.params.id });
+        if (!channel) return res.status(404).json({ message: '채널을 찾을 수 없습니다.' });
+        const updates = [], params = { id: channel.id };
+        if (typeof linkedServer === 'string') { updates.push('linkedServer=@linkedServer'); params.linkedServer = linkedServer.trim() || null; }
+        if (typeof linkedDb === 'string') { updates.push('linkedDb=@linkedDb'); params.linkedDb = linkedDb.trim() || null; }
+        if (typeof syncEnabled === 'boolean') { updates.push('syncEnabled=@syncEnabled'); params.syncEnabled = syncEnabled ? 1 : 0; }
+        if (updates.length) await execute(`UPDATE Channels SET ${updates.join(',')}, updatedAt=GETDATE() WHERE id=@id`, params);
+        const updated = await queryOne('SELECT id, name, slug, linkedServer, linkedDb, syncEnabled FROM Channels WHERE id=@id', { id: channel.id });
+        res.json({ message: '외부 DB 연결 설정이 저장되었습니다.', channel: updated });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // GET /api/superadmin/channels/:id/detail
 router.get('/channels/:id/detail', async (req, res) => {
     try {

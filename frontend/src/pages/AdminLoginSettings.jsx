@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
+import useAuthStore from '../store/authStore';
 
 const AdminLoginSettings = () => {
     const location = useLocation();
@@ -17,6 +18,24 @@ const AdminLoginSettings = () => {
     const [syncing, setSyncing] = useState(false);
     const [msg, setMsg] = useState('');
     const fileRef = useRef(null);
+
+    const { user } = useAuthStore();
+    const isSuperAdmin = user?.role === 'superadmin';
+    const [linkedServer, setLinkedServer] = useState('');
+    const [linkedDb, setLinkedDb] = useState('');
+    const [savingConn, setSavingConn] = useState(false);
+
+    const handleSaveConn = async () => {
+        setSavingConn(true); setMsg('');
+        try {
+            const { data } = await axios.put(`/superadmin/channels/${channelId}/sync-settings`, { linkedServer, linkedDb });
+            setMsg(data.message || '연결 설정이 저장되었습니다.');
+        } catch (e) {
+            setMsg(e.response?.data?.message || '연결 설정 저장에 실패했습니다.');
+        } finally {
+            setSavingConn(false);
+        }
+    };
 
     const handleSync = async () => {
         setSyncing(true); setMsg('');
@@ -39,6 +58,8 @@ const AdminLoginSettings = () => {
                 setLoginDomain(data.loginDomain || '');
                 setCardColor(data.cardColor || '#FF8C69');
                 setLoginLogo(data.loginLogo || data.profileImage || '');
+                setLinkedServer(data.linkedServer || '');
+                setLinkedDb(data.linkedDb || '');
             })
             .catch(() => setMsg('채널 정보를 불러오지 못했습니다.'));
     }, [channelId]);
@@ -102,6 +123,37 @@ const AdminLoginSettings = () => {
                         {syncing ? '동기화 중...' : '지금 동기화'}
                     </button>
                 </section>
+
+                {/* 외부 DB 연결 설정 (슈퍼어드민 전용) */}
+                {isSuperAdmin && (
+                    <section className="glass-card p-6 border-purple-500/20">
+                        <h3 className="text-sm font-bold text-gray-300 mb-2">외부 DB 연결 (GTRADE) <span className="text-[10px] text-purple-400">최고관리자 전용</span></h3>
+                        <p className="text-[11px] text-gray-600 mb-4">이 채널이 회원을 가져올 외부 서버/DB. 서버 주소가 바뀌면 여기서 수정하세요. (단, MSSQL에 링크드서버 등록은 SSMS에서 별도로 해야 함)</p>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">연결 서버 (linkedServer)</label>
+                                <input
+                                    value={linkedServer}
+                                    onChange={(e) => setLinkedServer(e.target.value)}
+                                    placeholder="예: 110.4.89.210,4600"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-purple-500/50"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">연결 DB (linkedDb)</label>
+                                <input
+                                    value={linkedDb}
+                                    onChange={(e) => setLinkedDb(e.target.value)}
+                                    placeholder="예: GTRADENEW"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm font-mono focus:outline-none focus:border-purple-500/50"
+                                />
+                            </div>
+                            <button onClick={handleSaveConn} disabled={savingConn} className="px-5 py-2.5 text-sm font-bold rounded-xl bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500 hover:text-white transition-colors disabled:opacity-50">
+                                {savingConn ? '저장 중...' : '연결 설정 저장'}
+                            </button>
+                        </div>
+                    </section>
+                )}
 
                 {/* 아이콘 */}
                 <section className="glass-card p-6">
