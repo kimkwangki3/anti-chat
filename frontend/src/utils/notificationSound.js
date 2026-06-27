@@ -81,7 +81,7 @@ export const installAudioUnlock = () => {
     });
 };
 
-const scheduleTone = (ctx, { start, duration, frequency, type, gainValue }) => {
+const scheduleTone = (ctx, destination, { start, duration, frequency, type, gainValue }) => {
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
 
@@ -89,11 +89,11 @@ const scheduleTone = (ctx, { start, duration, frequency, type, gainValue }) => {
     oscillator.frequency.setValueAtTime(frequency, start);
 
     gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(gainValue, start + 0.012);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
 
     oscillator.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(destination);
     oscillator.start(start);
     oscillator.stop(start + duration + 0.02);
 };
@@ -101,17 +101,20 @@ const scheduleTone = (ctx, { start, duration, frequency, type, gainValue }) => {
 const getPattern = (soundType, baseGain, now) => {
     const patterns = {
         peach: [
-            { start: now, duration: 0.09, frequency: 740, type: 'sine', gainValue: baseGain },
-            { start: now + 0.12, duration: 0.12, frequency: 988, type: 'sine', gainValue: baseGain * 0.9 }
+            { start: now, duration: 0.14, frequency: 784, type: 'triangle', gainValue: baseGain },
+            { start: now + 0.13, duration: 0.22, frequency: 1047, type: 'triangle', gainValue: baseGain },
+            // 저음 보강(body) — 더 묵직하고 강하게 들리도록
+            { start: now + 0.13, duration: 0.22, frequency: 523, type: 'sine', gainValue: baseGain * 0.55 }
         ],
         crystal: [
-            { start: now, duration: 0.07, frequency: 1047, type: 'triangle', gainValue: baseGain * 0.8 },
-            { start: now + 0.09, duration: 0.09, frequency: 1319, type: 'triangle', gainValue: baseGain * 0.75 },
-            { start: now + 0.2, duration: 0.12, frequency: 1568, type: 'triangle', gainValue: baseGain * 0.65 }
+            { start: now, duration: 0.10, frequency: 1047, type: 'triangle', gainValue: baseGain },
+            { start: now + 0.10, duration: 0.12, frequency: 1319, type: 'triangle', gainValue: baseGain },
+            { start: now + 0.22, duration: 0.20, frequency: 1568, type: 'triangle', gainValue: baseGain * 0.9 }
         ],
         knock: [
-            { start: now, duration: 0.05, frequency: 220, type: 'square', gainValue: baseGain * 0.9 },
-            { start: now + 0.08, duration: 0.05, frequency: 180, type: 'square', gainValue: baseGain * 0.75 }
+            { start: now, duration: 0.07, frequency: 220, type: 'square', gainValue: baseGain },
+            { start: now + 0.10, duration: 0.07, frequency: 165, type: 'square', gainValue: baseGain * 0.9 },
+            { start: now + 0.20, duration: 0.10, frequency: 110, type: 'square', gainValue: baseGain * 0.85 }
         ]
     };
 
@@ -119,10 +122,21 @@ const getPattern = (soundType, baseGain, now) => {
 };
 
 const playOnContext = (ctx, soundType, volume) => {
-    const baseGain = Math.max(0.02, Math.min(0.2, Number(volume || 0.5) * 0.25));
+    // 강하게: 배수·상한을 크게 올림 (기존 0.25/0.2 → 0.85/0.85)
+    const baseGain = Math.max(0.08, Math.min(0.85, Number(volume || 0.5) * 0.85));
     const now = ctx.currentTime + 0.01;
+
+    // 마스터 리미터: 크게 키워도 소리가 찢어지지(클리핑) 않게 압축
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-12, now);
+    compressor.knee.setValueAtTime(6, now);
+    compressor.ratio.setValueAtTime(12, now);
+    compressor.attack.setValueAtTime(0.002, now);
+    compressor.release.setValueAtTime(0.18, now);
+    compressor.connect(ctx.destination);
+
     const pattern = getPattern(soundType, baseGain, now);
-    pattern.forEach((tone) => scheduleTone(ctx, tone));
+    pattern.forEach((tone) => scheduleTone(ctx, compressor, tone));
     return true;
 };
 
