@@ -10,6 +10,21 @@ export const getFileUrl = (url) => {
     return `${apiBase}${url}`;
 };
 
+// 인라인 이미지용 최적화 URL.
+// Cloudinary 이미지는 f_auto(webp/avif 자동) + q_auto(품질 자동) + w_제한 을 주입해
+// 느린 인터넷에서 원본 대비 보통 80~95% 가볍게 받습니다. (클릭 시 원본은 getFileUrl 사용)
+// Cloudinary가 아닌 URL은 그대로 통과.
+export const getImageThumb = (url, width = 900) => {
+    const full = getFileUrl(url);
+    if (!full || !full.includes('res.cloudinary.com')) return full;
+    const marker = '/upload/';
+    const uIdx = full.indexOf(marker);
+    if (uIdx === -1) return full;
+    const after = full.slice(uIdx + marker.length);
+    if (after.startsWith('f_auto')) return full; // 이미 최적화됨 (중복 주입 방지)
+    return `${full.slice(0, uIdx + marker.length)}f_auto,q_auto,w_${width}/${after}`;
+};
+
 const readabilityScore = (text) => {
     if (!text || typeof text !== 'string') return -9999;
     const hangulCount = (text.match(/[가-힣]/g) || []).length;

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import useChatStore from '../../store/chatStore';
 import useAuthStore from '../../store/authStore';
-import { getFileUrl, normalizeDisplayFileName } from '../../utils/fileUtils';
+import { getFileUrl, getImageThumb, normalizeDisplayFileName } from '../../utils/fileUtils';
 import UserAvatar from '../Common/UserAvatar';
 
 const MessageList = () => {
@@ -112,8 +112,10 @@ const MessageList = () => {
                                             {msg.fileType?.startsWith('image/') ? (
                                                 <div className="group/img relative">
                                                     <img
-                                                        src={getFileUrl(msg.fileUrl)}
+                                                        src={getImageThumb(msg.fileUrl, 600)}
                                                         alt={normalizeDisplayFileName(msg.fileName)}
+                                                        loading="lazy"
+                                                        decoding="async"
                                                         className="max-w-full max-h-[300px] object-cover rounded-xl md:rounded-[1.5rem] cursor-pointer hover:scale-[1.02] transition-transform"
                                                         onClick={() => window.open(getFileUrl(msg.fileUrl), '_blank')}
                                                     />

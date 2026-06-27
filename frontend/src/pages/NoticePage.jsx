@@ -5,7 +5,7 @@ import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import { useSocket } from '../socket/SocketContext';
 import useNotificationStore from '../store/notificationStore';
-import { getFileUrl } from '../utils/fileUtils';
+import { getFileUrl, getImageThumb } from '../utils/fileUtils';
 
 const NoticePage = () => {
     const { notices, fetchNotices, createNotice, deleteNotice, uploadImage, markAsRead, markAllAsRead, isLoading } = useNoticeStore();
@@ -162,8 +162,10 @@ const NoticePage = () => {
                                         style={{ borderHoverColor: themeColor }}
                                     >
                                         <img
-                                            src={getFileUrl(notice.imageUrl)}
+                                            src={getImageThumb(notice.imageUrl, 1000)}
                                             alt="공지 이미지"
+                                            loading="lazy"
+                                            decoding="async"
                                             className="w-full h-auto max-h-[500px] object-contain hover:scale-105 transition-transform duration-700 pointer-events-auto cursor-zoom-in"
                                             onClick={() => window.open(getFileUrl(notice.imageUrl), '_blank')}
                                         />
