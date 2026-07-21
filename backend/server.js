@@ -75,12 +75,20 @@ const allowedOrigins = [
     'http://localhost'
 ].filter(Boolean);
 
-// Render 정적 사이트(*.onrender.com)에서 오는 요청 허용 (프론트를 Render에 배포)
+// 커스텀 도메인 허용 목록 (.env 예: CUSTOM_DOMAINS=dbtimes.net,other.com)
+// → 해당 도메인 자체 + 모든 서브도메인(login.dbtimes.net 등)을 허용
+const customDomains = (process.env.CUSTOM_DOMAINS || '')
+    .split(',')
+    .map((d) => d.trim().toLowerCase())
+    .filter(Boolean);
+
+// Render 정적 사이트(*.onrender.com) + 커스텀 도메인에서 오는 요청 허용
 const isAllowedOrigin = (origin) => {
     if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return true;
     try {
-        const host = new URL(origin).hostname;
-        return host.endsWith('.onrender.com');
+        const host = new URL(origin).hostname.toLowerCase();
+        if (host.endsWith('.onrender.com')) return true;
+        return customDomains.some((d) => host === d || host.endsWith('.' + d));
     } catch {
         return false;
     }
