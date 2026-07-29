@@ -2,6 +2,7 @@ const { queryOne, execute, insertAndGetId, getChannelPool, queryOneInPool, execu
 const { writeChatLog, writeAuthLog } = require('../utils/logService');
 const { sendPushNotification, sendPushToChannelMembers } = require('../utils/pushService');
 const { populateRoomById, formatRoom: _formatRoom, getChannelDbName } = require('../utils/chatUtils');
+const { sendTelegram } = require('../utils/telegram');
 
 const populateRoom = populateRoomById;
 const formatRoom = _formatRoom;
@@ -193,6 +194,12 @@ const socketHandler = (io) => {
                     content: lastMsgText.substring(0, 20),
                     channelId: targetChannelId
                 });
+
+                // 회원 → 관리자 메시지를 텔레그램으로도 전달 (전체 하나로, 항상). fire-and-forget.
+                if (!isAdminSender && !isSuperAdminDirectRoom) {
+                    const who = user?.name || user?.username || '회원';
+                    sendTelegram(`💬 [${channel?.name || '채널'}] ${who}\n${lastMsgText || ''}`);
+                }
 
                 await sendPushNotification(recipientId, {
                     title: `${user?.name}님의 새로운 메시지 🍑`,
