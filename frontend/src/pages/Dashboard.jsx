@@ -234,11 +234,15 @@ const Dashboard = () => {
                             </div>
                         ) : (
                             <div className="bento-grid !p-0">
-                                {Array.isArray(myChannels) && myChannels.map((membership) => (
+                                {Array.isArray(myChannels) && myChannels.map((membership) => {
+                                    const chId = membership.channelId?._id?.toString() || membership.channelId?.toString();
+                                    const cc = unreadCounts[chId] || {};
+                                    const unread = (cc.notice || 0) + (cc.post || 0) + (cc.chat || 0) + (cc.poll || 0);
+                                    return (
                                     <div
                                         key={membership.channelId?._id}
                                         onClick={() => handleChannelClick(membership.channelId)}
-                                        className="glass-card p-6 flex flex-col h-full cursor-pointer hover:border-white/15 transition-colors"
+                                        className={`glass-card p-6 flex flex-col h-full cursor-pointer transition-colors ${unread > 0 ? 'border-[#FF3B30]/40 hover:border-[#FF3B30]/60' : 'hover:border-white/15'}`}
                                     >
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5">
@@ -248,13 +252,20 @@ const Dashboard = () => {
                                                     <div className="w-full h-full flex items-center justify-center text-xl">🏘️</div>
                                                 )}
                                             </div>
-                                            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                                                membership.status === 'approved'
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                                    : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
-                                            }`}>
-                                                {membership.status === 'approved' ? '활성' : '대기중'}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                {unread > 0 && (
+                                                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#FF3B30] text-white shadow-lg shadow-red-500/30 animate-pulse">
+                                                        새 메시지 {unread > 99 ? '99+' : unread}
+                                                    </span>
+                                                )}
+                                                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                                                    membership.status === 'approved'
+                                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                                        : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+                                                }`}>
+                                                    {membership.status === 'approved' ? '활성' : '대기중'}
+                                                </span>
+                                            </div>
                                         </div>
                                         <h3 className="text-base font-bold text-white mb-1.5 truncate">{membership.channelId?.name}</h3>
                                         <p className="text-gray-500 text-sm line-clamp-2 leading-relaxed mb-3">{membership.channelId?.description}</p>
@@ -269,7 +280,8 @@ const Dashboard = () => {
                                             <span className="text-xs font-medium text-[#FF8C69]">입장 →</span>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </section>
