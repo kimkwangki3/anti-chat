@@ -34,21 +34,31 @@ const authenticateChannelMember = async (username, password, targetChannelId, cl
         } catch (e) { /* LoginHistory 실패는 무시 */ }
     };
 
+    // 탈퇴/정지/거절된 회원은 로그인 불가
+    const BLOCKED_STATUS = ['withdrawn', 'suspended', 'rejected'];
     const activeChannels = await query("SELECT id, name, databaseName FROM Channels WHERE status='active' AND databaseName IS NOT NULL");
     const foundChannels = [];
     let firstName = username, firstNickname = null;
+    let blockedInTarget = false;
 
     for (const ch of activeChannels) {
         try {
             const pool = await getChannelPool(ch.databaseName);
             const user = await queryOneInPool(pool, 'SELECT * FROM Users WHERE username = @username', { username });
             if (user && user.password === password && user.userGrade === 2) {
+                if (BLOCKED_STATUS.includes(user.status)) {
+                    if (ch.id === targetChannelId) blockedInTarget = true;
+                    continue; // 차단(탈퇴 등)된 회원 — 이 채널 로그인 불가
+                }
                 if (!foundChannels.length) { firstName = user.name; firstNickname = user.nickname; }
                 foundChannels.push({ channelId: ch.id, dbName: ch.databaseName, userId: user.id, role: user.role, channelName: ch.name });
                 await onLogin(pool, user.id);
             }
         } catch (e) { console.error(`[Login] 채널 DB 오류 (${ch.databaseName}):`, e.message); }
     }
+
+    // 타겟 채널에서 명시적으로 차단(탈퇴/정지)된 회원이면 백스톱으로 되살리지 않고 즉시 로그인 차단
+    if (blockedInTarget) return null;
 
     // 타겟 채널에 grade2 매치가 없으면 백스톱: GTRADE에서 그 회원 보충 후 재확인
     if (!foundChannels.some(c => c.channelId === targetChannelId)) {
@@ -58,7 +68,7 @@ const authenticateChannelMember = async (username, password, targetChannelId, cl
             try {
                 const pool = await getChannelPool(targetCh.databaseName);
                 const user = await queryOneInPool(pool, 'SELECT * FROM Users WHERE username = @username', { username });
-                if (user && user.password === password && user.userGrade === 2) {
+                if (user && user.password === password && user.userGrade === 2 && !BLOCKED_STATUS.includes(user.status)) {
                     if (!foundChannels.length) { firstName = user.name; firstNickname = user.nickname; }
                     foundChannels.push({ channelId: targetCh.id, dbName: targetCh.databaseName, userId: user.id, role: user.role, channelName: targetCh.name });
                     await onLogin(pool, user.id);

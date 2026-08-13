@@ -25,14 +25,16 @@ const mapRow = (row) => ({
 
 // 채널 DB에 회원 1명 upsert (id 보존). 반환: 'inserted' | 'updated'
 const upsertUser = async (channelPool, u) => {
-    const existing = await queryOneInPool(channelPool, 'SELECT id FROM Users WHERE username=@username', { username: u.username });
+    const existing = await queryOneInPool(channelPool, 'SELECT id, status FROM Users WHERE username=@username', { username: u.username });
     if (existing) {
+        // 로컬에서 탈퇴('withdrawn') 처리한 회원은 동기화가 되살리지 않도록 status 보존
+        const statusToSet = existing.status === 'withdrawn' ? 'withdrawn' : u.status;
         await executeInPool(channelPool,
             `UPDATE Users SET name=@name, nickname=@nickname, password=@password,
              phone=@phone, birthdate=@birthdate, memo=@memo, recommender=@recommender,
              status=@status, userGrade=@userGrade, updatedAt=GETDATE() WHERE username=@username`,
             { name: u.name, nickname: u.nickname, password: u.password, phone: u.phone, birthdate: u.birthdate,
-              memo: u.memo, recommender: u.recommender, status: u.status, userGrade: u.userGrade, username: u.username }
+              memo: u.memo, recommender: u.recommender, status: statusToSet, userGrade: u.userGrade, username: u.username }
         );
         return 'updated';
     }

@@ -48,7 +48,7 @@ const AdminMemberManagement = () => {
 
     const handleUpdateStatus = async (memberId, status, currentStatus) => {
         try {
-            await axios.put(`/channel-members/${memberId}/status`, { status });
+            await axios.put(`/channel-members/${channelId}/users/${memberId}/status`, { status });
             // pending 상태에서 승인/거절 시 뱃지 감소
             if (currentStatus === 'pending' && (status === 'approved' || status === 'rejected')) {
                 decrementPendingCount(channelId);
