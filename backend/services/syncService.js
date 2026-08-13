@@ -6,6 +6,13 @@ const SYNC_INTERVAL_MS = 60 * 1000; // (수동 모드에서는 사용 안 함)
 // GTRADE USER_MST에서 가져올 컬럼
 const SELECT_COLS = 'USER_ID, USER_NM, USER_NICK_NM, USER_PWD, USER_HP, USER_TEL, BIRTH_DT, USER_CREATE_IP, RECOMM_NM, USER_BIGO, USER_BLACK, USER_GRADE, UPDATE_DT, REG_DT';
 
+// USER_MST ⋈ ACNT_MST (USER_ID로 연결). 계좌 중 하나라도 ACNT_STATE=7이면 BLOCKED7=1 → 로그인 차단 대상.
+// OPENQUERY 내부(링크드서버)에서 실행되므로 문자열 리터럴은 없음(숫자 7만) → 따옴표 이스케이프 불필요.
+const buildUserQuery = (linkedDb, whereClause) =>
+    `SELECT ${SELECT_COLS}, ` +
+    `CASE WHEN EXISTS (SELECT 1 FROM ${linkedDb}.dbo.ACNT_MST a WHERE a.USER_ID = u.USER_ID AND a.ACNT_STATE = 7) THEN 1 ELSE 0 END AS BLOCKED7 ` +
+    `FROM ${linkedDb}.dbo.USER_MST u ${whereClause}`;
+
 // USER_MST 행 → 채널 Users 레코드 매핑
 const mapRow = (row) => ({
     username:      (String(row.USER_ID || '')).trim(),
@@ -17,7 +24,8 @@ const mapRow = (row) => ({
     memo:          row.USER_BIGO ? String(row.USER_BIGO).trim() : '',
     recommender:   row.RECOMM_NM ? String(row.RECOMM_NM).trim() : null,
     registrationIp: row.USER_CREATE_IP ? String(row.USER_CREATE_IP).trim() : null,
-    status:        (row.USER_BLACK === 1 || row.USER_BLACK === '1' || row.USER_BLACK === 'Y') ? 'suspended' : 'approved',
+    status:        (row.BLOCKED7 === 1 || row.BLOCKED7 === '1' ||
+                    row.USER_BLACK === 1 || row.USER_BLACK === '1' || row.USER_BLACK === 'Y') ? 'suspended' : 'approved',
     role:          'member',
     gender:        'none',
     userGrade:     (row.USER_GRADE === null || row.USER_GRADE === undefined || row.USER_GRADE === '') ? null : parseInt(row.USER_GRADE, 10),
@@ -61,7 +69,7 @@ const syncChannel = async (channel, { full = false } = {}) => {
         const dateStr = d.getFullYear().toString() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
         innerWhere += ` AND (REG_DT >= ''${dateStr}'' OR (UPDATE_DT IS NOT NULL AND UPDATE_DT >= ''${dateStr}''))`;
     }
-    const innerSql = `SELECT ${SELECT_COLS} FROM ${linkedDb}.dbo.USER_MST ${innerWhere}`;
+    const innerSql = buildUserQuery(linkedDb, innerWhere);
     const outerSql = `SELECT * FROM OPENQUERY([${linkedServer}], '${innerSql}')`;
 
     const result = await masterPool.request().query(outerSql);
@@ -102,7 +110,7 @@ const syncSingleUser = async (channel, username) => {
     if (!safeUser) return null;
     try {
         const masterPool = await getPool();
-        const innerSql = `SELECT ${SELECT_COLS} FROM ${linkedDb}.dbo.USER_MST WHERE USER_ID = ''${safeUser}'' AND USER_GRADE IN (2,3)`;
+        const innerSql = buildUserQuery(linkedDb, `WHERE USER_ID = ''${safeUser}'' AND USER_GRADE IN (2,3)`);
         const outerSql = `SELECT * FROM OPENQUERY([${linkedServer}], '${innerSql}')`;
         const result = await masterPool.request().query(outerSql);
         const row = result.recordset[0];
