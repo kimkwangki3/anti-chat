@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { query, queryOne, execute, insertAndGetId, getChannelPool, queryOneInPool } = require('../db/mssql');
+const { query, queryOne, execute, insertAndGetId, getChannelPool, queryOneInPool, queryInPool } = require('../db/mssql');
 const { protect, superAdmin } = require('../middleware/authMiddleware');
 
 // 아이디 중복검사 — 마스터 DB + 모든 채널 DB 전체 확인
@@ -352,6 +352,128 @@ router.get('/channels/:id/messages', async (req, res) => {
             _id: m.id, content: m.content, createdAt: m.createdAt,
             sender: { _id: m.senderId, id: m.senderId, name: m.senderName, username: m.senderUsername }
         })));
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// GET /api/superadmin/chats/by-date — 날짜별 → 그 날 대화한 채팅방 목록 (회원/관리자 메시지 모두 집계)
+// 회원 이름은 각 채널 DB에서 해석. 옵션 필터: channelName, userName(회원 이름/아이디)
+router.get('/chats/by-date', async (req, res) => {
+    const { channelName, userName } = req.query;
+    try {
+        const params = {};
+        let where = '1=1';
+        if (channelName) { where += ' AND ch.name LIKE @channelName'; params.channelName = `%${channelName}%`; }
+
+        // 날짜 x 방 단위 활동 (Users JOIN 없이 집계 → 회원 메시지도 포함)
+        const rows = await query(
+            `SELECT CONVERT(varchar(10), m.createdAt, 23) as msgDate,
+                    r.id as roomId, r.channelId, r.adminId, r.memberId,
+                    ch.name as channelName, ch.databaseName,
+                    COUNT(*) as cnt, MAX(m.createdAt) as lastAt
+             FROM Messages m
+             JOIN ChatRooms r ON m.roomId = r.id
+             JOIN Channels ch ON r.channelId = ch.id
+             WHERE ${where}
+             GROUP BY CONVERT(varchar(10), m.createdAt, 23), r.id, r.channelId, r.adminId, r.memberId, ch.name, ch.databaseName
+             ORDER BY msgDate DESC, MAX(m.createdAt) DESC`,
+            params
+        );
+
+        // 회원 이름 해석: databaseName별 memberId 배치 조회
+        const membersByDb = {};
+        rows.forEach(r => {
+            if (r.databaseName && r.memberId != null) {
+                (membersByDb[r.databaseName] = membersByDb[r.databaseName] || new Set()).add(r.memberId);
+            }
+        });
+        const nameCache = {}; // `${dbName}:${id}` -> {name, username}
+        for (const [dbName, idSet] of Object.entries(membersByDb)) {
+            try {
+                const safeIds = [...idSet].filter(n => Number.isInteger(Number(n))).map(Number);
+                if (!safeIds.length) continue;
+                const pool = await getChannelPool(dbName);
+                const users = await queryInPool(pool, `SELECT id, name, username FROM Users WHERE id IN (${safeIds.join(',')})`, {});
+                users.forEach(u => { nameCache[`${dbName}:${u.id}`] = { name: u.name, username: u.username }; });
+            } catch (e) { /* 채널 DB 접근 실패 무시 */ }
+        }
+
+        // 날짜별 그룹화
+        const byDate = {};
+        for (const r of rows) {
+            const member = nameCache[`${r.databaseName}:${r.memberId}`] || {};
+            if (userName) {
+                const q = String(userName).toLowerCase();
+                const hit = (member.name || '').toLowerCase().includes(q) || (member.username || '').toLowerCase().includes(q);
+                if (!hit) continue;
+            }
+            (byDate[r.msgDate] = byDate[r.msgDate] || []).push({
+                roomId: r.roomId,
+                channelId: r.channelId,
+                channelName: r.channelName,
+                memberName: member.name || '(알 수 없음)',
+                memberUsername: member.username || '',
+                count: r.cnt,
+                lastAt: r.lastAt
+            });
+        }
+
+        const result = Object.keys(byDate)
+            .sort((a, b) => b.localeCompare(a))
+            .map(date => ({ date, rooms: byDate[date] }));
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// GET /api/superadmin/chats/room/:roomId/messages?date=YYYY-MM-DD
+// 특정 방의 (해당 날짜) 대화 내용 — 회원/관리자 양쪽, 발신자 이름 해석
+router.get('/chats/room/:roomId/messages', async (req, res) => {
+    const { date } = req.query;
+    try {
+        const room = await queryOne(
+            `SELECT r.id, r.adminId, r.memberId, r.channelId, ch.name as channelName, ch.databaseName
+             FROM ChatRooms r JOIN Channels ch ON r.channelId = ch.id WHERE r.id = @roomId`,
+            { roomId: req.params.roomId }
+        );
+        if (!room) return res.status(404).json({ message: '채팅방을 찾을 수 없습니다.' });
+
+        const admin = await queryOne('SELECT id, name, username FROM Users WHERE id=@id', { id: room.adminId });
+        let member = null;
+        if (room.databaseName && room.memberId != null) {
+            try {
+                const pool = await getChannelPool(room.databaseName);
+                member = await queryOneInPool(pool, 'SELECT id, name, username FROM Users WHERE id=@id', { id: room.memberId });
+            } catch (e) { /* 무시 */ }
+        }
+
+        const params = { roomId: room.id };
+        let dateWhere = '';
+        if (date) { dateWhere = ' AND CONVERT(varchar(10), createdAt, 23) = @date'; params.date = date; }
+        const messages = await query(
+            `SELECT id, senderId, content, fileUrl, fileType, fileName, createdAt
+             FROM Messages WHERE roomId=@roomId${dateWhere} ORDER BY createdAt ASC`,
+            params
+        );
+
+        res.json({
+            channelName: room.channelName,
+            memberName: member?.name || '(회원)',
+            adminName: admin?.name || '관리자',
+            date: date || null,
+            messages: messages.map(m => {
+                const isAdmin = String(m.senderId) === String(room.adminId);
+                const who = isAdmin ? admin : member;
+                return {
+                    _id: m.id, content: m.content, createdAt: m.createdAt,
+                    fileUrl: m.fileUrl, fileType: m.fileType, fileName: m.fileName,
+                    isAdmin,
+                    senderName: who?.name || (isAdmin ? '관리자' : '(회원)')
+                };
+            })
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
