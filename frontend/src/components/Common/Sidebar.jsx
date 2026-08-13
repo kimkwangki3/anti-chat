@@ -38,12 +38,16 @@ const Sidebar = () => {
     const canManageChannel = isAdminOrSuperAdminRole(userRole);
     const isSuperAdmin = isSuperAdminRole(userRole);
 
-    const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0 };
+    const counts = unreadCounts[urlChannelId] || { notice: 0, post: 0, chat: 0, poll: 0 };
     const pendingBadge = (pendingCounts && pendingCounts[urlChannelId]) || 0;
-    const totalUnreadAll = Object.values(unreadCounts || {}).reduce((acc, c) => acc + (c?.notice || 0) + (c?.post || 0) + (c?.chat || 0), 0);
+    // 채널별 미읽음 합계 (공지+게시판+채팅+투표)
+    const channelSum = (c) => (c?.notice || 0) + (c?.post || 0) + (c?.chat || 0) + (c?.poll || 0);
+    const totalUnreadAll = Object.values(unreadCounts || {}).reduce((acc, c) => acc + channelSum(c), 0);
+    // 지금 보고 있는 채널을 뺀 "다른 채널들"의 미읽음 합 → 다른 채널에서 온 알림을 홈 배지로 노출
+    const otherChannelsUnread = totalUnreadAll - channelSum(unreadCounts[urlChannelId]);
 
     const menuItems = [
-        { id: 'dashboard', label: '홈', icon: 'home', path: '/', count: urlChannelId ? 0 : totalUnreadAll },
+        { id: 'dashboard', label: '홈', icon: 'home', path: '/', count: urlChannelId ? otherChannelsUnread : totalUnreadAll },
         { id: 'search', label: '채널 검색', icon: 'search', path: '/search-channels', hidden: !!urlChannelId || !isSuperAdmin },
         { id: 'notice', label: '공지사항', icon: 'bell', path: `/notices?channelId=${urlChannelId}`, count: counts.notice, hidden: !urlChannelId },
         { id: 'poll', label: '투표', icon: 'vote', path: `/polls?channelId=${urlChannelId}`, hidden: !urlChannelId },
