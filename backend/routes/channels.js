@@ -290,52 +290,65 @@ router.get('/unread-counts', protect, async (req, res) => {
     try {
         const counts = {};
 
-        // 채널별 userId 매핑 구성
-        // 슈퍼어드민: 마스터 DB userId 사용
-        // 채널 유저: JWT channels 배열에서 채널별 userId 사용
-        let channelUserMap = {}; // { channelId: userId }
+        // 채널별 매핑 구성 { channelId: { userId, ownerMode } }
+        // - 최고관리자/채널관리자: 자신이 소유(ownerId)한 채널의 채팅 미읽음을 마스터 userId로 집계
+        //   (회원→관리자 메시지 알림이 여기로 옴). 공지/게시판/투표는 관리자가 올리는 것이라 제외.
+        // - 채널 회원: JWT channels 배열에서 채널별 userId 사용 (공지/게시판/투표/채팅 전부)
+        let channelUserMap = {};
 
-        if (req.user.isMaster) {
-            const memberships = await query(
-                `SELECT cm.channelId FROM ChannelMembers cm
-                 JOIN Channels c ON cm.channelId = c.id
-                 WHERE cm.userId = @userId AND cm.status = 'approved' AND c.status = 'active'`,
+        if (req.user.isMaster || req.user.isAdminMaster) {
+            const owned = await query(
+                `SELECT id FROM Channels WHERE ownerId = @userId AND status = 'active'`,
                 { userId: req.user.id }
             );
-            memberships.forEach(m => { channelUserMap[m.channelId] = req.user.id; });
+            owned.forEach(c => { channelUserMap[c.id] = { userId: req.user.id, ownerMode: true }; });
+            // 최고관리자가 회원으로 가입한 채널도 포함 (기존 동작 유지)
+            if (req.user.isMaster) {
+                const memberships = await query(
+                    `SELECT cm.channelId FROM ChannelMembers cm
+                     JOIN Channels c ON cm.channelId = c.id
+                     WHERE cm.userId = @userId AND cm.status = 'approved' AND c.status = 'active'`,
+                    { userId: req.user.id }
+                );
+                memberships.forEach(m => { if (!channelUserMap[m.channelId]) channelUserMap[m.channelId] = { userId: req.user.id, ownerMode: false }; });
+            }
         } else {
             const userChannels = req.user.channels || [];
-            userChannels.forEach(c => { channelUserMap[c.channelId] = c.userId; });
+            userChannels.forEach(c => { channelUserMap[c.channelId] = { userId: c.userId, ownerMode: false }; });
         }
 
-        for (const [channelId, userId] of Object.entries(channelUserMap)) {
+        for (const [channelId, info] of Object.entries(channelUserMap)) {
             try {
                 const cid = parseInt(channelId);
-                const noticeRow = await queryOne(
-                    `SELECT COUNT(*) as cnt FROM Notices n WHERE n.channelId = @channelId
-                     AND NOT EXISTS (SELECT 1 FROM NoticeReadBy WHERE noticeId = n.id AND userId = @userId)`,
-                    { channelId: cid, userId }
-                );
-                const postRow = await queryOne(
-                    `SELECT COUNT(*) as cnt FROM Posts p WHERE p.channelId = @channelId
-                     AND NOT EXISTS (SELECT 1 FROM PostReadBy WHERE postId = p.id AND userId = @userId)`,
-                    { channelId: cid, userId }
-                );
-                const pollRow = await queryOne(
-                    `SELECT COUNT(*) as cnt FROM Polls p WHERE p.channelId = @channelId
-                     AND p.status = 'active' AND p.expiresAt > GETDATE()
-                     AND NOT EXISTS (SELECT 1 FROM PollReadBy WHERE pollId = p.id AND userId = @userId)`,
-                    { channelId: cid, userId }
-                );
+                const userId = info.userId;
+                let notice = 0, post = 0, poll = 0;
+                if (!info.ownerMode) {
+                    const noticeRow = await queryOne(
+                        `SELECT COUNT(*) as cnt FROM Notices n WHERE n.channelId = @channelId
+                         AND NOT EXISTS (SELECT 1 FROM NoticeReadBy WHERE noticeId = n.id AND userId = @userId)`,
+                        { channelId: cid, userId }
+                    );
+                    notice = noticeRow.cnt;
+                    const postRow = await queryOne(
+                        `SELECT COUNT(*) as cnt FROM Posts p WHERE p.channelId = @channelId
+                         AND NOT EXISTS (SELECT 1 FROM PostReadBy WHERE postId = p.id AND userId = @userId)`,
+                        { channelId: cid, userId }
+                    );
+                    post = postRow.cnt;
+                    const pollRow = await queryOne(
+                        `SELECT COUNT(*) as cnt FROM Polls p WHERE p.channelId = @channelId
+                         AND p.status = 'active' AND p.expiresAt > GETDATE()
+                         AND NOT EXISTS (SELECT 1 FROM PollReadBy WHERE pollId = p.id AND userId = @userId)`,
+                        { channelId: cid, userId }
+                    );
+                    poll = pollRow.cnt;
+                }
                 const chatRow = await queryOne(
                     `SELECT ISNULL(SUM(CASE WHEN adminId = @userId THEN unreadCountAdmin ELSE unreadCountMember END), 0) as cnt
                      FROM ChatRooms WHERE channelId = @channelId AND (adminId = @userId OR memberId = @userId)`,
                     { channelId: cid, userId }
                 );
-                counts[channelId] = {
-                    notice: noticeRow.cnt, post: postRow.cnt,
-                    poll: pollRow.cnt, chat: chatRow.cnt
-                };
+                counts[channelId] = { notice, post, poll, chat: chatRow.cnt };
             } catch (err) {
                 console.error(`[Unread API] Channel ${channelId} 오류:`, err.message);
             }
