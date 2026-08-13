@@ -7,6 +7,32 @@ const { sendTelegram } = require('../utils/telegram');
 const populateRoom = populateRoomById;
 const formatRoom = _formatRoom;
 
+// 회원 메시지가 관리자에게 도착한 뒤, 일정 시간(기본 3분) 안에 확인(읽음)되지 않으면 텔레그램으로 알림.
+// 방(roomId)당 타이머 1개만 두고, 타이머 종료 시점에 아직 미읽음이면 발송(읽었으면 스킵).
+// TELEGRAM_ALERT_DELAY_MIN 환경변수로 분 단위 조절 가능(기본 3).
+const TELEGRAM_ALERT_DELAY_MS = (parseInt(process.env.TELEGRAM_ALERT_DELAY_MIN) || 3) * 60 * 1000;
+const pendingTelegramAlerts = new Set();
+const scheduleUnreadTelegramAlert = ({ roomId, adminId, channelName, senderName, text }) => {
+    if (pendingTelegramAlerts.has(roomId)) return; // 이미 이 방에 대기 중인 알림 있음
+    pendingTelegramAlerts.add(roomId);
+    setTimeout(async () => {
+        pendingTelegramAlerts.delete(roomId);
+        try {
+            const row = await queryOne(
+                'SELECT COUNT(*) as cnt FROM Messages WHERE roomId=@roomId AND senderId != @adminId AND isRead=0',
+                { roomId, adminId }
+            );
+            const cnt = row?.cnt || 0;
+            if (cnt > 0) {
+                const more = cnt > 1 ? ` (외 ${cnt - 1}건)` : '';
+                sendTelegram(`🔔 [${channelName || '채널'}] ${senderName}님 메시지 미확인 (3분 경과)${more}\n${text || ''}`);
+            }
+        } catch (e) {
+            console.error('[Telegram] 미확인 알림 체크 실패:', e.message);
+        }
+    }, TELEGRAM_ALERT_DELAY_MS);
+};
+
 const socketHandler = (io) => {
     io.on('connection', (socket) => {
         console.log('소켓 연결됨:', socket.id);
@@ -195,10 +221,15 @@ const socketHandler = (io) => {
                     channelId: targetChannelId
                 });
 
-                // 회원 → 관리자 메시지를 텔레그램으로도 전달 (전체 하나로, 항상). fire-and-forget.
-                if (!isAdminSender && !isSuperAdminDirectRoom) {
-                    const who = user?.name || user?.username || '회원';
-                    sendTelegram(`💬 [${channel?.name || '채널'}] ${who}\n${lastMsgText || ''}`);
+                // 회원 → 관리자 메시지: 관리자가 지금 그 방을 안 보고 있으면, 3분 내 미확인 시 텔레그램 알림 예약
+                if (!isAdminSender && !isSuperAdminDirectRoom && !isRecipientInRoom) {
+                    scheduleUnreadTelegramAlert({
+                        roomId,
+                        adminId: room.adminId,
+                        channelName: channel?.name,
+                        senderName: user?.name || user?.username || '회원',
+                        text: lastMsgText
+                    });
                 }
 
                 await sendPushNotification(recipientId, {
