@@ -121,7 +121,8 @@ const socketHandler = (io) => {
         });
 
         socket.on('send_message', async (data) => {
-            const { roomId, senderId, content, channelId, fileUrl, fileType, fileName } = data;
+            const { roomId, content, channelId, fileUrl, fileType, fileName } = data;
+            let senderId = data.senderId;
             try {
                 const room = await queryOne('SELECT * FROM ChatRooms WHERE id=@id', { id: roomId });
                 if (!room) return;
@@ -138,6 +139,10 @@ const socketHandler = (io) => {
                     await execute('UPDATE ChatRooms SET adminId=@ownerId WHERE id=@id', { ownerId: channel.ownerId, id: roomId });
                     room.adminId = channel.ownerId;
                 }
+
+                // 발신자 id 보정: 다중채널 회원은 전역 user._id(첫 채널 id)를 보내서 다른 채널 DB에서
+                // 엉뚱한 사람으로 조회될 수 있음. 방 기준으로 관리자면 adminId, 회원이면 memberId(채널-정확)로 고정.
+                senderId = String(senderId) === String(room.adminId) ? room.adminId : room.memberId;
 
                 if (!isSuperAdminDirectRoom) {
                     const dbName = await getChannelDbName(targetChannelId);
