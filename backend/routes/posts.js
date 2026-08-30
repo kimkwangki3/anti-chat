@@ -8,9 +8,12 @@ const { query, queryOne, execute, insertAndGetId } = require('../db/mssql');
 const { protect, admin } = require('../middleware/authMiddleware');
 const { sendPushToChannelMembers } = require('../utils/pushService');
 const { normalizeUploadedFileName } = require('../utils/filename');
+const cloudinary = require('../config/cloudinary');
+const streamifier = require('streamifier');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage, limits: { fileSize: 20 * 1024 * 1024 } });
+const imageUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const postFileUploadMiddleware = (req, res, next) => {
     upload.array('files', 5)(req, res, (err) => {
@@ -67,6 +70,23 @@ router.post('/', protect, admin, postFileUploadMiddleware, async (req, res) => {
         res.status(201).json({ ...post, attachments });
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// POST /api/posts/upload-image — 게시글 본문 인라인 이미지 업로드 (cloudinary). 관리자만.
+router.post('/upload-image', protect, admin, imageUpload.single('image'), (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ message: '이미지가 없습니다.' });
+        const stream = cloudinary.uploader.upload_stream(
+            { folder: 'posts', resource_type: 'image' },
+            (error, result) => {
+                if (error) return res.status(500).json({ message: '이미지 업로드에 실패했습니다.', detail: error.message });
+                res.json({ imageUrl: result.secure_url });
+            }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+    } catch (e) {
+        res.status(500).json({ message: '이미지 업로드 오류' });
     }
 });
 

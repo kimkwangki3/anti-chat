@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import PostContent from '../components/PostContent';
 import usePostStore from '../store/postStore';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
@@ -19,8 +20,30 @@ const PostDetailPage = () => {
     const [editTitle, setEditTitle] = useState('');
     const [editContent, setEditContent] = useState('');
     const [saving, setSaving] = useState(false);
+    const [imgUploading, setImgUploading] = useState(false);
+    const editRef = useRef(null);
 
     const isAdmin = user?.role === 'admin' || user?.role === 'superadmin' || user?.isMaster;
+
+    const insertImage = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImgUploading(true);
+        try {
+            const fd = new FormData();
+            fd.append('image', file);
+            const { data } = await axios.post('/posts/upload-image', fd);
+            const md = `\n![](${data.imageUrl})\n`;
+            const ta = editRef.current;
+            const pos = ta ? ta.selectionStart : editContent.length;
+            setEditContent(editContent.slice(0, pos) + md + editContent.slice(pos));
+        } catch (err) {
+            alert('이미지 업로드 실패: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setImgUploading(false);
+            e.target.value = '';
+        }
+    };
 
     const startEdit = () => {
         setEditTitle(currentPost.title || '');
@@ -126,27 +149,29 @@ const PostDetailPage = () => {
                     {isEditing ? (
                         <div className="relative z-10">
                             <textarea
+                                ref={editRef}
                                 value={editContent}
                                 onChange={(e) => setEditContent(e.target.value)}
-                                rows={8}
-                                placeholder="내용"
+                                rows={10}
+                                placeholder="내용 (글 중간에 이미지를 넣을 수 있습니다)"
                                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white leading-relaxed focus:outline-none resize-y"
                             />
-                            <div className="flex gap-2 mt-3">
-                                <button onClick={saveEdit} disabled={saving} className="px-5 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50" style={{ backgroundColor: themeColor }}>
+                            <div className="flex flex-wrap gap-2 mt-3 items-center">
+                                <button onClick={saveEdit} disabled={saving || imgUploading} className="px-5 py-2.5 rounded-xl text-xs font-bold text-white disabled:opacity-50" style={{ backgroundColor: themeColor }}>
                                     {saving ? '저장 중...' : '저장'}
                                 </button>
                                 <button onClick={() => setIsEditing(false)} disabled={saving} className="px-5 py-2.5 rounded-xl text-xs font-bold text-[#9aa0b8] bg-white/5 border border-white/10">
                                     취소
                                 </button>
+                                <label className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#9bb4ff] bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10">
+                                    {imgUploading ? '업로드 중...' : '🖼️ 이미지 삽입'}
+                                    <input type="file" accept="image/*" className="hidden" onChange={insertImage} disabled={imgUploading} />
+                                </label>
                             </div>
                         </div>
                     ) : (
-                        <div
-                            className="text-[#6b6b8a] whitespace-pre-wrap leading-relaxed text-sm border-l-2 pl-8 ml-1 relative z-10 font-medium"
-                            style={{ borderColor: `${themeColor}40` }}
-                        >
-                            {currentPost.content}
+                        <div className="border-l-2 pl-8 ml-1 relative z-10" style={{ borderColor: `${themeColor}40` }}>
+                            <PostContent content={currentPost.content} className="text-[#8890a8] leading-relaxed text-sm font-medium" />
                         </div>
                     )}
 

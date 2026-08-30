@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import usePostStore from '../store/postStore';
 import useAuthStore from '../store/authStore';
 import useChannelStore from '../store/channelStore';
 import useNotificationStore from '../store/notificationStore';
 import { getFileUrl, normalizeDisplayFileName } from '../utils/fileUtils';
+import { stripImages } from '../components/PostContent';
+import axios from '../api/axios';
 
 const BoardPage = () => {
     const navigate = useNavigate();
@@ -16,6 +18,28 @@ const BoardPage = () => {
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ title: '', content: '' });
     const [files, setFiles] = useState([]);
+    const [uploadingImg, setUploadingImg] = useState(false);
+    const contentRef = useRef(null);
+
+    const insertImage = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploadingImg(true);
+        try {
+            const fd = new FormData();
+            fd.append('image', file);
+            const { data } = await axios.post('/posts/upload-image', fd);
+            const md = `\n![](${data.imageUrl})\n`;
+            const ta = contentRef.current;
+            const pos = ta ? ta.selectionStart : formData.content.length;
+            setFormData(prev => ({ ...prev, content: prev.content.slice(0, pos) + md + prev.content.slice(pos) }));
+        } catch (err) {
+            alert('이미지 업로드 실패: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setUploadingImg(false);
+            e.target.value = '';
+        }
+    };
 
     const queryParams = new URLSearchParams(location.search);
     const channelId = queryParams.get('channelId');
@@ -129,7 +153,8 @@ const BoardPage = () => {
                                 <div>
                                     <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-2 font-mono ml-1">내용</label>
                                     <textarea
-                                        placeholder="채널 멤버들과 공유할 내용을 작성하세요"
+                                        ref={contentRef}
+                                        placeholder="채널 멤버들과 공유할 내용을 작성하세요 (글 중간에 이미지를 넣을 수 있습니다)"
                                         value={formData.content}
                                         onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                         rows="6"
@@ -138,6 +163,11 @@ const BoardPage = () => {
                                         onFocus={(e) => e.target.style.borderColor = themeColor}
                                         onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
                                     ></textarea>
+                                    <label className="inline-flex items-center gap-2 mt-3 px-4 py-2.5 rounded-xl text-xs font-bold text-[#9bb4ff] bg-[#1a1a28] border border-white/5 cursor-pointer hover:bg-white/5 transition-all">
+                                        {uploadingImg ? '업로드 중...' : '🖼️ 본문에 이미지 삽입'}
+                                        <input type="file" accept="image/*" className="hidden" onChange={insertImage} disabled={uploadingImg} />
+                                    </label>
+                                    <p className="text-[10px] text-[#555] mt-2 ml-1">커서 위치에 이미지가 들어갑니다. 글 중간중간 여러 장 넣을 수 있어요.</p>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-[#6b6b8a] uppercase tracking-[0.2em] mb-2 font-mono ml-1">첨부 파일</label>
@@ -218,7 +248,7 @@ const BoardPage = () => {
                                     >
                                         {post.title}
                                     </h2>
-                                    <p className="text-[#6b6b8a] line-clamp-3 text-sm mb-10 leading-relaxed flex-1 font-medium">{post.content}</p>
+                                    <p className="text-[#6b6b8a] line-clamp-3 text-sm mb-10 leading-relaxed flex-1 font-medium">{stripImages(post.content)}</p>
                                     {Array.isArray(post.attachments) && post.attachments.length > 0 && (
                                         <div className="mb-6 space-y-2">
                                             {post.attachments.slice(0, 2).map((file, index) => (
