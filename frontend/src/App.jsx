@@ -25,6 +25,7 @@ const PollPage = lazy(() => import('./pages/PollPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const ChannelEntryRedirect = lazy(() => import('./pages/ChannelEntryRedirect'));
+const GuidePage = lazy(() => import('./pages/GuidePage'));
 const SuperAdminUsers = lazy(() => import('./pages/SuperAdminUsers'));
 const SuperAdminAdmins = lazy(() => import('./pages/SuperAdminAdmins'));
 const SuperAdminDirectChat = lazy(() => import('./pages/SuperAdminDirectChat'));
@@ -103,6 +104,7 @@ function App() {
           <Route path="/superadmin/chats" element={<ProtectedLayout><SuperAdminChats /></ProtectedLayout>} />
           <Route path="/superadmin/polls" element={<ProtectedLayout><SuperAdminPolls /></ProtectedLayout>} />
           <Route path="/privacy-policy" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
+          <Route path="/guide" element={<Suspense fallback={<PageLoader />}><GuidePage /></Suspense>} />
         </Routes>
       </SocketProvider>
     </BrowserRouter>
