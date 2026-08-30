@@ -42,18 +42,25 @@ const GuidePage = () => {
 
                     <div className="space-y-4 text-sm leading-relaxed text-[#d1d1e0]">
                         <p>
-                            안녕하세요. <b className="text-white">모바일 MTS 시스템 개선(신규 개발)</b> 작업으로 인해,
-                            기존 방식으로는 정상 이용이 어려워 <b className="text-white">새로운 전용 프로그램 설치</b>가 필요합니다.
+                            안녕하세요. 모바일 MTS 개선으로 <b className="text-white">새로운 전용 프로그램 설치</b>가 필요합니다.
+                            아래 안내에 따라 설치를 부탁드립니다. 🙏
                         </p>
 
                         <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                             <p className="font-bold text-white mb-2.5">📌 설치 방법</p>
-                            <ol className="list-decimal list-inside space-y-2 text-[13px] marker:font-bold" style={{ }}>
+                            <ol className="list-decimal list-inside space-y-2 text-[13px] marker:font-bold">
                                 <li>아래 <b style={{ color: theme }}>[{name} 로그인]</b> 버튼으로 로그인</li>
                                 <li>로그인 후 <b className="text-white">게시판</b> 메뉴로 이동</li>
                                 <li>게시판에 올라온 <b className="text-white">설치 프로그램</b>을 다운로드</li>
                                 <li>다운로드한 프로그램을 설치 후 이용해 주세요</li>
                             </ol>
+                        </div>
+
+                        <div className="p-4 rounded-2xl border" style={{ backgroundColor: `${theme}12`, borderColor: `${theme}33` }}>
+                            <p className="text-[13px]">
+                                <span className="mr-1">🔑</span>
+                                로그인 <b className="text-white">아이디 · 비밀번호</b>는 <b style={{ color: theme }}>기존 HTS 아이디 · 비밀번호와 동일</b>합니다.
+                            </p>
                         </div>
 
                         <p className="text-[12px] text-[#9a9ab0]">
