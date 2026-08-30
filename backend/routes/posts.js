@@ -189,4 +189,25 @@ router.delete('/:id', protect, async (req, res) => {
     }
 });
 
+// PUT /api/posts/:id — 게시글 수정 (제목/내용). 작성자 또는 관리자만.
+router.put('/:id', protect, admin, async (req, res) => {
+    const { title, content } = req.body;
+    try {
+        const post = await queryOne('SELECT * FROM Posts WHERE id = @id', { id: req.params.id });
+        if (!post) return res.status(404).json({ message: 'Post not found' });
+        if (post.authorId !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+        const updates = [], params = { id: post.id };
+        if (typeof title === 'string' && title.trim()) { updates.push('title=@title'); params.title = title.trim(); }
+        if (typeof content === 'string') { updates.push('content=@content'); params.content = content; }
+        if (!updates.length) return res.status(400).json({ message: '변경할 내용이 없습니다.' });
+        await execute(`UPDATE Posts SET ${updates.join(',')} WHERE id=@id`, params);
+        const updated = await queryOne('SELECT p.*, u.name as authorName FROM Posts p JOIN Users u ON p.authorId = u.id WHERE p.id = @id', { id: post.id });
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
