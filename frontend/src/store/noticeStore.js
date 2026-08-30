@@ -55,6 +55,19 @@ const useNoticeStore = create((set, get) => ({
         }
     },
 
+    updateNotice: async (id, content) => {
+        try {
+            await axios.put(`/notices/${id}`, { content });
+            set((state) => ({
+                notices: state.notices.map(n => (n._id === id ? { ...n, content } : n))
+            }));
+            return true;
+        } catch (error) {
+            set({ error: '공지사항 수정에 실패했습니다.' });
+            return false;
+        }
+    },
+
     markAsRead: async (id) => {
         try {
             const response = await axios.patch(`/notices/${id}/read`);

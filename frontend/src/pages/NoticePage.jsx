@@ -8,7 +8,7 @@ import useNotificationStore from '../store/notificationStore';
 import { getFileUrl, getImageThumb } from '../utils/fileUtils';
 
 const NoticePage = () => {
-    const { notices, fetchNotices, createNotice, deleteNotice, uploadImage, markAsRead, markAllAsRead, isLoading } = useNoticeStore();
+    const { notices, fetchNotices, createNotice, deleteNotice, updateNotice, uploadImage, markAsRead, markAllAsRead, isLoading } = useNoticeStore();
     const { user } = useAuthStore();
     const { currentChannel } = useChannelStore();
     const { onlineCount } = useSocket();
@@ -17,6 +17,18 @@ const NoticePage = () => {
     const [selectedImage, setSelectedImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [editContent, setEditContent] = useState('');
+    const [savingEdit, setSavingEdit] = useState(false);
+
+    const startEditNotice = (notice) => { setEditingId(notice._id); setEditContent(notice.content || ''); };
+    const saveEditNotice = async (id) => {
+        setSavingEdit(true);
+        const ok = await updateNotice(id, editContent);
+        setSavingEdit(false);
+        if (ok) setEditingId(null);
+        else alert('공지 수정에 실패했습니다.');
+    };
 
     const scrollRef = useRef(null);
 
@@ -171,15 +183,32 @@ const NoticePage = () => {
                                         />
                                     </div>
                                 )}
-                                <p className="text-[13px] leading-relaxed text-[#d1d1e0] whitespace-pre-wrap">{notice.content}</p>
+                                {editingId === notice._id ? (
+                                    <div>
+                                        <textarea
+                                            value={editContent}
+                                            onChange={(e) => setEditContent(e.target.value)}
+                                            rows={4}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[13px] text-white leading-relaxed focus:outline-none resize-y"
+                                        />
+                                        <div className="flex gap-2 mt-2">
+                                            <button onClick={() => saveEditNotice(notice._id)} disabled={savingEdit} className="px-4 py-2 rounded-lg text-[11px] font-bold text-white disabled:opacity-50" style={{ backgroundColor: themeColor }}>
+                                                {savingEdit ? '저장 중...' : '저장'}
+                                            </button>
+                                            <button onClick={() => setEditingId(null)} disabled={savingEdit} className="px-4 py-2 rounded-lg text-[11px] font-bold text-[#9aa0b8] bg-white/5 border border-white/10">
+                                                취소
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-[13px] leading-relaxed text-[#d1d1e0] whitespace-pre-wrap">{notice.content}</p>
+                                )}
 
-                                {isAdmin && (
-                                    <button
-                                        onClick={() => { if (window.confirm('공지를 삭제하시겠습니까?')) deleteNotice(notice._id); }}
-                                        className="absolute -top-1 -right-1 sm:-right-12 sm:top-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-2 text-red-500/50 hover:text-red-500 text-[10px] font-bold uppercase"
-                                    >
-                                        🗑️
-                                    </button>
+                                {isAdmin && editingId !== notice._id && (
+                                    <div className="absolute -top-1 -right-1 sm:-right-12 sm:top-0 flex flex-col gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                        <button onClick={() => startEditNotice(notice)} title="수정" className="p-2 text-[#9aa0b8] hover:text-white text-[10px] font-bold">✏️</button>
+                                        <button onClick={() => { if (window.confirm('공지를 삭제하시겠습니까?')) deleteNotice(notice._id); }} title="삭제" className="p-2 text-red-500/50 hover:text-red-500 text-[10px] font-bold">🗑️</button>
+                                    </div>
                                 )}
 
                                 <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-3 opacity-40 group-hover:opacity-100 transition-opacity">

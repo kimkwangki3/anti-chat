@@ -113,4 +113,28 @@ router.delete('/:id', protect, admin, async (req, res) => {
     }
 });
 
+// PUT /api/notices/:id — 공지 수정 (내용/제목/이미지). 채널 소유 관리자만.
+router.put('/:id', protect, admin, async (req, res) => {
+    const { title, content, imageUrl } = req.body;
+    try {
+        const notice = await queryOne(
+            `SELECT n.*, c.ownerId FROM Notices n JOIN Channels c ON n.channelId = c.id WHERE n.id = @id`,
+            { id: req.params.id }
+        );
+        if (!notice) return res.status(404).json({ message: '공지사항을 찾을 수 없습니다.' });
+        if (notice.ownerId !== req.user.id) return res.status(401).json({ message: '권한이 없습니다.' });
+
+        const updates = [], params = { id: notice.id };
+        if (typeof title === 'string') { updates.push('title=@title'); params.title = title; }
+        if (typeof content === 'string') { updates.push('content=@content'); params.content = content; }
+        if (imageUrl !== undefined) { updates.push('imageUrl=@imageUrl'); params.imageUrl = imageUrl || null; }
+        if (!updates.length) return res.status(400).json({ message: '변경할 내용이 없습니다.' });
+        await execute(`UPDATE Notices SET ${updates.join(',')} WHERE id=@id`, params);
+        const updated = await queryOne('SELECT * FROM Notices WHERE id = @id', { id: notice.id });
+        res.json(updated);
+    } catch (error) {
+        res.status(500).json({ message: '공지사항 수정 오류' });
+    }
+});
+
 module.exports = router;
